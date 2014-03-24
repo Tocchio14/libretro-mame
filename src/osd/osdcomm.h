@@ -36,7 +36,11 @@
 #define ATTR_MALLOC             __attribute__((malloc))
 #define ATTR_PURE               __attribute__((pure))
 #define ATTR_CONST              __attribute__((const))
+#ifdef RETRO
+#define ATTR_FORCE_INLINE       
+#else
 #define ATTR_FORCE_INLINE       __attribute__((always_inline))
+#endif
 #define ATTR_NONNULL(...)       __attribute__((nonnull(__VA_ARGS__)))
 #define ATTR_DEPRECATED         __attribute__((deprecated))
 /* not supported in GCC prior to 4.4.x */
@@ -50,7 +54,11 @@
 #define UNEXPECTED(exp)         __builtin_expect(!!(exp), 0)
 #define EXPECTED(exp)           __builtin_expect(!!(exp), 1)
 #define RESTRICT                __restrict__
+#ifdef RETRO_SETJMP_HACK
+#define SETJMP_GNUC_PROTECT()   (void)__builtin_return_address(0)
+#else
 #define SETJMP_GNUC_PROTECT()   (void)__builtin_return_address(1)
+#endif
 #else
 #define ATTR_UNUSED
 #if defined(_MSC_VER) && (_MSC_VER >= 1200)

@@ -56,6 +56,10 @@
 #define FLAC__U64L(x) x##LLU
 #endif
 
+#ifdef RETRO
+#define VERSION "1.2.1"
+#endif
+
 /* VERSION should come from configure */
 FLAC_API const char *FLAC__VERSION_STRING = VERSION;
 

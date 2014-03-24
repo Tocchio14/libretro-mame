@@ -194,7 +194,7 @@ void n64_periphs::device_reset()
 	memset(pif_cmd, 0, sizeof(pif_cmd));
 	si_dram_addr = 0;
 	si_pif_addr = 0;
-	si_status = 0;
+	_si_status = 0;
 
 	memset(m_save_data.eeprom, 0, 2048);
 
@@ -2104,7 +2104,7 @@ void n64_periphs::pif_dma(int direction)
 		}
 	}
 
-	si_status |= 0x1000;
+	_si_status |= 0x1000;
 	signal_rcp_interrupt(SI_INTERRUPT);
 }
 
@@ -2117,7 +2117,7 @@ READ32_MEMBER( n64_periphs::si_reg_r )
 			//return si_dram_addr;
 
 		case 0x18/4:        // SI_STATUS_REG
-			ret = si_status;
+			ret = _si_status;
 	}
 
 	//printf("si_reg_r %08x = %08x\n", offset * 4, ret); fflush(stdout);
@@ -2148,7 +2148,7 @@ WRITE32_MEMBER( n64_periphs::si_reg_w )
 			break;
 
 		case 0x18/4:        // SI_STATUS_REG
-			si_status &= ~0x1000;
+			_si_status &= ~0x1000;
 			clear_rcp_interrupt(SI_INTERRUPT);
 			break;
 

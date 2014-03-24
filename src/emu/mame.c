@@ -71,6 +71,9 @@
         - exits the program
 
 ***************************************************************************/
+#ifndef RETRO
+#define WANT_WEBENGINE
+#endif
 
 #include "emu.h"
 #include "emuopts.h"
@@ -84,7 +87,9 @@
 #include "crsshair.h"
 #include "validity.h"
 #include "debug/debugcon.h"
+#ifdef WANT_WEBENGINE
 #include "webengine.h"
+#endif
 #include <time.h>
 
 
@@ -148,7 +153,9 @@ int mame_execute(emu_options &options, osd_interface &osd)
 	bool exit_pending = false;
 	int error = MAMERR_NONE;
 
+#ifdef WANT_WEBENGINE
 	web_engine web(options);
+#endif
 
 	while (error == MAMERR_NONE && !exit_pending)
 	{
@@ -187,8 +194,10 @@ int mame_execute(emu_options &options, osd_interface &osd)
 		// looooong term: remove this
 		global_machine = &machine;
 
+#ifdef WANT_WEBENGINE
 		web.set_machine(machine);
 		web.push_message("update_machine");
+#endif
 		
 		// run the machine
 		error = machine.run(firstrun);

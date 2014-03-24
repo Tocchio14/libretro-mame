@@ -84,7 +84,7 @@ $(OBJ)/libexpat.a: $(EXPATOBJS)
 
 $(LIBOBJ)/expat/%.o: $(LIBSRC)/expat/%.c | $(OSPREBUILD)
 	@echo Compiling $<...
-	$(CC) $(CDEFS) $(CCOMFLAGS) $(CONLYFLAGS) -c $< -o $@
+	$(CC_AS) $(CDEFS) $(CCOMFLAGS) $(CONLYFLAGS) -c $< -o $@
 
 
 
@@ -251,7 +251,7 @@ $(OBJ)/libz.a: $(ZLIBOBJS)
 
 $(LIBOBJ)/zlib/%.o: $(LIBSRC)/zlib/%.c | $(OSPREBUILD)
 	@echo Compiling $<...
-	$(CC) $(CDEFS) $(CCOMFLAGS) $(CONLYFLAGS) $(ZLIBOPTS) -c $< -o $@
+	$(CC_AS) $(CDEFS) $(CCOMFLAGS) $(CONLYFLAGS) $(ZLIBOPTS) -c $< -o $@
 
 
 
@@ -330,7 +330,7 @@ $(OBJ)/libjpeg.a: $(LIBJPEGOBJS)
 
 $(LIBOBJ)/libjpeg/%.o: $(LIBSRC)/libjpeg/%.c | $(OSPREBUILD)
 	@echo Compiling $<...
-	$(CC) $(CDEFS) $(CCOMFLAGS) $(CONLYFLAGS) -I$(LIBSRC)/libjpeg -c $< -o $@
+	$(CC_AS) $(CDEFS) $(CCOMFLAGS) $(CONLYFLAGS) -I$(LIBSRC)/libjpeg -c $< -o $@
 
 
 
@@ -349,12 +349,6 @@ ARCHFLAGS = -DWORDS_BIGENDIAN=0
 endif
 
 FLACOPTS=-DFLAC__NO_ASM -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -DHAVE_CONFIG_H=0 -DFLAC__HAS_OGG=0 -Wno-unused-function $(ARCHFLAGS) -O0
-ifdef MSVC_BUILD
-	# vconv will convert the \" to just a "
-	FLACOPTS += -DVERSION=\\\"1.2.1\\\"
-else
-	FLACOPTS += -DVERSION=\"1.2.1\"
-endif
 
 LIBFLACOBJS = \
 	$(LIBOBJ)/libflac/bitmath.o \
@@ -375,9 +369,9 @@ LIBFLACOBJS = \
 
 $(OBJ)/libflac.a: $(LIBFLACOBJS)
 
-$(LIBOBJ)/libflac/%.o: $(LIBSRC)/libflac/libFLAC/%.c | $(OSPREBUILD)
+$(LIBOBJ)/libflac/%.o: $(LIBSRC)/libflac/libflac/%.c | $(OSPREBUILD)
 	@echo Compiling $<...
-	$(CC) $(CDEFS) $(CONLYFLAGS) $(CCOMFLAGS) $(FLACOPTS) -I$(LIBSRC)/libflac/include -c $< -o $@
+	$(CC_AS) $(CDEFS) $(CONLYFLAGS) $(CCOMFLAGS) $(FLACOPTS) -I$(LIBSRC)/libflac/include -c $< -o $@
 
 
 
@@ -411,7 +405,7 @@ $(OBJ)/lib7z.a: $(LIB7ZOBJS)
 
 $(LIBOBJ)/lib7z/%.o: $(LIBSRC)/lib7z/%.c | $(OSPREBUILD)
 	@echo Compiling $<...
-	$(CC) $(CDEFS) $(7ZOPTS) $(CCOMFLAGS) $(CONLYFLAGS) -I$(LIBSRC)/lib7z/ -c $< -o $@
+	$(CC_AS) $(CDEFS) $(7ZOPTS) $(CCOMFLAGS) $(CONLYFLAGS) -I$(LIBSRC)/lib7z/ -c $< -o $@
 
 #-------------------------------------------------
 # portmidi library objects
@@ -457,7 +451,7 @@ $(OBJ)/libportmidi.a: $(LIBPMOBJS)
 
 $(LIBOBJ)/portmidi/%.o: $(LIBSRC)/portmidi/%.c | $(OSPREBUILD)
 	@echo Compiling $<...
-	$(CC) $(CDEFS) $(PMOPTS) $(CCOMFLAGS) $(CONLYFLAGS) -I$(LIBSRC)/portmidi/ -c $< -o $@
+	$(CC_AS) $(CDEFS) $(PMOPTS) $(CCOMFLAGS) $(CONLYFLAGS) -I$(LIBSRC)/portmidi/ -c $< -o $@
 
 #-------------------------------------------------
 # LUA library objects
@@ -510,20 +504,20 @@ endif
 
 $(LIBOBJ)/lua/%.o: $(LIBSRC)/lua/%.c | $(OSPREBUILD)
 	@echo Compiling $<...
-	$(CC) $(CDEFS) $(CCOMFLAGS) $(CONLYFLAGS) -DLUA_COMPAT_ALL $(LUA_FLAGS) -c $< -o $@
+	$(CC_AS) $(CDEFS) $(CCOMFLAGS) $(CONLYFLAGS) -DLUA_COMPAT_ALL $(LUA_FLAGS) -c $< -o $@
 
 #-------------------------------------------------
 # web library objects
 #-------------------------------------------------
 
-WEBOBJS = \
-	$(LIBOBJ)/web/mongoose.o \
-	$(LIBOBJ)/web/json/json_reader.o \
-	$(LIBOBJ)/web/json/json_value.o \
-	$(LIBOBJ)/web/json/json_writer.o \
+#WEBOBJS = \
+#	$(LIBOBJ)/web/mongoose.o \
+#	$(LIBOBJ)/web/json/json_reader.o \
+#	$(LIBOBJ)/web/json/json_value.o \
+#	$(LIBOBJ)/web/json/json_writer.o \
 
-$(OBJ)/libweb.a: $(WEBOBJS)
-
-$(LIBOBJ)/web/%.o: $(LIBSRC)/web/%.cpp | $(OSPREBUILD)
-	@echo Compiling $<...
-	$(CC) $(CDEFS) $(CFLAGS) -I$(LIBSRC)/web -c $< -o $@
+#$(OBJ)/libweb.a: $(WEBOBJS)
+#
+#$(LIBOBJ)/web/%.o: $(LIBSRC)/web/%.cpp | $(OSPREBUILD)
+#	@echo Compiling $<...
+#	$(CC) $(CDEFS) $(CFLAGS) -I$(LIBSRC)/web -c $< -o $@

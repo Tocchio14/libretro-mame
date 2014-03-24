@@ -199,7 +199,11 @@ static void buffreplace (LexState *ls, char from, char to) {
 
 
 #if !defined(getlocaledecpoint)
+#ifdef RETRO_AND
+#define getlocaledecpoint() ('.') //Code-monkey style
+#else
 #define getlocaledecpoint() (localeconv()->decimal_point[0])
+#endif
 #endif
 
 
