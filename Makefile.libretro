@@ -102,12 +102,12 @@ ifeq ($(platform), unix)
    TARGETLIB := $(TARGET_NAME)_libretro.so
 	TARGETOS=linux  
    fpic := -fPIC
-   SHARED := -shared -Wl,--version-script=src/osd/retro/link.T
+   SHARED := -shared -Wl,--version-script=src/osd/retro/link.T -Wl,--no-undefined
 	CCOMFLAGS += $(fpic) -fsigned-char -finline  -fno-common -fno-builtin -fweb -frename-registers -falign-functions=16 -fsingle-precision-constant
 	PLATCFLAGS += -DRETRO -DALIGN_INTS -DALIGN_SHORTS -fstrict-aliasing -fno-merge-constants  $(fpic)
 	LDFLAGS +=  $(fpic) $(SHARED)
 	NATIVELD = g++
-	NATIVELDFLAGS = -Wl,--warn-common -lstdc++
+	NATIVELDFLAGS = -Wl,--warn-common -lstdc++ -Wl,--no-undefined
 	NATIVECC = g++
 	NATIVECFLAGS = -std=gnu99
 	CC_AS = gcc 
@@ -344,6 +344,7 @@ endif
 
 #TARGET=mame
 #SUBTARGET=mame
+
 OSD=retro
 
 NOWERROR = 1
