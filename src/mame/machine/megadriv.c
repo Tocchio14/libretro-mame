@@ -28,9 +28,6 @@ Known Non-Issues (confirmed on Real Genesis)
 
 MACHINE_CONFIG_EXTERN( megadriv );
 
-extern timer_device* megadriv_scanline_timer;
-
-
 void megadriv_z80_hold(running_machine &machine)
 {
 	md_base_state *state = machine.driver_data<md_base_state>();
@@ -515,7 +512,6 @@ static ADDRESS_MAP_START( megadriv_map, AS_PROGRAM, 16, md_base_state )
 
 	AM_RANGE(0xc00000, 0xc0001f) AM_DEVREADWRITE("gen_vdp", sega_genesis_vdp_device, megadriv_vdp_r,megadriv_vdp_w)
 	AM_RANGE(0xd00000, 0xd0001f) AM_DEVREADWRITE("gen_vdp", sega_genesis_vdp_device, megadriv_vdp_r,megadriv_vdp_w) // the earth defend
-
 	AM_RANGE(0xe00000, 0xe0ffff) AM_RAM AM_MIRROR(0x1f0000) AM_SHARE("megadrive_ram")
 //  AM_RANGE(0xff0000, 0xffffff) AM_READONLY
 	/*       0xe00000 - 0xffffff) == MAIN RAM (64kb, Mirrored, most games use ff0000 - ffffff) */
@@ -886,8 +882,8 @@ MACHINE_RESET_MEMBER(md_base_state,megadriv)
 
 	if (!m_vdp->m_use_alt_timing)
 	{
-		megadriv_scanline_timer = machine().device<timer_device>("md_scan_timer");
-		megadriv_scanline_timer->adjust(attotime::zero);
+		m_vdp->m_megadriv_scanline_timer = machine().device<timer_device>("md_scan_timer");
+		m_vdp->m_megadriv_scanline_timer->adjust(attotime::zero);
 	}
 
 	if (m_other_hacks)
@@ -907,7 +903,7 @@ MACHINE_RESET_MEMBER(md_base_state,megadriv)
 void md_base_state::megadriv_stop_scanline_timer()
 {
 	if (!m_vdp->m_use_alt_timing)
-		megadriv_scanline_timer->reset();
+		m_vdp->m_megadriv_scanline_timer->reset();
 }
 
 
@@ -963,7 +959,7 @@ IRQ_CALLBACK_MEMBER(md_base_state::genesis_int_callback)
 }
 
 MACHINE_CONFIG_FRAGMENT( megadriv_timers )
-	MCFG_TIMER_ADD("md_scan_timer", megadriv_scanline_timer_callback)
+	MCFG_TIMER_DEVICE_ADD("md_scan_timer", "gen_vdp", sega_genesis_vdp_device, megadriv_scanline_timer_callback)
 MACHINE_CONFIG_END
 
 
@@ -1014,7 +1010,7 @@ MACHINE_CONFIG_FRAGMENT( md_ntsc )
 	MCFG_SCREEN_UPDATE_DRIVER(md_base_state,screen_update_megadriv) /* Copies a bitmap */
 	MCFG_SCREEN_VBLANK_DRIVER(md_base_state,screen_eof_megadriv) /* Used to Sync the timing */
 
-	MCFG_TIMER_ADD_SCANLINE("scantimer", megadriv_scanline_timer_callback_alt_timing, "megadriv", 0, 1)
+	MCFG_TIMER_DEVICE_ADD_SCANLINE("scantimer", "gen_vdp", sega_genesis_vdp_device, megadriv_scanline_timer_callback_alt_timing, "megadriv", 0, 1)
 
 	MCFG_VIDEO_START_OVERRIDE(md_base_state,megadriv)
 
@@ -1062,8 +1058,6 @@ MACHINE_CONFIG_FRAGMENT( md_pal )
 	MCFG_SCREEN_VISIBLE_AREA(0, 32*8-1, 0, 28*8-1)
 	MCFG_SCREEN_UPDATE_DRIVER(md_base_state,screen_update_megadriv) /* Copies a bitmap */
 	MCFG_SCREEN_VBLANK_DRIVER(md_base_state,screen_eof_megadriv) /* Used to Sync the timing */
-
-	MCFG_PALETTE_ADD("palette", 0x200)
 
 	MCFG_VIDEO_START_OVERRIDE(md_base_state,megadriv)
 
@@ -1250,34 +1244,6 @@ WRITE8_MEMBER(md_base_state::z80_unmapped_w )
 }
 
 
-/* sets the megadrive z80 to it's normal ports / map */
-void mtech_state::megatech_set_megadrive_z80_as_megadrive_z80(const char* tag)
-{
-	ym2612_device *ym2612 = machine().device<ym2612_device>("ymsnd");
-
-	/* INIT THE PORTS *********************************************************************************************/
-	machine().device(tag)->memory().space(AS_IO).install_readwrite_handler(0x0000, 0xffff, read8_delegate(FUNC(mtech_state::z80_unmapped_port_r),this), write8_delegate(FUNC(mtech_state::z80_unmapped_port_w),this));
-
-	/* catch any addresses that don't get mapped */
-	machine().device(tag)->memory().space(AS_PROGRAM).install_readwrite_handler(0x0000, 0xffff, read8_delegate(FUNC(mtech_state::z80_unmapped_r),this), write8_delegate(FUNC(mtech_state::z80_unmapped_w),this));
-
-
-	machine().device(tag)->memory().space(AS_PROGRAM).install_readwrite_bank(0x0000, 0x1fff, "bank1");
-	machine().root_device().membank("bank1")->set_base(m_genz80.z80_prgram);
-
-	machine().device(tag)->memory().space(AS_PROGRAM).install_ram(0x0000, 0x1fff, m_genz80.z80_prgram);
-
-
-	machine().device(tag)->memory().space(AS_PROGRAM).install_readwrite_handler(0x4000, 0x4003, read8_delegate(FUNC(ym2612_device::read),ym2612), write8_delegate(FUNC(ym2612_device::write),ym2612));
-	machine().device(tag)->memory().space(AS_PROGRAM).install_write_handler    (0x6000, 0x6000, write8_delegate(FUNC(mtech_state::megadriv_z80_z80_bank_w),this));
-	machine().device(tag)->memory().space(AS_PROGRAM).install_write_handler    (0x6001, 0x6001, write8_delegate(FUNC(mtech_state::megadriv_z80_z80_bank_w),this));
-	machine().device(tag)->memory().space(AS_PROGRAM).install_read_handler     (0x6100, 0x7eff, read8_delegate(FUNC(mtech_state::megadriv_z80_unmapped_read),this));
-	machine().device(tag)->memory().space(AS_PROGRAM).install_readwrite_handler(0x7f00, 0x7fff, read8_delegate(FUNC(mtech_state::megadriv_z80_vdp_read),this), write8_delegate(FUNC(mtech_state::megadriv_z80_vdp_write),this));
-	machine().device(tag)->memory().space(AS_PROGRAM).install_readwrite_handler(0x8000, 0xffff, read8_delegate(FUNC(mtech_state::z80_read_68k_banked_data),this), write8_delegate(FUNC(mtech_state::z80_write_68k_banked_data),this));
-}
-
-
-
 
 void md_base_state::screen_eof_megadriv(screen_device &screen, bool state)
 {
@@ -1290,7 +1256,7 @@ void md_base_state::screen_eof_megadriv(screen_device &screen, bool state)
 		if (!m_vdp->m_use_alt_timing)
 		{
 			m_vdp->vdp_handle_eof();
-			megadriv_scanline_timer->adjust(attotime::zero);
+			m_vdp->m_megadriv_scanline_timer->adjust(attotime::zero);
 		}
 	}
 }

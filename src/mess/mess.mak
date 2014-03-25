@@ -728,6 +728,7 @@ DRVLIBS += \
 	$(MESSOBJ)/sun.a \
 	$(MESSOBJ)/svi.a \
 	$(MESSOBJ)/svision.a \
+	$(MESSOBJ)/swtpc09.a \
 	$(MESSOBJ)/synertec.a \
 	$(MESSOBJ)/ta.a \
 	$(MESSOBJ)/tandberg.a \
@@ -981,7 +982,6 @@ $(MESSOBJ)/at.a:                \
 	$(MESS_DRIVERS)/ct486.o     \
 
 $(MESSOBJ)/atari.a:             \
-	$(MESS_MACHINE)/ataricrt.o  \
 	$(MESS_MACHINE)/atarifdc.o  \
 	$(MESS_DRIVERS)/atari400.o  \
 	$(MESS_MACHINE)/a7800.o     \
@@ -1510,6 +1510,7 @@ $(MESSOBJ)/nintendo.a:          \
 $(MESSOBJ)/nokia.a:             \
 	$(MESS_DRIVERS)/mikromik.o  \
 	$(MESS_VIDEO)/mikromik.o    \
+	$(MESS_MACHINE)/mm1kb.o     \
 
 $(MESSOBJ)/northstar.a:         \
 	$(MESS_DRIVERS)/horizon.o   \
@@ -1773,6 +1774,10 @@ $(MESSOBJ)/svi.a:               \
 $(MESSOBJ)/svision.a:           \
 	$(MESS_DRIVERS)/svision.o   \
 	$(MESS_AUDIO)/svision.o     \
+
+$(MESSOBJ)/swtpc09.a:			\
+	$(MESS_DRIVERS)/swtpc09.o	\
+	$(MESS_MACHINE)/swtpc09.o    \
 
 $(MESSOBJ)/synertec.a:          \
 	$(MESS_DRIVERS)/sym1.o      \

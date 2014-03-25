@@ -146,7 +146,6 @@
 #define MEGADRIVE_REG17_UNUSED          ((m_vdp_regs[0x17]&0x3f)>>0)
 
 
-TIMER_DEVICE_CALLBACK( megadriv_scanline_timer_callback_alt_timing );
 
 UINT16 vdp_get_word_from_68k_mem_default(running_machine &machine, UINT32 source, address_space & space68k);
 
@@ -171,7 +170,6 @@ public:
 	DECLARE_WRITE16_MEMBER( megadriv_vdp_w );
 
 	int genesis_get_scanline_counter();
-
 
 	void genesis_render_scanline();
 	void vdp_handle_scanline_callback(int scanline);
@@ -200,6 +198,10 @@ public:
 	bitmap_ind16* m_render_bitmap;
 	UINT16* m_render_line;
 	UINT16* m_render_line_raw;
+
+	TIMER_DEVICE_CALLBACK_MEMBER( megadriv_scanline_timer_callback_alt_timing );
+	TIMER_DEVICE_CALLBACK_MEMBER( megadriv_scanline_timer_callback );
+	timer_device* m_megadriv_scanline_timer;
 
 protected:
 	virtual void device_start();

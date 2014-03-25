@@ -289,15 +289,8 @@ class segamsys_state : public md_base_state
 {
 public:
 	segamsys_state(const machine_config &mconfig, device_type type, const char *tag)
-	: md_base_state(mconfig, type, tag),
-		smsgg_backupram(0)
+	: md_base_state(mconfig, type, tag)
 	{ }
-	
-	enum sms_mapper
-	{
-		MAPPER_STANDARD = 0,
-		MAPPER_CODEMASTERS = 1
-	};
 	
 	struct sms_vdp
 	{
@@ -342,15 +335,11 @@ public:
 
 	};
 
-	UINT32 screen_update_megatech_bios(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 	UINT32 screen_update_megaplay_bios(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
-	UINT32 screen_update_megatech_md_sms(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
-	void init_megatech_bios();
-	void init_hazemd_segasyse();
-	DECLARE_MACHINE_RESET(megatech_bios);
-	DECLARE_MACHINE_RESET(megatech_md_sms);
-	void screen_eof_megatech_bios(screen_device &screen, bool state);
-	void screen_eof_megatech_md_sms(screen_device &screen, bool state);
+	UINT32 screen_update_megatech_sms(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
+	void init_megaplay_legacy_overlay();
+	DECLARE_MACHINE_RESET(megaplay_bios);
+	void screen_eof_megaplay_bios(screen_device &screen, bool state);
 
 	DECLARE_READ8_MEMBER( sms_vcounter_r );
 	DECLARE_READ8_MEMBER( sms_vdp_data_r );
@@ -358,18 +347,12 @@ public:
 	DECLARE_READ8_MEMBER( sms_vdp_ctrl_r );
 	DECLARE_WRITE8_MEMBER( sms_vdp_ctrl_w );
 
-	void init_for_megadrive();
-	void segae_md_sms_stop_scanline_timer();
-	void megatech_set_genz80_as_sms_standard_map(const char* tag, int mapper);
 private:
 
 	UINT8* vdp1_vram_bank0;
 	UINT8* vdp1_vram_bank1;
-	UINT8* sms_mainram;
-	UINT8* smsgg_backupram;
 	struct sms_vdp *vdp1;
 	struct sms_vdp *md_sms_vdp;
-	UINT8* sms_rom;
 
 	static int sms_vdp_null_irq_callback(running_machine &machine, int status);
 	static int sms_vdp_cpu1_irq_callback(running_machine &machine, int status);
@@ -390,25 +373,10 @@ private:
 	TIMER_CALLBACK_MEMBER( sms_scanline_timer_callback );
 	void end_of_frame(screen_device &screen, struct sms_vdp *chip);
 
-	READ8_MEMBER(md_sms_vdp_vcounter_r );
-	READ8_MEMBER(md_sms_vdp_data_r );
-	WRITE8_MEMBER(md_sms_vdp_data_w );
-	READ8_MEMBER(md_sms_vdp_ctrl_r );
-	WRITE8_MEMBER(md_sms_vdp_ctrl_w );
 	READ8_MEMBER( sms_z80_unmapped_port_r );
 	WRITE8_MEMBER( sms_z80_unmapped_port_w );
 	READ8_MEMBER(sms_z80_unmapped_r );
 	WRITE8_MEMBER( sms_z80_unmapped_w );
-	READ8_MEMBER (megatech_sms_ioport_dc_r);
-	READ8_MEMBER (megatech_sms_ioport_dd_r);
-	READ8_MEMBER( smsgg_backupram_r );
-	WRITE8_MEMBER( smsgg_backupram_w );
-	WRITE8_MEMBER( mt_sms_standard_rom_bank_w );
-	WRITE8_HANDLER( codemasters_rom_bank_0000_w );
-	WRITE8_HANDLER( codemasters_rom_bank_4000_w );
-	WRITE8_HANDLER( codemasters_rom_bank_8000_w );
-	void megatech_set_genz80_as_sms_standard_ports(const char* tag);
-
 };
 
 
@@ -420,8 +388,6 @@ public:
 	m_ic3_ram(*this, "ic3_ram"),
 	m_vdp1(*this, "vdp1"),
 	m_bioscpu(*this, "mtbios")
-
-
 	{ }
 
 	UINT32 m_bios_mode;  // determines whether ROM banks or Game data
@@ -494,8 +460,8 @@ public:
 	required_device<cpu_device>          m_bioscpu;
 
 
-	DECLARE_WRITE_LINE_MEMBER( int_callback );
-
+	DECLARE_WRITE_LINE_MEMBER( snd_int_callback );
+	DECLARE_WRITE_LINE_MEMBER( bios_int_callback );
 
 	UINT8 m_mt_cart_select_reg;
 	UINT32 m_bios_port_ctrl;
@@ -519,7 +485,9 @@ public:
 	void screen_eof_mtnew(screen_device &screen, bool state);
 	UINT32 screen_update_megatech_menu(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 
-	void megatech_set_megadrive_z80_as_megadrive_z80(const char* tag);
+	void megatech_set_genz80_as_md(const char* tag);
+	void megatech_set_genz80_as_sms(const char* tag);
+	UINT32 screen_update_megatech_sms2(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 
 	DECLARE_READ8_MEMBER( megatech_cart_select_r );
 	TIMER_CALLBACK_MEMBER( megatech_z80_run_state );
@@ -530,16 +498,23 @@ public:
 	DECLARE_WRITE8_MEMBER( bios_ctrl_w );
 	DECLARE_READ8_MEMBER( megatech_z80_read_68k_banked_data );
 	DECLARE_WRITE8_MEMBER( megatech_z80_write_68k_banked_data );
-	void megatech_z80_bank_w(UINT16 data);
 	DECLARE_WRITE8_MEMBER( mt_z80_bank_w );
 	DECLARE_READ8_MEMBER( megatech_banked_ram_r );
 	DECLARE_WRITE8_MEMBER( megatech_banked_ram_w );
 	DECLARE_WRITE8_MEMBER( megatech_bios_port_ctrl_w );
 	DECLARE_READ8_MEMBER( megatech_bios_joypad_r );
 	DECLARE_WRITE8_MEMBER (megatech_bios_port_7f_w);
+	READ8_MEMBER(vdp1_count_r);
+	READ8_MEMBER(sms_count_r);
+	READ8_MEMBER(sms_ioport_dc_r);
+	READ8_MEMBER(sms_ioport_dd_r);
+	WRITE8_MEMBER(mt_sms_standard_rom_bank_w);	
 
 protected:
 	virtual void device_timer(emu_timer &timer, device_timer_id id, int param, void *ptr);
+
+	UINT8* sms_mainram;
+	UINT8* sms_rom;
 };
 
 class _32x_state : public md_base_state
@@ -565,5 +540,3 @@ extern UINT16 vdp_get_word_from_68k_mem_default(running_machine &machine, UINT32
 extern int megadrive_total_scanlines;
 extern int megadrive_vblank_flag;
 extern UINT16* megadrive_vdp_palette_lookup;
-extern TIMER_DEVICE_CALLBACK( megadriv_scanline_timer_callback );
-extern timer_device* megadriv_scanline_timer;

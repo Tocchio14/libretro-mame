@@ -506,6 +506,7 @@ static ADDRESS_MAP_START( copera_mem, AS_PROGRAM, 16, copera_state )
 	AM_RANGE(0x800000, 0x80001f) AM_READWRITE(pico_68k_io_read, pico_68k_io_write)
 
 	AM_RANGE(0xc00000, 0xc0001f) AM_DEVREADWRITE("gen_vdp", sega_genesis_vdp_device, megadriv_vdp_r,megadriv_vdp_w)
+
 	AM_RANGE(0xe00000, 0xe0ffff) AM_RAM AM_MIRROR(0x1f0000)
 ADDRESS_MAP_END
 
