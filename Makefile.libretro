@@ -456,7 +456,8 @@ EMULATOR = $(TARGET)
 SRC = src
 
 # build the targets in different object dirs, so they can co-exist
-OBJ = obj/$(PREFIX)$(OSD)$(SUFFIX)$(SUFFIX64)$(SUFFIXDEBUG)$(SUFFIXPROFILE)
+#OBJ = obj/$(PREFIX)$(OSD)$(SUFFIX)$(SUFFIX64)$(SUFFIXDEBUG)$(SUFFIXPROFILE)
+OBJ = obj/$(PREFIX)$(SUFFIXDEBUG)$(SUFFIXPROFILE)
 
 #-------------------------------------------------
 # compile-time definitions
@@ -732,7 +733,7 @@ maketree: $(sort $(OBJDIRS))
 clean: $(OSDCLEAN)
 ifeq ($(PARTIAL),1)	
 		@echo Deleting object tree $(OBJ)...
-		$(RM) -r obj/retro64/osd/*
+		$(RM) -r obj/osd/*
 		@echo Deleting $(EMULATOR)...
 		$(RM) $(EMULATOR)
 		@echo Deleting $(TOOLS)...
