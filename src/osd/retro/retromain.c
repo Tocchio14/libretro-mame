@@ -25,6 +25,8 @@ static bool boot_to_bios_enabled;
 static bool boot_to_osd_enabled;
 static bool commandline_enabled;
 
+static bool experimental_cmdline=FALSE;
+
 static bool arcade=FALSE;
 
 #ifdef _WIN32
@@ -334,7 +336,7 @@ int Add_Path_To_Args(){
 	for (paramCount = 0; xargv[paramCount] != NULL; paramCount++)
 		printf("args: %s\n",xargv[paramCount]);
 
-	if(commandline_enabled){
+	if(experimental_cmdline/*commandline_enabled*/){
   		if(ARGUC==1){// 1 args -> arcade rom with full path  
 			xargv[paramCount++] = (char*)"-rp";	
 			xargv[paramCount++] = (char*)g_rom_dir;	
@@ -427,8 +429,8 @@ int executeGame(char* path) {
 
 	screenRot = 0;
 
-	if(commandline_enabled){
-
+	if(experimental_cmdline/*commandline_enabled*/){
+		
 		int i;
 
 		//MAME 1 args -> arcade rom with full path
@@ -615,7 +617,7 @@ int mmain(int argc, const char *argv)
 	
 	strcpy(gameName,argv);
 
-	if(commandline_enabled){
+	if(experimental_cmdline/*commandline_enabled*/){
 
 		strcpy(tempstring,gameName);
 	        pch = strtok (tempstring," ");
@@ -628,7 +630,7 @@ int mmain(int argc, const char *argv)
 	   		pch = strtok (NULL, " ");
 	  	}
 	
-	        write_log("executing from cmdline... %s\n", gameName);
+	        write_log("executing from experimental cmdline... %s\n", gameName);
 		result = executeGame(ARGUV[ARGUC-1]);
 	}
 	else{
