@@ -304,7 +304,6 @@ VIDEOS += MB_VCU
 VIDEOS += MC6845
 #VIDEOS += MC6847
 #VIDEOS += MSM6255
-VIDEOS += PC_CGA
 VIDEOS += PC_VGA
 VIDEOS += POLY
 VIDEOS += PSX
@@ -1380,6 +1379,7 @@ $(MAMEOBJ)/namco.a: \
 	$(MACHINE)/namco62.o \
 	$(AUDIO)/namco52.o \
 	$(AUDIO)/namco54.o \
+	$(VIDEO)/c45.o \
 	$(VIDEO)/bosco.o \
 	$(VIDEO)/digdug.o \
 	$(MACHINE)/xevious.o $(VIDEO)/xevious.o \

@@ -3,7 +3,6 @@
 #include "machine/pit8253.h"
 #include "includes/amstr_pc.h"
 #include "includes/pc.h"
-#include "video/pc_vga.h"
 
 
 /* pc20 (v2)
@@ -143,36 +142,15 @@ DRIVER_INIT_MEMBER(amstrad_pc_state,pc1640)
 
 DRIVER_INIT_MEMBER(amstrad_pc_state,pc200)
 {
-	UINT8 *gfx = &memregion("gfx1")->base()[0x8000];
-	int i;
-
-	/* just a plain bit pattern for graphics data generation */
-	for (i = 0; i < 256; i++)
-		gfx[i] = i;
-
 	init_pc_common(write_line_delegate(FUNC(amstrad_pc_state::pc_set_keyb_int),this));
 }
 
 DRIVER_INIT_MEMBER(amstrad_pc_state,ppc512)
 {
-	UINT8 *gfx = &memregion("gfx1")->base()[0x8000];
-	int i;
-
-	/* just a plain bit pattern for graphics data generation */
-	for (i = 0; i < 256; i++)
-		gfx[i] = i;
-
 	init_pc_common(write_line_delegate(FUNC(amstrad_pc_state::pc_set_keyb_int),this));
 }
 DRIVER_INIT_MEMBER(amstrad_pc_state,pc1512)
 {
-	UINT8 *gfx = &memregion("gfx1")->base()[0x8000];
-	int i;
-
-	/* just a plain bit pattern for graphics data generation */
-	for (i = 0; i < 256; i++)
-		gfx[i] = i;
-
 	init_pc_common(write_line_delegate(FUNC(amstrad_pc_state::pc_set_keyb_int),this));
 }
 
