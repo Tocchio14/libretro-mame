@@ -38,12 +38,12 @@ void retro_set_audio_sample(retro_audio_sample_t cb) { }
 void retro_set_environment(retro_environment_t cb)
 {
    static const struct retro_variable vars[] = {
-#ifdef WANT_MAME
+#if defined(WANT_MAME)
       { "mame_current_mouse_enable", "Enable mouse; disabled|enabled" },
 	  { "mame_current_nagscreenpatch_enable", "Enable nagscreen patch; disabled|enabled" },      
       { "mame_current_videoapproach1_enable", "Enable video approach 1; disabled|enabled" },
 	  { "mame_boot_osd", "Boot to OSD; disabled|enabled" },
-#elif WANT_MESS
+#elif defined(WANT_MESS)
       { "mess_current_mouse_enable", "Enable mouse; disabled|enabled" },
 	  { "mess_current_nagscreenpatch_enable", "Enable nagscreen patch; disabled|enabled" },      
       { "mess_current_videoapproach1_enable", "Enable video approach 1; disabled|enabled" },
@@ -53,7 +53,7 @@ void retro_set_environment(retro_environment_t cb)
 	  { "mess_boot_bios", "Boot to BIOS; disabled|enabled" },
 	  { "mess_boot_osd", "Boot to OSD; disabled|enabled" },
 	  { "mess_commandline", "Boot from CLI; disabled|enabled" },
-#elif WANT_UME
+#elif defined(WANT_UME)
       { "ume_current_mouse_enable", "Enable mouse; disabled|enabled" },
 	  { "ume_current_nagscreenpatch_enable", "Enable nagscreen patch; disabled|enabled" },      
       { "ume_current_videoapproach1_enable", "Enable video approach 1; disabled|enabled" },
@@ -77,7 +77,7 @@ static void check_variables(void)
    struct retro_variable var = {0};
 
 
-#ifdef WANT_MAME
+#if defined(WANT_MAME)
 
    var.key = "mame_current_mouse_enable";
    
@@ -126,7 +126,7 @@ static void check_variables(void)
          boot_to_osd_enabled = false;       
    }   
 
-#elif WANT_MESS
+#elif defined(WANT_MESS)
 
    var.key = "mess_current_mouse_enable";
    
@@ -233,7 +233,7 @@ static void check_variables(void)
          commandline_enabled = false;       
    }   
    
-#elif WANT_UME
+#elif defined(WANT_UME)
 
    var.key = "ume_current_mouse_enable";
    
