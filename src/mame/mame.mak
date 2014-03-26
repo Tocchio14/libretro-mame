@@ -97,6 +97,7 @@ CPUS += SPC700
 CPUS += E1
 CPUS += I860
 CPUS += I960
+CPUS += H8
 CPUS += H83002
 CPUS += H83334
 CPUS += V810
@@ -1356,7 +1357,7 @@ $(MAMEOBJ)/namco.a: \
 	$(DRIVERS)/namcos1.o $(MACHINE)/namcos1.o $(VIDEO)/namcos1.o \
 	$(DRIVERS)/namcos10.o \
 	$(DRIVERS)/namcos11.o $(MACHINE)/ns11prot.o \
-	$(DRIVERS)/namcos12.o \
+	$(DRIVERS)/namcos12.o $(MACHINE)/namco_settings.o \
 	$(DRIVERS)/namcos2.o $(MACHINE)/namcos2.o $(VIDEO)/namcos2.o \
 	$(DRIVERS)/namcos21.o $(VIDEO)/namcos21.o \
 	$(DRIVERS)/namcos22.o $(VIDEO)/namcos22.o \
@@ -1566,7 +1567,7 @@ $(MAMEOBJ)/sega.a: \
 	$(DRIVERS)/triforce.o \
 	$(DRIVERS)/puckpkmn.o \
 	$(DRIVERS)/segac2.o \
-	$(DRIVERS)/segae.o $(MACHINE)/segamsys.o \
+	$(DRIVERS)/segae.o \
 	$(DRIVERS)/shtzone.o \
 	$(DRIVERS)/segag80r.o $(MACHINE)/segag80.o $(AUDIO)/segag80r.o $(VIDEO)/segag80r.o \
 	$(DRIVERS)/segag80v.o $(AUDIO)/segag80v.o $(VIDEO)/segag80v.o \

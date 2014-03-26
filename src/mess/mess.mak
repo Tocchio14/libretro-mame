@@ -80,8 +80,7 @@ CPUS += SPC700
 CPUS += E1
 CPUS += I860
 CPUS += I960
-CPUS += H83002
-CPUS += H83334
+CPUS += H8
 CPUS += V810
 CPUS += M37710
 CPUS += POWERPC
@@ -807,8 +806,6 @@ $(MESSOBJ)/mame.a: \
 	$(MAME_MACHINE)/megacdcd.o  \
 	$(MAME_MACHINE)/mega32x.o   \
 	$(MAME_MACHINE)/megavdp.o   \
-	$(MAME_MACHINE)/segamsys.o  \
-	$(MAME_DRIVERS)/megatech.o  \
 	$(MAME_MACHINE)/dc.o        \
 	$(MAME_DRIVERS)/naomi.o     \
 	$(MAME_VIDEO)/powervr2.o    \
@@ -2005,6 +2002,10 @@ $(MESSOBJ)/xussrpc.a:            \
 
 $(MESSOBJ)/yamaha.a:            \
 	$(MESS_DRIVERS)/ymmu100.o   \
+
+$(MESS_DRIVERS)/ymmu100.o: $(MESS_DRIVERS)/ymmu100.inc
+$(MESS_DRIVERS)/ymmu100.inc: $(MESSSRC)/drivers/ymmu100.ppm $(FILE2STR_TARGET)
+	$(FILE2STR) $(MESSSRC)/drivers/ymmu100.ppm $@ ymmu100_bkg UINT8
 
 $(MESSOBJ)/zenith.a:            \
 	$(MESS_DRIVERS)/z100.o      \
