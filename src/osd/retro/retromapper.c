@@ -44,13 +44,13 @@ void retro_set_environment(retro_environment_t cb)
 #if defined(WANT_MAME)
       //{ "mame_extra_content", "Look for additional content in ; system|content" },	  	    
 #elif defined(WANT_MESS)
-      //{ "mess_media_type", "Auto media type; enabled|disabled" },   
+      { "mess_softlist_enable", "Use softlists; enabled|disabled" },   
+	  { "mess_boot_bios", "Load BIOS only; disabled|enabled" },   
       { "mess_media_type", "Media type; cart|flop|crdm|cass|hard|serl|prin" },   
+	  
 #elif defined(WANT_UME)
-      //{ "mess_media_type", "Auto media type; enabled|disabled" },   
-      { "mess_media_type", "Media type; cart|rom|flop|crdm|cass|hard|serl|prin" }, 
-#else
-   
+      { "mess_softlist_enable", "Use softlists; enabled|disabled" },   
+      { "mess_media_type", "Media type; cart|rom|flop|crdm|cass|hard|serl|prin" },   
 #endif   
       { NULL, NULL },
    };
@@ -106,8 +106,32 @@ static void check_variables(void)
       fprintf(stderr, "value: %s\n", var.value);
       sprintf(messMediaType,"-%s",var.value);
 	  fprintf(stderr, "mess value: %s\n", messMediaType);
-
    }
+   
+   var.key = "mess_softlist_enable";
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      fprintf(stderr, "value: %s\n", var.value);
+      if (strcmp(var.value, "enabled") == 0)
+         softlist_enabled = true;
+      if (strcmp(var.value, "disabled") == 0)
+         softlist_enabled = false;       
+   }      
+
+   var.key = "mess_boot_bios";
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      fprintf(stderr, "value: %s\n", var.value);
+      if (strcmp(var.value, "enabled") == 0)
+         bios_enabled = true;
+      if (strcmp(var.value, "disabled") == 0)
+         bios_enabled = false;       
+   }   
+   
    
 }
 

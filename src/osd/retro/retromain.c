@@ -40,7 +40,7 @@ const char core[] = "ume";
 
 static bool mouse_enable = false;
 static bool videoapproach1_enable = false;
-bool nagscreenpatch_enable = false; //TODO IN  0151
+bool nagscreenpatch_enable = false;
 
 static void extract_basename(char *buf, const char *path, size_t size)
 {
