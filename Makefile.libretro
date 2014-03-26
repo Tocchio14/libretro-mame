@@ -456,7 +456,8 @@ EMULATOR = $(TARGET)
 SRC = src
 
 # build the targets in different object dirs, so they can co-exist
-OBJ = obj/$(PREFIX)$(OSD)$(SUFFIX)$(SUFFIX64)$(SUFFIXDEBUG)$(SUFFIXPROFILE)
+#OBJ = obj/$(PREFIX)$(OSD)$(SUFFIX)$(SUFFIX64)$(SUFFIXDEBUG)$(SUFFIXPROFILE)
+OBJ = obj/$(PREFIX)$(SUFFIXDEBUG)$(SUFFIXPROFILE)
 
 #-------------------------------------------------
 # compile-time definitions
@@ -595,6 +596,7 @@ OBJDIRS = $(OBJ) $(OBJ)/$(TARGET)/$(SUBTARGET)
 LIBEMU = $(OBJ)/libemu.a
 LIBOPTIONAL = $(OBJ)/$(TARGET)/$(SUBTARGET)/liboptional.a
 LIBDASM = $(OBJ)/$(TARGET)/$(SUBTARGET)/libdasm.a
+LIBBUS = $(OBJ)/$(TARGET)/$(SUBTARGET)/libbus.a
 LIBUTIL = $(OBJ)/libutil.a
 LIBOCORE = $(OBJ)/libocore.a
 LIBOSD = $(OBJ)/osd/retro/retromain.o $(OSDOBJS)
@@ -732,7 +734,7 @@ maketree: $(sort $(OBJDIRS))
 clean: $(OSDCLEAN)
 ifeq ($(PARTIAL),1)	
 		@echo Deleting object tree $(OBJ)...
-		$(RM) -r obj/retro64/osd/*
+		$(RM) -r obj/osd/*
 		@echo Deleting $(EMULATOR)...
 		$(RM) $(EMULATOR)
 		@echo Deleting $(TOOLS)...
@@ -807,7 +809,7 @@ endif
 # executable targets and dependencies
 #-------------------------------------------------
 
-$(EMULATOR): $(EMUINFOOBJ) $(DRIVLISTOBJ) $(DRVLIBS) $(LIBOSD) $(LIBOPTIONAL) $(LIBEMU) $(LIBDASM) $(LIBUTIL) $(EXPAT) $(SOFTFLOAT) $(JPEG_LIB) $(FLAC_LIB) $(7Z_LIB) $(FORMATS_LIB) $(LUA_LIB) $(ZLIB) $(LIBOCORE) $(MIDI_LIB) $(RESFILE)
+$(EMULATOR): $(EMUINFOOBJ) $(DRIVLISTOBJ) $(DRVLIBS) $(LIBOSD) $(LIBBUS) $(LIBOPTIONAL) $(LIBEMU) $(LIBDASM) $(LIBUTIL) $(EXPAT) $(SOFTFLOAT) $(JPEG_LIB) $(FLAC_LIB) $(7Z_LIB) $(FORMATS_LIB) $(LUA_LIB) $(ZLIB) $(LIBOCORE) $(MIDI_LIB) $(RESFILE)
 	$(CC) $(CDEFS) $(CFLAGS) -c $(SRC)/version.c -o $(VERSIONOBJ)
 	@echo Linking $(TARGETLIB)
 	$(LD) $(LDFLAGS) $(LDFLAGSEMULATOR) $(VERSIONOBJ) $^ $(LIBS) -o $(TARGETLIB)
