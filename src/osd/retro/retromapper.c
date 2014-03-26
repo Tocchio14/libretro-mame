@@ -440,6 +440,15 @@ void retro_init (void){
 		printf("Retro SAVE_DIRECTORY %s\n",retro_save_directory);
 		printf("Retro CONTENT_DIRECTORY %s\n",retro_content_directory);
 
+		if(retro_system_directory!=NULL)sprintf(RSYSDIR,"%s\0",retro_system_directory);
+		else sprintf(RSYSDIR,"\0");
+
+		if(retro_save_directory!=NULL)sprintf(RSAVDIR,"%s\0",retro_save_directory);
+		else sprintf(RSAVDIR,"\0");
+
+		if(retro_content_directory!=NULL)sprintf(RCONDIR,"%s\0",retro_content_directory);
+		else sprintf(RCONDIR,"\0");
+
 
     	if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
     	{
