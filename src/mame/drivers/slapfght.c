@@ -505,8 +505,14 @@ INPUT_PORTS_END
 static INPUT_PORTS_START( tigerh )
 	PORT_INCLUDE(slapfght_generic)
 
+	PORT_MODIFY("IN1")
+	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_BUTTON1 )
+	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_BUTTON2 )
+	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_BUTTON1 ) PORT_COCKTAIL
+	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_BUTTON2 ) PORT_COCKTAIL
+
 	PORT_MODIFY("DSW1")
-	PORT_DIPNAME( 0x80, 0x80, "Player Speed" )              PORT_DIPLOCATION("SW1:1")
+	PORT_DIPNAME( 0x80, 0x00, "Player Speed" )              PORT_DIPLOCATION("SW1:1")
 	PORT_DIPSETTING(    0x80, DEF_STR( Normal ) )
 	PORT_DIPSETTING(    0x00, "Fast" )
 
@@ -516,14 +522,14 @@ static INPUT_PORTS_START( tigerh )
 	PORT_DIPSETTING(    0x00, "2" )
 	PORT_DIPSETTING(    0x03, "3" )
 	PORT_DIPSETTING(    0x02, "5" )
-	PORT_DIPNAME( 0x0c, 0x0c, DEF_STR( Difficulty ) )       PORT_DIPLOCATION("SW1:6,5")
+	PORT_DIPNAME( 0x0c, 0x08, DEF_STR( Difficulty ) )       PORT_DIPLOCATION("SW2:6,5")
 	PORT_DIPSETTING(    0x0c, DEF_STR( Easy ) )
 	PORT_DIPSETTING(    0x08, DEF_STR( Medium ) )
 	PORT_DIPSETTING(    0x04, DEF_STR( Hard ) )
 	PORT_DIPSETTING(    0x00, DEF_STR( Hardest ) )
-	PORT_DIPNAME( 0x10, 0x10, DEF_STR( Bonus_Life ) )       PORT_DIPLOCATION("SW1:4")
-	PORT_DIPSETTING(    0x10, "20k, 100k, then every 80k" )                               // see notes for 'tigerhb3'
-	PORT_DIPSETTING(    0x00, "50k, 170k, then every 120k" )
+	PORT_DIPNAME( 0x10, 0x00, DEF_STR( Bonus_Life ) )       PORT_DIPLOCATION("SW2:4") // see notes for 'tigerhb3'
+	PORT_DIPSETTING(    0x10, "20k and every 80k" )
+	PORT_DIPSETTING(    0x00, "50k and every 120k" )
 	PORT_DIPUNUSED_DIPLOC( 0x20, IP_ACTIVE_LOW, "SW2:3" )
 	PORT_DIPUNUSED_DIPLOC( 0x40, IP_ACTIVE_LOW, "SW2:2" )
 	PORT_DIPUNUSED_DIPLOC( 0x80, IP_ACTIVE_LOW, "SW2:1" )
@@ -736,14 +742,14 @@ INTERRUPT_GEN_MEMBER(slapfght_state::vblank_irq)
 static MACHINE_CONFIG_START( perfrman, slapfght_state )
 
 	/* basic machine hardware */
-	MCFG_CPU_ADD("maincpu", Z80, XTAL_16MHz/4) /* 4MHz ???, 16MHz Oscillator */
+	MCFG_CPU_ADD("maincpu", Z80, XTAL_16MHz/4) // 4MHz? XTAL is known, divider is guessed
 	MCFG_CPU_PROGRAM_MAP(perfrman_map)
 	MCFG_CPU_IO_MAP(slapfght_io_map)
 	MCFG_CPU_VBLANK_INT_DRIVER("screen", slapfght_state, vblank_irq)
 
-	MCFG_CPU_ADD("audiocpu", Z80, XTAL_16MHz/8) /* 2MHz ???, 16MHz Oscillator */
+	MCFG_CPU_ADD("audiocpu", Z80, XTAL_16MHz/8) // 2MHz? XTAL is known, divider is guessed
 	MCFG_CPU_PROGRAM_MAP(perfrman_sound_map)
-	MCFG_CPU_PERIODIC_INT_DRIVER(slapfght_state, getstar_interrupt, 240) /* music speed, verified */
+	MCFG_CPU_PERIODIC_INT_DRIVER(slapfght_state, getstar_interrupt, 240) // music speed, verified
 
 	MCFG_QUANTUM_PERFECT_CPU("maincpu")
 
@@ -781,16 +787,16 @@ MACHINE_CONFIG_END
 static MACHINE_CONFIG_START( tigerh, slapfght_state )
 
 	/* basic machine hardware */
-	MCFG_CPU_ADD("maincpu", Z80, XTAL_36MHz/6) /* verified on pcb */
+	MCFG_CPU_ADD("maincpu", Z80, XTAL_36MHz/6) // 6MHz
 	MCFG_CPU_PROGRAM_MAP(tigerh_map)
 	MCFG_CPU_IO_MAP(tigerh_io_map)
 	MCFG_CPU_VBLANK_INT_DRIVER("screen", slapfght_state, vblank_irq)
 
-	MCFG_CPU_ADD("audiocpu", Z80, XTAL_36MHz/12) /* verified on pcb */
+	MCFG_CPU_ADD("audiocpu", Z80, XTAL_36MHz/12) // 3MHz
 	MCFG_CPU_PROGRAM_MAP(slapfght_sound_map)
-	MCFG_CPU_PERIODIC_INT_DRIVER(slapfght_state, nmi_line_pulse, 360) // music speed, verfied with pcb recording
+	MCFG_CPU_PERIODIC_INT_DRIVER(slapfght_state, nmi_line_pulse, 360) // music speed, verified with pcb recording
 
-	MCFG_CPU_ADD("mcu", M68705, XTAL_36MHz/12) /* verified on pcb */
+	MCFG_CPU_ADD("mcu", M68705, XTAL_36MHz/12) // 3MHz
 	MCFG_CPU_PROGRAM_MAP(tigerh_m68705_map)
 
 	MCFG_QUANTUM_PERFECT_CPU("maincpu")
@@ -816,11 +822,11 @@ static MACHINE_CONFIG_START( tigerh, slapfght_state )
 	/* sound hardware */
 	MCFG_SPEAKER_STANDARD_MONO("mono")
 
-	MCFG_SOUND_ADD("ay1", AY8910, XTAL_36MHz/24) /* verified on pcb */
+	MCFG_SOUND_ADD("ay1", AY8910, XTAL_36MHz/24) // 1.5MHz
 	MCFG_SOUND_CONFIG(ay8910_interface_1)
 	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 0.25)
 
-	MCFG_SOUND_ADD("ay2", AY8910, XTAL_36MHz/24) /* verified on pcb */
+	MCFG_SOUND_ADD("ay2", AY8910, XTAL_36MHz/24) // 1.5MHz
 	MCFG_SOUND_CONFIG(ay8910_interface_2)
 	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 0.25)
 MACHINE_CONFIG_END
@@ -828,14 +834,14 @@ MACHINE_CONFIG_END
 static MACHINE_CONFIG_START( tigerhb, slapfght_state )
 
 	/* basic machine hardware */
-	MCFG_CPU_ADD("maincpu", Z80, 6000000) // ?
+	MCFG_CPU_ADD("maincpu", Z80, XTAL_12MHz/2) // 6MHz? XTAL is known, divider is guessed
 	MCFG_CPU_PROGRAM_MAP(tigerh_map)
 	MCFG_CPU_IO_MAP(tigerhb_io_map)
 	MCFG_CPU_VBLANK_INT_DRIVER("screen", slapfght_state, vblank_irq)
 
-	MCFG_CPU_ADD("audiocpu", Z80, 6000000) // ?
+	MCFG_CPU_ADD("audiocpu", Z80, XTAL_12MHz/4) // 3MHz? XTAL is known, divider is guessed
 	MCFG_CPU_PROGRAM_MAP(slapfght_sound_map)
-	MCFG_CPU_PERIODIC_INT_DRIVER(slapfght_state, nmi_line_pulse, 360) // ?
+	MCFG_CPU_PERIODIC_INT_DRIVER(slapfght_state, nmi_line_pulse, 360)
 
 	MCFG_QUANTUM_PERFECT_CPU("maincpu")
 
@@ -860,11 +866,11 @@ static MACHINE_CONFIG_START( tigerhb, slapfght_state )
 	/* sound hardware */
 	MCFG_SPEAKER_STANDARD_MONO("mono")
 
-	MCFG_SOUND_ADD("ay1", AY8910, 1500000)
+	MCFG_SOUND_ADD("ay1", AY8910, XTAL_12MHz/8)
 	MCFG_SOUND_CONFIG(ay8910_interface_1)
 	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 0.25)
 
-	MCFG_SOUND_ADD("ay2", AY8910, 1500000)
+	MCFG_SOUND_ADD("ay2", AY8910, XTAL_12MHz/8)
 	MCFG_SOUND_CONFIG(ay8910_interface_2)
 	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 0.25)
 MACHINE_CONFIG_END
@@ -873,16 +879,16 @@ MACHINE_CONFIG_END
 static MACHINE_CONFIG_START( slapfigh, slapfght_state )
 
 	/* basic machine hardware */
-	MCFG_CPU_ADD("maincpu",Z80, XTAL_36MHz/6) /* verified on pcb */
+	MCFG_CPU_ADD("maincpu",Z80, XTAL_36MHz/6) // 6MHz
 	MCFG_CPU_PROGRAM_MAP(slapfght_map)
 	MCFG_CPU_IO_MAP(slapfght_io_map)
 	MCFG_CPU_VBLANK_INT_DRIVER("screen", slapfght_state, vblank_irq)
 
-	MCFG_CPU_ADD("audiocpu", Z80, XTAL_36MHz/12) /* verified on pcb */
+	MCFG_CPU_ADD("audiocpu", Z80, XTAL_36MHz/12) // 3MHz
 	MCFG_CPU_PROGRAM_MAP(slapfght_sound_map)
 	MCFG_CPU_PERIODIC_INT_DRIVER(slapfght_state, getstar_interrupt, 180)
 
-	MCFG_CPU_ADD("mcu", M68705, XTAL_36MHz/12) /* verified on pcb */
+	MCFG_CPU_ADD("mcu", M68705, XTAL_36MHz/12) // 3MHz
 	MCFG_CPU_PROGRAM_MAP(slapfight_m68705_map)
 
 	MCFG_QUANTUM_PERFECT_CPU("maincpu")
@@ -908,11 +914,11 @@ static MACHINE_CONFIG_START( slapfigh, slapfght_state )
 	/* sound hardware */
 	MCFG_SPEAKER_STANDARD_MONO("mono")
 
-	MCFG_SOUND_ADD("ay1", AY8910, XTAL_36MHz/24) /* verified on pcb */
+	MCFG_SOUND_ADD("ay1", AY8910, XTAL_36MHz/24) // 1.5MHz
 	MCFG_SOUND_CONFIG(ay8910_interface_1)
 	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 0.25)
 
-	MCFG_SOUND_ADD("ay2", AY8910, XTAL_36MHz/24) /* verified on pcb */
+	MCFG_SOUND_ADD("ay2", AY8910, XTAL_36MHz/24) // 1.5MHz
 	MCFG_SOUND_CONFIG(ay8910_interface_2)
 	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 0.25)
 MACHINE_CONFIG_END
