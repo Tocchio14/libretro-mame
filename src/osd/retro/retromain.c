@@ -607,8 +607,10 @@ int executeGame(char* path) {
 void parse_cmdline( const char *argv ){
 
 	static char buffer[512*2];
+	
 	strcpy(buffer,argv);
-
+	strcat(buffer," \0");
+	
 	char *p,*p2,*start_of_word;
 	int c,c2;
 	enum states { DULL, IN_WORD, IN_STRING } state = DULL;
