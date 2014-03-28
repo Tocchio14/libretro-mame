@@ -96,13 +96,12 @@ WRITE8_MEMBER(slapfght_state::slapfight_fixcol_w)
 	m_fix_tilemap->mark_tile_dirty(offset);
 }
 
-WRITE8_MEMBER(slapfght_state::slapfight_flipscreen_w)
+WRITE8_MEMBER(slapfght_state::flipscreen_w)
 {
-	// port 2 is flipscreen, port 3 is normal
-	m_flipscreen = (offset == 0);
+	m_flipscreen = offset ? 0 : 1;
 }
 
-WRITE8_MEMBER(slapfght_state::slapfight_palette_bank_w)
+WRITE8_MEMBER(slapfght_state::palette_bank_w)
 {
 	m_palette_bank = offset;
 }
@@ -203,7 +202,7 @@ UINT32 slapfght_state::screen_update_slapfight(screen_device &screen, bitmap_ind
 				src[offs] + ((src[offs + 2] & 0xc0) << 2),
 				(src[offs + 2] & 0x1e) >> 1,
 				0, 0,
-				(src[offs + 1] + ((src[offs + 2] & 0x01) << 8)) - 13, src[offs + 3],0
+				(src[offs + 1] + ((src[offs + 2] & 0x01) << 8)) - 13, src[offs + 3], 0
 			);
 	}
 
