@@ -456,9 +456,11 @@ EMULATOR = $(TARGET)
 SRC = src
 
 # build the targets in different object dirs, so they can co-exist
-#OBJ = obj/$(PREFIX)$(OSD)$(SUFFIX)$(SUFFIX64)$(SUFFIXDEBUG)$(SUFFIXPROFILE)
+ifeq ($(NATIVE),1)
+OBJ = obj/$(PREFIX)$(OSD)$(SUFFIX)$(SUFFIX64)$(SUFFIXDEBUG)$(SUFFIXPROFILE)
+else
 OBJ = obj/$(PREFIX)$(SUFFIXDEBUG)$(SUFFIXPROFILE)
-
+endif
 #-------------------------------------------------
 # compile-time definitions
 #-------------------------------------------------
