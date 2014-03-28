@@ -24,8 +24,7 @@ static bool softlist_auto;
 static bool boot_to_bios_enabled;
 static bool boot_to_osd_enabled;
 static bool commandline_enabled;
-
-static bool experimental_cmdline=FALSE;
+static bool experimental_cmdline;
 
 static bool arcade=FALSE;
 
@@ -133,8 +132,8 @@ static char MgameName[512];
 static char MsystemName[512];
 static char gameName[1024];
 
-//Args for CmdLine used if commandline_enabled.
-static char ARGUV[20][1024];
+//Args for CmdLine used if experimental_cmdline enabled.
+static char ARGUV[32][1024];
 static char ARGUC=0;
 
 static char RSYSDIR[1024];
@@ -336,7 +335,7 @@ int Add_Path_To_Args(){
 	for (paramCount = 0; xargv[paramCount] != NULL; paramCount++)
 		printf("args: %s\n",xargv[paramCount]);
 
-	if(experimental_cmdline/*commandline_enabled*/){
+	if(experimental_cmdline){
   		if(ARGUC==1){// 1 args -> arcade rom with full path  
 			xargv[paramCount++] = (char*)"-rp";	
 			xargv[paramCount++] = (char*)g_rom_dir;	
@@ -429,7 +428,7 @@ int executeGame(char* path) {
 
 	screenRot = 0;
 
-	if(experimental_cmdline/*commandline_enabled*/){
+	if(experimental_cmdline){
 		
 		int i;
 
@@ -606,7 +605,7 @@ int executeGame(char* path) {
 
 void parse_cmdline( const char *argv ){
 
-	static char buffer[512*2];
+	static char buffer[512*4];
 	
 	strcpy(buffer,argv);
 	strcat(buffer," \0");
@@ -666,28 +665,14 @@ extern "C"
 #endif
 int mmain(int argc, const char *argv)
 {
-
 	int result = 0;
-
-	static char tempstring[512];
-	char *pch;
 	
 	strcpy(gameName,argv);
 
-	if(experimental_cmdline/*commandline_enabled*/){
-/*
-		strcpy(tempstring,gameName);
-	        pch = strtok (tempstring," ");
-   
-	  	while (pch != NULL)
-	  	{   		  
-			strcpy(ARGUV[ARGUC],pch);
-			ARGUC++; 
-	
-	   		pch = strtok (NULL, " ");
-	  	}
-*/	  	
+	if(experimental_cmdline){
+  	
 		parse_cmdline(argv);
+
 	        write_log("executing from experimental cmdline... %s\n", gameName);
 		result = executeGame(ARGUV[ARGUC-1]);
 	}

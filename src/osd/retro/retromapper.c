@@ -64,6 +64,7 @@ void retro_set_environment(retro_environment_t cb)
 	  { "ume_boot_osd", "Boot to OSD; disabled|enabled" },
 	  { "ume_commandline", "Boot from CLI; disabled|enabled" },
 #endif   
+	  { "experimental_commandline", "Experimental CLI; disabled|enabled" },
       { NULL, NULL },
    };
 
@@ -76,6 +77,17 @@ static void check_variables(void)
 {
    struct retro_variable var = {0};
 
+   var.key = "experimental_commandline";
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      fprintf(stderr, "value: %s\n", var.value);
+      if (strcmp(var.value, "enabled") == 0)
+         experimental_cmdline = true;
+      if (strcmp(var.value, "disabled") == 0)
+         experimental_cmdline = false;       
+   }   
 
 #if defined(WANT_MAME)
 
@@ -361,7 +373,7 @@ void retro_get_system_info(struct retro_system_info *info)
    info->library_name = "N/D";
 #endif   
    
-   info->library_version = "0.152";
+   info->library_version = "SVN";
    info->valid_extensions = "zip|chd|7z";
    info->need_fullpath = true;   
    info->block_extract = true;
@@ -440,14 +452,16 @@ void retro_init (void){
 		printf("Retro SAVE_DIRECTORY %s\n",retro_save_directory);
 		printf("Retro CONTENT_DIRECTORY %s\n",retro_content_directory);
 
+		//if NULL then use current DIR
+
 		if(retro_system_directory!=NULL)sprintf(RSYSDIR,"%s\0",retro_system_directory);
-		else sprintf(RSYSDIR,"\0");
+		else sprintf(RSYSDIR,".\0");
 
 		if(retro_save_directory!=NULL)sprintf(RSAVDIR,"%s\0",retro_save_directory);
-		else sprintf(RSAVDIR,"\0");
+		else sprintf(RSAVDIR,".\0");
 
 		if(retro_content_directory!=NULL)sprintf(RCONDIR,"%s\0",retro_content_directory);
-		else sprintf(RCONDIR,"\0");
+		else sprintf(RCONDIR,".\0");
 
 
     	if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
