@@ -425,12 +425,12 @@ void device_image_interface::run_hash(void (*partialhash)(hash_collection &, con
 	hash_collection &hashes, const char *types)
 {
 	UINT32 size;
-	UINT8 *buf = NULL;
+	dynamic_buffer buf;
 
 	hashes.reset();
 	size = (UINT32) length();
 
-	buf = (UINT8*)malloc(size);
+	buf.resize(size);
 	memset(buf,0,size);
 
 	/* read the file */
@@ -443,7 +443,6 @@ void device_image_interface::run_hash(void (*partialhash)(hash_collection &, con
 		hashes.compute(buf, size, types);
 
 	/* cleanup */
-	free(buf);
 	fseek(0, SEEK_SET);
 }
 

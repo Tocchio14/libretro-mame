@@ -26,8 +26,6 @@
 
 
 
-
-
 /*
 
  $00 - Mode Set Register No. 1
@@ -145,29 +143,48 @@
 #define MEGADRIVE_REG17_DMATYPE         ((m_vdp_regs[0x17]&0xc0)>>6)
 #define MEGADRIVE_REG17_UNUSED          ((m_vdp_regs[0x17]&0x3f)>>0)
 
-#define MCFG_SEGAGEN_VDP_ADD(_tag, _intrf) \
-	MCFG_DEVICE_ADD(_tag, SEGA_GEN_VDP, 0) \
-	MCFG_DEVICE_CONFIG(_intrf)
+
+#define MCFG_SEGAGEN_VDP_IS_PAL(_bool) \
+	sega_genesis_vdp_device::set_signal_type(*device, _bool);
+
+#define MCFG_SEGAGEN_VDP_INT_CB(_devcb) \
+	devcb = &sega_genesis_vdp_device::set_int_callback(*device, DEVCB2_##_devcb);
+	
+#define MCFG_SEGAGEN_VDP_PAUSE_CB(_devcb) \
+	devcb = &sega_genesis_vdp_device::set_pause_callback(*device, DEVCB2_##_devcb);
 
 #define MCFG_SEGAGEN_VDP_SND_IRQ_CALLBACK(_write) \
-	devcb = &sega_genesis_vdp_device::set_genesis_vdp_sndirqline_callback(*device, DEVCB2_##_write);
+	devcb = &sega_genesis_vdp_device::set_sndirqline_callback(*device, DEVCB2_##_write);
  
 #define MCFG_SEGAGEN_VDP_LV6_IRQ_CALLBACK(_write) \
-	devcb = &sega_genesis_vdp_device::set_genesis_vdp_lv6irqline_callback(*device, DEVCB2_##_write);
+	devcb = &sega_genesis_vdp_device::set_lv6irqline_callback(*device, DEVCB2_##_write);
  
 #define MCFG_SEGAGEN_VDP_LV4_IRQ_CALLBACK(_write) \
-	devcb = &sega_genesis_vdp_device::set_genesis_vdp_lv4irqline_callback(*device, DEVCB2_##_write);
+	devcb = &sega_genesis_vdp_device::set_lv4irqline_callback(*device, DEVCB2_##_write);
  
 #define MCFG_SEGAGEN_VDP_ALT_TIMING(_data) \
-	sega_genesis_vdp_device::set_genesis_vdp_alt_timing(*device, _data);
+	sega_genesis_vdp_device::set_alt_timing(*device, _data);
  
 #define MCFG_SEGAGEN_VDP_PAL_WRITE_BASE(_data) \
-	sega_genesis_vdp_device::set_genesis_vdp_palwrite_base(*device, _data);
+	sega_genesis_vdp_device::set_palwrite_base(*device, _data);
  
 #define MCFG_SEGAGEN_VDP_PALETTE(_palette_tag) \
 	sega_genesis_vdp_device::static_set_palette_tag(*device, "^" _palette_tag);
 
-UINT16 vdp_get_word_from_68k_mem_default(running_machine &machine, UINT32 source, address_space & space68k);
+
+// Temporary solution while 32x VDP mixing and scanline interrupting is moved outside MD VDP
+typedef device_delegate<void (int x, UINT32 priority, UINT16 &lineptr)> md_32x_scanline_delegate;
+typedef device_delegate<void (int scanline, int irq6)> md_32x_interrupt_delegate;
+typedef device_delegate<void (int scanline)> md_32x_scanline_helper_delegate;
+
+#define MCFG_SEGAGEN_VDP_32X_SCANLINE_CB(_class, _method) \
+	sega_genesis_vdp_device::set_md_32x_scanline(*device, md_32x_scanline_delegate(&_class::_method, #_class "::" #_method, downcast<_class *>(owner)));
+
+#define MCFG_SEGAGEN_VDP_32X_INTERRUPT_CB(_class, _method) \
+	sega_genesis_vdp_device::set_md_32x_interrupt(*device, md_32x_interrupt_delegate(&_class::_method, #_class "::" #_method, downcast<_class *>(owner)));
+
+#define MCFG_SEGAGEN_VDP_32X_SCANLINE_HELPER_CB(_class, _method) \
+	sega_genesis_vdp_device::set_md_32x_scanline_helper(*device, md_32x_scanline_helper_delegate(&_class::_method, #_class "::" #_method, downcast<_class *>(owner)));
 
 
 class sega_genesis_vdp_device : public sega315_5124_device
@@ -175,13 +192,17 @@ class sega_genesis_vdp_device : public sega315_5124_device
 public:
 	sega_genesis_vdp_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
 
-	template<class _Object> static devcb2_base &set_genesis_vdp_sndirqline_callback(device_t &device, _Object object) { return downcast<sega_genesis_vdp_device &>(device).m_genesis_vdp_sndirqline_callback.set_callback(object); }
-	template<class _Object> static devcb2_base &set_genesis_vdp_lv6irqline_callback(device_t &device, _Object object) { return downcast<sega_genesis_vdp_device &>(device).m_genesis_vdp_lv6irqline_callback.set_callback(object); }
-	template<class _Object> static devcb2_base &set_genesis_vdp_lv4irqline_callback(device_t &device, _Object object) { return downcast<sega_genesis_vdp_device &>(device).m_genesis_vdp_lv4irqline_callback.set_callback(object); }
-	static void set_genesis_vdp_alt_timing(device_t &device, int use_alt_timing);
-	static void set_genesis_vdp_palwrite_base(device_t &device, int palwrite_base);
+	template<class _Object> static devcb2_base &set_sndirqline_callback(device_t &device, _Object object) { return downcast<sega_genesis_vdp_device &>(device).m_sndirqline_callback.set_callback(object); }
+	template<class _Object> static devcb2_base &set_lv6irqline_callback(device_t &device, _Object object) { return downcast<sega_genesis_vdp_device &>(device).m_lv6irqline_callback.set_callback(object); }
+	template<class _Object> static devcb2_base &set_lv4irqline_callback(device_t &device, _Object object) { return downcast<sega_genesis_vdp_device &>(device).m_lv4irqline_callback.set_callback(object); }
+	static void set_alt_timing(device_t &device, int use_alt_timing);
+	static void set_palwrite_base(device_t &device, int palwrite_base);
 	static void static_set_palette_tag(device_t &device, const char *tag);
-	
+
+	static void set_md_32x_scanline(device_t &device, md_32x_scanline_delegate callback) { downcast<sega_genesis_vdp_device &>(device).m_32x_scanline_func = callback; }
+	static void set_md_32x_interrupt(device_t &device, md_32x_interrupt_delegate callback) { downcast<sega_genesis_vdp_device &>(device).m_32x_interrupt_func = callback; }
+	static void set_md_32x_scanline_helper(device_t &device, md_32x_scanline_helper_delegate callback) { downcast<sega_genesis_vdp_device &>(device).m_32x_scanline_helper_func = callback; }
+
 	int m_use_alt_timing; // use MAME scanline timer instead, render only one scanline to a single line buffer, to be rendered by a partial update call.. experimental
 
 	int m_palwrite_base; // if we want to write to the actual MAME palette..
@@ -191,7 +212,7 @@ public:
 
 	int genesis_get_scanline_counter();
 
-	void genesis_render_scanline();
+	void render_scanline();
 	void vdp_handle_scanline_callback(int scanline);
 	void vdp_handle_irq6_on_timer_callback(int param);
 	void vdp_handle_irq4_on_timer_callback(int param);
@@ -206,7 +227,9 @@ public:
 	void set_framerate(int rate) { m_framerate = rate; }
 	void set_vdp_pal(bool pal) { m_vdp_pal = pal ? 1 : 0; }
 	void set_use_cram(int cram) { m_vdp_use_cram = cram; }
+	void set_dma_delay(int delay) { m_dma_delay = delay; }
 	int get_framerate() { return m_framerate; }
+	int get_imode() { return megadrive_imode; }
 
 
 	void vdp_clear_bitmap(void)
@@ -223,16 +246,22 @@ public:
 	TIMER_DEVICE_CALLBACK_MEMBER( megadriv_scanline_timer_callback );
 	timer_device* m_megadriv_scanline_timer;
 
+	inline UINT16 vdp_get_word_from_68k_mem(UINT32 source);
+
 protected:
 	virtual void device_start();
 	virtual void device_reset();
 	virtual machine_config_constructor device_mconfig_additions() const;
 
 	// called when we hit 240 and 241 (used to control the z80 irq line on genesis, or the main irq on c2)
-	devcb2_write_line m_genesis_vdp_sndirqline_callback;
-	devcb2_write_line m_genesis_vdp_lv6irqline_callback;
-	devcb2_write_line m_genesis_vdp_lv4irqline_callback;
-
+	devcb2_write_line m_sndirqline_callback;
+	devcb2_write_line m_lv6irqline_callback;
+	devcb2_write_line m_lv4irqline_callback;
+	
+	md_32x_scanline_delegate m_32x_scanline_func;
+	md_32x_interrupt_delegate m_32x_interrupt_func;
+	md_32x_scanline_helper_delegate m_32x_scanline_helper_func;
+	
 private:
 
 	int m_vdp_command_pending; // 2nd half of command pending..
@@ -248,20 +277,21 @@ private:
 	int megadrive_irq6_pending;
 	int megadrive_irq4_pending;
 	int m_scanline_counter;
+	int m_vblank_flag;
 
 	int megadrive_imode;
 
 	int m_visible_scanlines;
 	int m_irq6_scanline;
 	int m_z80irq_scanline;
-	// this is updated at runtime (atm we still need a global one, to handle 32x and SCD timers)
-	// int m_total_scanlines;
+	int m_total_scanlines;
 	// this is only set at init: 262 for PAL, 313 for NTSC
 	int m_base_total_scanlines;
 
 	int m_framerate;
 	int m_vdp_pal;
 	int m_vdp_use_cram; // c2 uses it's own palette ram, so it sets this to 0
+	int m_dma_delay;	// SVP and SegaCD have some 'lag' in DMA transfers
 
 	UINT16* m_vdp_regs;
 	UINT16* m_vram;
@@ -281,10 +311,10 @@ private:
 	UINT16 vdp_vsram_r(void);
 	UINT16 vdp_cram_r(void);
 
-	void megadrive_do_insta_68k_to_cram_dma(UINT32 source,UINT16 length);
-	void megadrive_do_insta_68k_to_vsram_dma(UINT32 source,UINT16 length);
-	void megadrive_do_insta_68k_to_vram_dma(UINT32 source,int length);
-	void megadrive_do_insta_vram_copy(UINT32 source, UINT16 length);
+	void insta_68k_to_cram_dma(UINT32 source,UINT16 length);
+	void insta_68k_to_vsram_dma(UINT32 source,UINT16 length);
+	void insta_68k_to_vram_dma(UINT32 source,int length);
+	void insta_vram_copy(UINT32 source, UINT16 length);
 
 	void vdp_vram_write(UINT16 data);
 	void vdp_cram_write(UINT16 data);
@@ -305,9 +335,9 @@ private:
 	void update_m_vdp_code_and_address(void);
 
 
-	void genesis_render_spriteline_to_spritebuffer(int scanline);
-	void genesis_render_videoline_to_videobuffer(int scanline);
-	void genesis_render_videobuffer_to_screenbuffer(int scanline);
+	void render_spriteline_to_spritebuffer(int scanline);
+	void render_videoline_to_videobuffer(int scanline);
+	void render_videobuffer_to_screenbuffer(int scanline);
 
 	/* variables used during emulation - not saved */
 	UINT8* m_sprite_renderline;

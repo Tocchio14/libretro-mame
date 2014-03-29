@@ -178,7 +178,7 @@ void h8_device::recompute_bcount(UINT64 event_time)
 
 void h8_device::execute_run()
 {
-	UINT64 start_cycles = machine().time().as_ticks(clock());
+	start_cycles = machine().time().as_ticks(clock());
 	end_cycles = start_cycles + icount;
 
 	internal_update(start_cycles);
@@ -195,9 +195,8 @@ void h8_device::execute_run()
 			}
 			do_exec_full();
 		}
-		while(bcount && icount <= bcount)
+		while(bcount && icount && icount <= bcount)
 			internal_update(end_cycles - bcount);
-
 		do_exec_partial();
 	}
 	end_cycles = 0;
@@ -753,7 +752,7 @@ UINT32 h8_device::do_add32(UINT32 v1, UINT32 v2)
 		CCR |= F_N;
 	if(~(v1^v2) & (v1^res) & 0x80000000)
 		CCR |= F_V;
-	if(res & 0x100000000)
+	if(res & U64(0x100000000))
 		CCR |= F_C;
 	return res;	
 }
@@ -845,7 +844,7 @@ UINT32 h8_device::do_sub32(UINT32 v1, UINT32 v2)
 		CCR |= F_N;
 	if((v1^v2) & (v1^res) & 0x80000000)
 		CCR |= F_V;
-	if(res & 0x100000000)
+	if(res & U64(0x100000000))
 		CCR |= F_C;
 	return res;	
 }

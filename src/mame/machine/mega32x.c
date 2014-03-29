@@ -967,9 +967,9 @@ UINT16 sega_32x_device::get_hposition(void)
 
 	time_elapsed_since_megadriv_scanline_timer = machine().device<timer_device>(":md_scan_timer")->time_elapsed();
 
-	if (time_elapsed_since_megadriv_scanline_timer.attoseconds<(ATTOSECONDS_PER_SECOND/m_framerate /megadrive_total_scanlines))
+	if (time_elapsed_since_megadriv_scanline_timer.attoseconds<(ATTOSECONDS_PER_SECOND/m_framerate /m_total_scanlines))
 	{
-		value4 = (UINT16)(MAX_HPOSITION*((double)(time_elapsed_since_megadriv_scanline_timer.attoseconds) / (double)(ATTOSECONDS_PER_SECOND/m_framerate /megadrive_total_scanlines)));
+		value4 = (UINT16)(MAX_HPOSITION*((double)(time_elapsed_since_megadriv_scanline_timer.attoseconds) / (double)(ATTOSECONDS_PER_SECOND/m_framerate /m_total_scanlines)));
 	}
 	else /* in some cases (probably due to rounding errors) we get some stupid results (the odd huge value where the time elapsed is much higher than the scanline time??!).. hopefully by clamping the result to the maximum we limit errors */
 	{
@@ -1017,16 +1017,16 @@ READ16_MEMBER( sega_32x_device::_32x_common_vdp_regs_r )
 			UINT16 hpos = get_hposition();
 			int megadrive_hblank_flag = 0;
 
-			if (megadrive_vblank_flag) retdata |= 0x8000;
+			if (m_32x_vblank_flag) retdata |= 0x8000;
 
 			if (hpos>400) megadrive_hblank_flag = 1;
 			if (hpos>460) megadrive_hblank_flag = 0;
 
 			if (megadrive_hblank_flag) retdata |= 0x4000;
 
-			if (megadrive_vblank_flag) { retdata |= 2; } // framebuffer approval (TODO: condition is unknown at current time)
+			if (m_32x_vblank_flag) { retdata |= 2; } // framebuffer approval (TODO: condition is unknown at current time)
 
-			if (megadrive_hblank_flag && megadrive_vblank_flag) { retdata |= 0x2000; } // palette approval (TODO: active high or low?)
+			if (megadrive_hblank_flag && m_32x_vblank_flag) { retdata |= 0x2000; } // palette approval (TODO: active high or low?)
 
 			return retdata;
 	}
@@ -1593,6 +1593,34 @@ void sega_32x_device::_32x_scanline_cb1(int scanline)
 	}
 }
 
+void sega_32x_device::_32x_interrupt_cb(int scanline, int irq6)
+{
+	if (scanline == irq6)
+	{
+		m_32x_vblank_flag = 1;
+		m_sh2_master_vint_pending = 1;
+		m_sh2_slave_vint_pending = 1;
+		_32x_check_irqs();
+	}
+
+	_32x_check_framebuffer_swap(scanline >= irq6);
+
+	m_32x_hcount_compare_val++;
+	
+	if (m_32x_hcount_compare_val >= m_32x_hcount_reg)
+	{
+		m_32x_hcount_compare_val = -1;
+		
+		if (scanline < 224 || m_sh2_hint_in_vbl)
+		{
+			if (m_sh2_master_hint_enable) 
+				m_master_cpu->set_input_line(SH2_HINT_IRQ_LEVEL, ASSERT_LINE);
+			if (m_sh2_slave_hint_enable)
+				m_slave_cpu->set_input_line(SH2_HINT_IRQ_LEVEL, ASSERT_LINE);
+		}
+	}
+}
+
 
 
 int _32x_fifo_available_callback(device_t *device, UINT32 src, UINT32 dst, UINT32 data, int size)
@@ -1940,6 +1968,8 @@ void sega_32x_device::device_reset()
 
 	m_lch_index_w = 0;
 	m_rch_index_w = 0;
+
+	m_total_scanlines = 262;
 
 // moved from init
 

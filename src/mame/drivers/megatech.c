@@ -551,12 +551,14 @@ DRIVER_INIT_MEMBER(mtech_state,mt_crt)
 
 UINT32 mtech_state::screen_update_main(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect)
 {
-	/* if we're running an sms game then use the SMS update.. maybe this should be moved to the megadrive emulation core as compatibility mode is a feature of the chip */
+	// if we're running an sms game then use the SMS update.. maybe this should be moved to the megadrive emulation core as compatibility mode is a feature of the chip
 	if (!m_current_game_is_sms)
 		screen_update_megadriv(screen, bitmap, cliprect);
 	else
 	{
-//		m_vdp->screen_update(screen, bitmap, cliprect);
+		m_vdp->screen_update(screen, bitmap, cliprect);
+#if 0
+		// when launching megatech + both sms and megadrive games, the following would be needed...
 		for (int y = 0; y < 224; y++)
 		{
 			UINT32* lineptr = &bitmap.pix32(y, 0);
@@ -565,6 +567,7 @@ UINT32 mtech_state::screen_update_main(screen_device &screen, bitmap_rgb32 &bitm
 			for (int x = 0; x < SEGA315_5124_WIDTH; x++)
 				lineptr[x] = srcptr[x];
 		}	
+#endif
 	}
 	return 0;
 }
@@ -595,26 +598,10 @@ WRITE_LINE_MEMBER( mtech_state::bios_int_callback )
 	m_bioscpu->set_input_line(0, state);
 }
 
-static const sega315_5124_interface bios_vdp_intf =
-{
-	false,
-	DEVCB_DRIVER_LINE_MEMBER(mtech_state, bios_int_callback),
-	DEVCB_NULL,
-};
-
-
 WRITE_LINE_MEMBER( mtech_state::snd_int_callback )
 {
 	m_z80snd->set_input_line(0, state);
 }
-
-static const sega315_5124_interface main_vdp_intf =
-{
-	false,
-	DEVCB_DRIVER_LINE_MEMBER(mtech_state, snd_int_callback),
-	DEVCB_NULL,
-};
-
 
 static MACHINE_CONFIG_START( megatech, mtech_state )
 	/* basic machine hardware */
@@ -636,12 +623,8 @@ static MACHINE_CONFIG_START( megatech, mtech_state )
 	MCFG_SCREEN_UPDATE_DRIVER(mtech_state, screen_update_main)
 	MCFG_SCREEN_VBLANK_DRIVER(mtech_state, screen_eof_main)
 
-	MCFG_DEVICE_REMOVE("gen_vdp")
-	MCFG_SEGAGEN_VDP_ADD("gen_vdp", main_vdp_intf )
-	MCFG_SEGAGEN_VDP_SND_IRQ_CALLBACK(WRITELINE(md_base_state, genesis_vdp_sndirqline_callback_genesis_z80));
-	MCFG_SEGAGEN_VDP_LV6_IRQ_CALLBACK(WRITELINE(md_base_state, genesis_vdp_lv6irqline_callback_genesis_68k));
-	MCFG_SEGAGEN_VDP_LV4_IRQ_CALLBACK(WRITELINE(md_base_state, genesis_vdp_lv4irqline_callback_genesis_68k));
-	MCFG_VIDEO_SET_SCREEN("megadriv")
+	MCFG_DEVICE_MODIFY("gen_vdp")
+	MCFG_SEGAGEN_VDP_INT_CB(WRITELINE(mtech_state, snd_int_callback))
 
 	MCFG_SCREEN_ADD("menu", RASTER)
 	// check frq
@@ -650,8 +633,10 @@ static MACHINE_CONFIG_START( megatech, mtech_state )
 		SEGA315_5124_HEIGHT_NTSC, SEGA315_5124_TBORDER_START + SEGA315_5124_NTSC_224_TBORDER_HEIGHT, SEGA315_5124_TBORDER_START + SEGA315_5124_NTSC_224_TBORDER_HEIGHT + 224)
 	MCFG_SCREEN_UPDATE_DRIVER(mtech_state, screen_update_menu)
 
-	MCFG_SEGA315_5246_ADD("vdp1", bios_vdp_intf)
+	MCFG_DEVICE_ADD("vdp1", SEGA315_5246, 0)
 	MCFG_SEGA315_5246_SET_SCREEN("menu")
+	MCFG_SEGA315_5246_IS_PAL(false)
+	MCFG_SEGA315_5246_INT_CB(WRITELINE(mtech_state, bios_int_callback))
 
 	/* sound hardware */
 	MCFG_SOUND_ADD("sn2", SN76496, MASTER_CLOCK/15)
