@@ -64,6 +64,7 @@ void retro_set_environment(retro_environment_t cb)
 	  { "ume_boot_osd", "Boot to OSD; disabled|enabled" },
 	  { "ume_commandline", "Boot from CLI; disabled|enabled" },
 #endif   
+	  { "experimental_commandline", "Experimental CLI; disabled|enabled" },
       { NULL, NULL },
    };
 
@@ -76,6 +77,17 @@ static void check_variables(void)
 {
    struct retro_variable var = {0};
 
+   var.key = "experimental_commandline";
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      fprintf(stderr, "value: %s\n", var.value);
+      if (strcmp(var.value, "enabled") == 0)
+         experimental_cmdline = true;
+      if (strcmp(var.value, "disabled") == 0)
+         experimental_cmdline = false;       
+   }   
 
 #if defined(WANT_MAME)
 
@@ -361,7 +373,7 @@ void retro_get_system_info(struct retro_system_info *info)
    info->library_name = "N/D";
 #endif   
    
-   info->library_version = "0.152";
+   info->library_version = "SVN";
    info->valid_extensions = "zip|chd|7z";
    info->need_fullpath = true;   
    info->block_extract = true;
@@ -513,7 +525,7 @@ bool retro_load_game(const struct retro_game_info *info)
 #else
 	memset(videoBuffer,0,1024*1024*2*2);
 #endif
-	char basename[128];
+	char basename[256];
 	
 	extract_basename(basename, info->path, sizeof(basename));
   	extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));

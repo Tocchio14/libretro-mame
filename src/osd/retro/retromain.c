@@ -7,7 +7,7 @@
 #include "emu.h"
 #include "clifront.h"
 #include "render.h"
-#include "../../emu/ui/ui.h"
+#include "ui/ui.h"
 #include "uiinput.h"
 
 #include "libretro.h" 
@@ -24,7 +24,7 @@ static bool softlist_auto;
 static bool boot_to_bios_enabled;
 static bool boot_to_osd_enabled;
 static bool commandline_enabled;
-
+static bool experimental_cmdline;
 
 static bool arcade=FALSE;
 
@@ -44,8 +44,8 @@ const char core[] = "ume";
 
 #define M16B
 
-#include "../../emu/render.c"
-#include "../../emu/rendersw.inc"
+#include "render.c"
+#include "rendersw.inc"
 
 static bool mouse_enable = false;
 static bool videoapproach1_enable = false;
@@ -566,6 +566,8 @@ int executeGame(char* path) {
 //  main
 //============================================================
 
+#include "retroexpcmd.c"
+
 #ifdef __cplusplus
 extern "C"
 #endif
@@ -575,8 +577,20 @@ int mmain(int argc, const char *argv)
 	int result = 0;
 	
 	strcpy(gameName,argv);
-	write_log("executing game... %s\n", gameName);
-	result = executeGame(gameName);
+
+	if(experimental_cmdline){
+  	
+		parse_cmdline(argv);
+
+	        write_log("executing from experimental cmdline... %s\n", gameName);
+		result = executeGame_cmd(ARGUV[ARGUC-1]);
+	}
+	else
+	{
+		write_log("executing game... %s\n", gameName);
+		result = executeGame(gameName);
+	}
+
 	return 1;
 }
 
