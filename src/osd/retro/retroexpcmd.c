@@ -1,31 +1,7 @@
-//Args for Core
-static char XARGV[64][1024];
-static const char* xargv_cmd[64];
 
 //Args for experimental_cmdline
 static char ARGUV[32][1024];
 static char ARGUC=0;
-
-#define NB_OPTPATH 12
-
-static const char *dir_name[NB_OPTPATH]={
-	"cfg","nvram","memcard","input",
-	"states" ,"snaps","diff","samples",
-	"artwork","cheat","ini","hash"
-};
-
-static const char *opt_name[NB_OPTPATH]={
-	"-cfg_directory","-nvram_directory","-memcard_directory","-input_directory",
-	"-state_directory" ,"-snapshot_directory","-diff_directory","-samplepath",
-	"-artpath","-cheatpath","-inipath","-hashpath"
-};
-
-//0 save_dir | 1 system_dir
-int opt_type[NB_OPTPATH]={
-	0,0,0,0,
-	0,0,0,1,
-	1,1,1,1
-};
 
 void parse_cmdline( const char *argv ){
 
@@ -107,7 +83,7 @@ int executeGame_cmd(char* path) {
 		strcpy(MgameName,path );
 	}
 	//Find the game info. Exit if game driver was not found.
-	if (getGameInfo(Only1Arg?MgameName:ARGUV[0], &gameRot, &driverIndex) == 0) {
+	if (getGameInfo(Only1Arg?MgameName:ARGUV[0], &gameRot, &driverIndex,&arcade) == 0) {
 
 		// handle -cc/-createconfig case
 		if(CreateConf){
