@@ -287,7 +287,7 @@ static int getGameInfo(char* gameName, int* rotation, int* driverIndex,bool *Arc
 		if(driver_list::driver(num).flags& GAME_TYPE_ARCADE)
 		{
 		   write_log("type: ARCADE system\n");
-		   Arcade=TRUE;
+		   *Arcade=TRUE;
 		}
 		else if(driver_list::driver(num).flags& GAME_TYPE_CONSOLE)write_log("type: CONSOLE system\n");
 		else if(driver_list::driver(num).flags& GAME_TYPE_COMPUTER)write_log("type: COMPUTER system\n");
