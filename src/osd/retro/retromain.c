@@ -206,7 +206,7 @@ static int parsePath(char* path, char* gamePath, char* gameName) {
 	if (slashIndex < 0 || dotIndex < 0) {
 		return 0;
 	}
-
+printf("slashind:%d\n",slashIndex);
 	strncpy(gamePath, path, slashIndex);
 	gamePath[slashIndex] = 0;
 	strncpy(gameName, path + (slashIndex + 1), dotIndex - (slashIndex + 1));
@@ -219,9 +219,9 @@ static int parsePath(char* path, char* gamePath, char* gameName) {
 static int parseSystemName(char* path, char* systemName) {
 	int i;
 	int j=0;
-	int slashIndex[2];
+	int slashIndex[2]={-1,-1};
 	int len = strlen(path);
-	
+
 	if (len < 1) {
 		return 0;
 	}
@@ -237,10 +237,10 @@ static int parseSystemName(char* path, char* systemName) {
 		else
 		   break;
 	}
-	if (slashIndex < 0 ) {
+	if (slashIndex[0] < 0 || slashIndex[1] < 0 ) {
 		return 0;
 	}
-	
+
 	strncpy(systemName, path + (slashIndex[1] +1), slashIndex[0]-slashIndex[1]-1);
 	
 	//write_log("systemName=%s\n", systemName);
@@ -250,9 +250,9 @@ static int parseSystemName(char* path, char* systemName) {
 static int parseParentPath(char* path, char* parentPath) {
 	int i;
 	int j=0;
-	int slashIndex[2];
+	int slashIndex[2]={-1,-1};
 	int len = strlen(path);
-	
+
 	if (len < 1) {
 		return 0;
 	}
@@ -268,10 +268,10 @@ static int parseParentPath(char* path, char* parentPath) {
 		else
 		   break;
 	}
-	if (slashIndex < 0 ) {
+	if (slashIndex[0] < 0 || slashIndex[1] < 0 ) {
 		return 0;
 	}
-	
+
 	strncpy(parentPath, path, slashIndex[1]);
 	
 	//write_log("parentPath=%s\n", parentPath);
@@ -315,14 +315,14 @@ void Extract_AllPath(char *srcpath){
 	//split the path to directory and the name without the zip extension
 	result = parseSystemName(srcpath, MsystemName);
 	if (result == 0) {
-		write_log("parse path failed! path=%s\n", srcpath);
+		write_log("parse systemname failed! path=%s\n", srcpath);
 		strcpy(MsystemName,srcpath );
 		result_value|=2;
 	}
 	//get the parent path
 	result = parseParentPath(srcpath, MparentPath);
 	if (result == 0) {
-		write_log("parse path failed! path=%s\n", srcpath);
+		write_log("parse parentpath failed! path=%s\n", srcpath);
 		strcpy(MparentPath,srcpath );
 		result_value|=4;
 	}
