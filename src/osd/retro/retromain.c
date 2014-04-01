@@ -206,7 +206,7 @@ static int parsePath(char* path, char* gamePath, char* gameName) {
 	if (slashIndex < 0 || dotIndex < 0) {
 		return 0;
 	}
-printf("slashind:%d\n",slashIndex);
+
 	strncpy(gamePath, path, slashIndex);
 	gamePath[slashIndex] = 0;
 	strncpy(gameName, path + (slashIndex + 1), dotIndex - (slashIndex + 1));
