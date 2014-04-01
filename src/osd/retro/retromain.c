@@ -101,6 +101,7 @@ static char gameName[1024];
 // Args for Core
 static char XARGV[64][1024];
 static const char* xargv_cmd[64];
+int PARAMCOUNT=0;
 
 // Path configuration
 #define NB_OPTPATH 12
@@ -211,7 +212,7 @@ static int parsePath(char* path, char* gamePath, char* gameName) {
 	strncpy(gameName, path + (slashIndex + 1), dotIndex - (slashIndex + 1));
 	gameName[dotIndex - (slashIndex + 1)] = 0;
 
-	write_log("gamePath=%s gameName=%s\n", gamePath, gameName);
+	//write_log("gamePath=%s gameName=%s\n", gamePath, gameName);
 	return 1;
 }
 
@@ -242,7 +243,7 @@ static int parseSystemName(char* path, char* systemName) {
 	
 	strncpy(systemName, path + (slashIndex[1] +1), slashIndex[0]-slashIndex[1]-1);
 	
-	write_log("systemName=%s\n", systemName);
+	//write_log("systemName=%s\n", systemName);
 	return 1;
 }
 
@@ -273,7 +274,7 @@ static int parseParentPath(char* path, char* parentPath) {
 	
 	strncpy(parentPath, path, slashIndex[1]);
 	
-	write_log("parentPath=%s\n", parentPath);
+	//write_log("parentPath=%s\n", parentPath);
 	return 1;
 }
 
@@ -283,7 +284,7 @@ static int getGameInfo(char* gameName, int* rotation, int* driverIndex,bool *Arc
 	int num=driver_list::find(gameName);
 
 	if (num != -1){
-		fprintf(stderr, "%s%s\n", driver_list::driver(num).name, driver_list::driver(num).description);
+		fprintf(stderr, "%s | %s\n", driver_list::driver(num).name, driver_list::driver(num).description);
 		if(driver_list::driver(num).flags& GAME_TYPE_ARCADE)
 		{
 		   write_log("type: ARCADE system\n");
@@ -299,6 +300,76 @@ static int getGameInfo(char* gameName, int* rotation, int* driverIndex,bool *Arc
 }
 
 
+void Extract_AllPath(char *srcpath){
+
+	int result = 0, result_value =0;
+
+	//split the path to directory and the name without the zip extension
+	result = parsePath(srcpath, MgamePath, MgameName);
+	if (result == 0) {
+		write_log("parse path failed! path=%s\n", srcpath);
+		strcpy(MgameName,srcpath);
+		result_value|=1;
+	}
+	
+	//split the path to directory and the name without the zip extension
+	result = parseSystemName(srcpath, MsystemName);
+	if (result == 0) {
+		write_log("parse path failed! path=%s\n", srcpath);
+		strcpy(MsystemName,srcpath );
+		result_value|=2;
+	}
+	//get the parent path
+	result = parseParentPath(srcpath, MparentPath);
+	if (result == 0) {
+		write_log("parse path failed! path=%s\n", srcpath);
+		strcpy(MparentPath,srcpath );
+		result_value|=4;
+	}
+
+	write_log("Extract path:%s res=%x\nGame=%s System=%s\nGamepath=%s\nParent=%s\n",\
+		srcpath,result_value,MgameName,MsystemName,MgamePath,MparentPath);
+
+}
+
+void Set_Default_Option(){
+
+	//some hardcoded default Options
+
+	PARAMCOUNT=0;
+
+	sprintf(XARGV[PARAMCOUNT++],"%s\0",core);
+	sprintf(XARGV[PARAMCOUNT++],"%s\0","-joystick");
+	sprintf(XARGV[PARAMCOUNT++],"%s\0","-samplerate");
+	sprintf(XARGV[PARAMCOUNT++],"%s\0","48000");
+	sprintf(XARGV[PARAMCOUNT++],"%s\0","-sound");
+	sprintf(XARGV[PARAMCOUNT++],"%s\0","-cheat");
+
+}
+
+void Set_Path_Option(){
+
+	char tmp_dir[256];
+
+	//Setup path Option according to retro (save/system) directory or current if NULL 
+	for(int i=0;i<NB_OPTPATH;i++){
+
+		sprintf(XARGV[PARAMCOUNT++],"%s\0",(char*)(opt_name[i]));
+
+		if(opt_type[i]==0){
+			if(retro_save_directory!=NULL)sprintf(tmp_dir, "%s%c%s%c%s", retro_save_directory, slash, core, slash,dir_name[i]);	
+			else sprintf(tmp_dir, "%s%c%s%c%s", ".", slash, core, slash,dir_name[i]);
+		}
+		else {
+			if(retro_system_directory!=NULL)sprintf(tmp_dir, "%s%c%s%c%s", retro_system_directory, slash, core, slash,dir_name[i]);	
+			else sprintf(tmp_dir, "%s%c%s%c%s", ".", slash, core, slash,dir_name[i]);
+		}
+
+		sprintf(XARGV[PARAMCOUNT++],"%s\0",(char*)(tmp_dir));
+	}
+
+}
+
 #include "../portmedia/pmmidi.inc"
  
 //============================================================
@@ -313,7 +384,6 @@ extern "C"
 #endif
 int mmain(int argc, const char *argv)
 {
-
 	int result = 0;
 	
 	strcpy(gameName,argv);
@@ -330,6 +400,25 @@ int mmain(int argc, const char *argv)
 		write_log("executing game... %s\n", gameName);
 		result = executeGame(gameName);
 	}
+
+	if(result<0)return result;
+	
+	write_log("frontend parameters:%i\n", PARAMCOUNT);
+
+	for (int i = 0; i<PARAMCOUNT; i++){
+		xargv_cmd[i] = (char*)(XARGV[i]);
+		write_log("  %s\n",XARGV[i]);
+	}
+
+	osd_init_midi();
+
+	cli_options MRoptions;
+	mini_osd_interface MRosd;
+	cli_frontend frontend(MRoptions, MRosd);
+	result = frontend.execute(PARAMCOUNT, ( char **)xargv_cmd); 
+
+	xargv_cmd[PARAMCOUNT - 2] = NULL;
+
 
 	return 1;
 }

@@ -62,12 +62,9 @@ void parse_cmdline( const char *argv ){
 
 int executeGame_cmd(char* path) {
 
-	char tmp_dir[256];
-
-	int paramCount;
-	int result = 0;
 	int gameRot=0;
 	int driverIndex;
+
 	bool CreateConf = ( strcmp(ARGUV[0],"-cc") == 0 || strcmp(ARGUV[0],"-createconfig") == 0 )?1:0;
 	bool Only1Arg =   ( ARGUC==1 )?1:0;
 
@@ -95,64 +92,28 @@ int executeGame_cmd(char* path) {
 		}
 	}
 
-	//some hardcoded default Options
-	paramCount=0;
-	sprintf(XARGV[paramCount++],"%s\0",core);
-	sprintf(XARGV[paramCount++],"%s\0","-joystick");
-	sprintf(XARGV[paramCount++],"%s\0","-samplerate");
-	sprintf(XARGV[paramCount++],"%s\0","48000");
-	sprintf(XARGV[paramCount++],"%s\0","-sound");
-	sprintf(XARGV[paramCount++],"%s\0","-cheat");
-        sprintf(XARGV[paramCount++],"%s\0","-mouse");
+	Set_Default_Option();
 
-	//Setup path Option according to retro (save/system) directory or current if NULL 
-	for(int i=0;i<NB_OPTPATH;i++){
+        sprintf(XARGV[PARAMCOUNT++],"%s\0","-mouse");
 
-		sprintf(XARGV[paramCount++],"%s\0",(char*)(opt_name[i]));
-
-		if(opt_type[i]==0){
-			if(retro_save_directory!=NULL)sprintf(tmp_dir, "%s%c%s%c%s", retro_save_directory, slash, core, slash,dir_name[i]);	
-			else sprintf(tmp_dir, "%s%c%s%c%s", ".", slash, core, slash,dir_name[i]);
-		}
-		else {
-			if(retro_system_directory!=NULL)sprintf(tmp_dir, "%s%c%s%c%s", retro_system_directory, slash, core, slash,dir_name[i]);	
-			else sprintf(tmp_dir, "%s%c%s%c%s", ".", slash, core, slash,dir_name[i]);
-		}
-
-		sprintf(XARGV[paramCount++],"%s\0",(char*)(tmp_dir));
-	}
+	Set_Path_Option();
 
 	if(Only1Arg){// Assume arcade rom with full path or -cc  
 
 		if(CreateConf)
-			sprintf(XARGV[paramCount++],"%s\0",(char*)"-createconfig");
+			sprintf(XARGV[PARAMCOUNT++],"%s\0",(char*)"-createconfig");
 		else {
-			sprintf(XARGV[paramCount++],"%s\0",(char*)"-rp");	
-			sprintf(XARGV[paramCount++],"%s\0",(char*)g_rom_dir);	
-			sprintf(XARGV[paramCount++],"%s\0",MgameName);
+			sprintf(XARGV[PARAMCOUNT++],"%s\0",(char*)"-rp");	
+			sprintf(XARGV[PARAMCOUNT++],"%s\0",(char*)g_rom_dir);	
+			sprintf(XARGV[PARAMCOUNT++],"%s\0",MgameName);
 		}
 	}
 	else { // Pass all cmdline args
 		for(int i=0;i<ARGUC;i++)
-			sprintf(XARGV[paramCount++],"%s\0", ARGUV[i]);
+			sprintf(XARGV[PARAMCOUNT++],"%s\0", ARGUV[i]);
 	}
 
-	write_log("frontend parameters:%i\n", paramCount);
-
-	for (int i = 0; i<paramCount; i++){
-		xargv_cmd[i] = (char*)(XARGV[i]);
-		write_log("  %s\n",XARGV[i]);
-	}
-
-	osd_init_midi();
-
-	cli_options MRoptions;
-	mini_osd_interface MRosd;
-	cli_frontend frontend(MRoptions, MRosd);
-	result = frontend.execute(paramCount, ( char **)xargv_cmd); 
-
-	xargv_cmd[paramCount - 2] = NULL;
-
-	return result;
+	
+	return 0;
 }
 
