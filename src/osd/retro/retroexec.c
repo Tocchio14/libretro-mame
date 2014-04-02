@@ -79,25 +79,25 @@ int executeGame(char* path) {
 	// useless ?
 	if (tate) {
 		if (screenRot == 3) {
-			sprintf(XARGV[PARAMCOUNT++],"%s\0",(char*) "-rol");
+			Add_Option((char*) "-rol");
 		} else {
-			sprintf(XARGV[PARAMCOUNT++],"%s\0", (char*)(screenRot ? "-mouse" : "-ror"));
+			Add_Option((char*)(screenRot ? "-mouse" : "-ror"));
 		}
 	} else {
 		if (screenRot == 2) {
-			sprintf(XARGV[PARAMCOUNT++],"%s\0",(char*)"-rol");
+			Add_Option((char*)"-rol");
 		} else {
-			sprintf(XARGV[PARAMCOUNT++],"%s\0", (char*)(screenRot ? "-ror" : "-mouse"));
+			Add_Option((char*)(screenRot ? "-ror" : "-mouse"));
 		}
 	}
 
-	sprintf(XARGV[PARAMCOUNT++],"%s\0", (char*)("-rompath"));
+	Add_Option((char*)("-rompath"));
 		
 #ifdef WANT_MAME
    	sprintf(tmp_dir, "%s", MgamePath);
-   	sprintf(XARGV[PARAMCOUNT++],"%s\0", (char*)(tmp_dir));		   
+   	Add_Option((char*)(tmp_dir));		   
    	if(!boot_to_osd_enabled)
-   		sprintf(XARGV[PARAMCOUNT++],"%s\0", MgameName);
+   		Add_Option(MgameName);
   
 #else
    	if(!commandline_enabled)
@@ -105,32 +105,32 @@ int executeGame(char* path) {
 		if(!boot_to_osd_enabled)
 	   	{
 			sprintf(tmp_dir, "%s", MgamePath);
-			sprintf(XARGV[PARAMCOUNT++],"%s\0", (char*)(tmp_dir));		   
+			Add_Option((char*)(tmp_dir));		   
 		  	if(softlist_enabled)
 		  	{
 				if(!arcade)
 				{
-					sprintf(XARGV[PARAMCOUNT++],"%s\0",MsystemName);   
+					Add_Option(MsystemName);   
 					if(!boot_to_bios_enabled)
 					{
 						if(!softlist_auto)
-					  		sprintf(XARGV[PARAMCOUNT++],"%s\0", (char*)mediaType);
-				   		sprintf(XARGV[PARAMCOUNT++],"%s\0", (char*)MgameName);
+					  		Add_Option((char*)mediaType);
+				   		Add_Option((char*)MgameName);
 					}
 			 	}
 			 	else
 			 	{
-					sprintf(XARGV[PARAMCOUNT++],"%s\0", (char*)MgameName);
+					Add_Option((char*)MgameName);
 			 	}	     
 		  	}
 		  	else
 		  	{
 			 	if (strcmp(mediaType, "-rom") == 0) {
-					sprintf(XARGV[PARAMCOUNT++],"%s\0", MgameName);
+					Add_Option(MgameName);
 			 	} else {
-					sprintf(XARGV[PARAMCOUNT++],"%s\0",MsystemName);
-					sprintf(XARGV[PARAMCOUNT++],"%s\0", (char*)mediaType);
-					sprintf(XARGV[PARAMCOUNT++],"%s\0", (char*)gameName);
+					Add_Option(MsystemName);
+					Add_Option((char*)mediaType);
+					Add_Option((char*)gameName);
 			 	}   
 	   
 		  	}
@@ -138,11 +138,11 @@ int executeGame(char* path) {
 		else
 		{
 			sprintf(tmp_dir, "%s;%s", MgamePath,MparentPath);
-			sprintf(XARGV[PARAMCOUNT++],"%s\0", (char*)(tmp_dir));		   	
+			Add_Option((char*)(tmp_dir));		   	
 		}
 	}
 	else	
-		sprintf(XARGV[PARAMCOUNT++],"%s\0",(char*)gameName);	
+		Add_Option((char*)gameName);	
  	
 #endif 	 	 
 	

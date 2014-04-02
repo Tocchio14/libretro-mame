@@ -332,19 +332,29 @@ void Extract_AllPath(char *srcpath){
 
 }
 
+void Add_Option(const char* option){
+	
+	static int first=0;
+
+	if(first==0){
+		PARAMCOUNT=0;	
+		first++;
+	}
+	
+	sprintf(XARGV[PARAMCOUNT++],"%s\0",option);
+}
+
 void Set_Default_Option(){
 
 	//some hardcoded default Options
 
-	PARAMCOUNT=0;
-
-	sprintf(XARGV[PARAMCOUNT++],"%s\0",core);
-	sprintf(XARGV[PARAMCOUNT++],"%s\0","-joystick");
-	sprintf(XARGV[PARAMCOUNT++],"%s\0","-samplerate");
-	sprintf(XARGV[PARAMCOUNT++],"%s\0","48000");
-	sprintf(XARGV[PARAMCOUNT++],"%s\0","-sound");
-	sprintf(XARGV[PARAMCOUNT++],"%s\0","-cheat");
-	sprintf(XARGV[PARAMCOUNT++],"%s\0","-nothrottle");
+	Add_Option(core);
+	Add_Option("-joystick");
+	Add_Option("-samplerate");
+	Add_Option("48000");
+	Add_Option("-sound");
+	Add_Option("-cheat");
+	Add_Option("-nothrottle");
 
 }
 
@@ -355,7 +365,7 @@ void Set_Path_Option(){
 	//Setup path Option according to retro (save/system) directory or current if NULL 
 	for(int i=0;i<NB_OPTPATH;i++){
 
-		sprintf(XARGV[PARAMCOUNT++],"%s\0",(char*)(opt_name[i]));
+		Add_Option((char*)(opt_name[i]));
 
 		if(opt_type[i]==0){
 			if(retro_save_directory!=NULL)sprintf(tmp_dir, "%s%c%s%c%s", retro_save_directory, slash, core, slash,dir_name[i]);	
@@ -366,7 +376,7 @@ void Set_Path_Option(){
 			else sprintf(tmp_dir, "%s%c%s%c%s", ".", slash, core, slash,dir_name[i]);
 		}
 
-		sprintf(XARGV[PARAMCOUNT++],"%s\0",(char*)(tmp_dir));
+		Add_Option((char*)(tmp_dir));
 	}
 
 }

@@ -79,6 +79,15 @@ int executeGame_cmd(char* path) {
 		write_log("parse path failed! path=%s\n", path);
 		strcpy(MgameName,path );
 	}
+
+	if(Only1Arg){
+	//split the path to directory and the name without the zip extension
+		if (parseSystemName(path, MsystemName) ==0){
+			write_log("parse systemname failed! path=%s\n", path);
+			strcpy(MsystemName,path );		
+		}
+	}
+
 	//Find the game info. Exit if game driver was not found.
 	if (getGameInfo(Only1Arg?MgameName:ARGUV[0], &gameRot, &driverIndex,&arcade) == 0) {
 
@@ -88,29 +97,54 @@ int executeGame_cmd(char* path) {
 		}
 		else {
 			write_log("game not found: %s\n", MgameName);
-			return -2;
+			if(Only1Arg){
+				//test if system exist (based on parent path)
+		   		if (getGameInfo(MsystemName, &gameRot, &driverIndex,&arcade) == 0) {
+		      			write_log("driver not found: %s\n", MsystemName);
+   		         		return -2;
+	       			}
+			}
+			else return -2;
 		}
 	}
 
+
+	if(Only1Arg){
+
+		// handle case where Arcade game exist and game on a System also
+		if(arcade==true){
+			// test system
+		   	if (getGameInfo(MsystemName, &gameRot, &driverIndex,&arcade) == 0) {
+		      		write_log("System not found: %s\n", MsystemName);   		         	
+	       		}
+			else {
+				write_log("System found: %s\n", MsystemName);   
+				arcade=false;
+			}
+		} 
+	
+	} 
+
 	Set_Default_Option();
 
-        sprintf(XARGV[PARAMCOUNT++],"%s\0","-mouse");
+        Add_Option("-mouse");
 
 	Set_Path_Option();
 
-	if(Only1Arg){// Assume arcade rom with full path or -cc  
+	if(Only1Arg){// Assume arcade/mess rom with full path or -cc  
 
 		if(CreateConf)
-			sprintf(XARGV[PARAMCOUNT++],"%s\0",(char*)"-createconfig");
+			Add_Option((char*)"-createconfig");
 		else {
-			sprintf(XARGV[PARAMCOUNT++],"%s\0",(char*)"-rp");	
-			sprintf(XARGV[PARAMCOUNT++],"%s\0",(char*)g_rom_dir);	
-			sprintf(XARGV[PARAMCOUNT++],"%s\0",MgameName);
+			Add_Option((char*)"-rp");	
+			Add_Option((char*)g_rom_dir);	
+			if(!arcade)Add_Option(MsystemName);
+			Add_Option(MgameName);
 		}
 	}
 	else { // Pass all cmdline args
 		for(int i=0;i<ARGUC;i++)
-			sprintf(XARGV[PARAMCOUNT++],"%s\0", ARGUV[i]);
+			Add_Option(ARGUV[i]);
 	}
 
 	
