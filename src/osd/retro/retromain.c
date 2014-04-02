@@ -344,6 +344,7 @@ void Set_Default_Option(){
 	sprintf(XARGV[PARAMCOUNT++],"%s\0","48000");
 	sprintf(XARGV[PARAMCOUNT++],"%s\0","-sound");
 	sprintf(XARGV[PARAMCOUNT++],"%s\0","-cheat");
+	sprintf(XARGV[PARAMCOUNT++],"%s\0","-nothrottle");
 
 }
 
