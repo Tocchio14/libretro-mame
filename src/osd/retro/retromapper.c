@@ -1,6 +1,6 @@
 void retro_poll_mame_input();
 
-static int rtwi=320,rthe=240,topw=1024; // DEFAULT TEXW/TEXH/PITCH
+static int rtwi=320,rthe=240,topw=1600; // DEFAULT TEXW/TEXH/PITCH
 static float rtaspect=0;
 int SHIFTON=-1,NEWGAME_FROM_OSD=0;
 char RPATH[512];
@@ -13,10 +13,10 @@ extern "C" int mmain(int argc, const char *argv);
 extern bool draw_this_frame;
 
 #ifdef M16B
-	uint16_t videoBuffer[1024*1024];
+	uint16_t videoBuffer[1600*1200];
 	#define LOG_PIXEL_BYTES 1
 #else
-	unsigned int videoBuffer[1024*1024];
+	unsigned int videoBuffer[1600*1200];
 	#define LOG_PIXEL_BYTES 2*1
 #endif 
 
@@ -384,8 +384,8 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
    info->geometry.base_width = rtwi;
    info->geometry.base_height =rthe;
 
-   info->geometry.max_width = 1024;
-   info->geometry.max_height = 768;
+   info->geometry.max_width = 1600;
+   info->geometry.max_height = 1200;
 
    info->geometry.aspect_ratio =rtaspect;
    info->timing.fps = 60;
@@ -521,9 +521,9 @@ bool retro_load_game(const struct retro_game_info *info)
 	check_variables();
 
 #ifdef M16B
-	memset(videoBuffer,0,1024*1024*2);
+	memset(videoBuffer,0,1600*1200*2);
 #else
-	memset(videoBuffer,0,1024*1024*2*2);
+	memset(videoBuffer,0,1600*1200*2*2);
 #endif
 	char basename[256];
 	

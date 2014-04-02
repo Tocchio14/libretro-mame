@@ -96,7 +96,7 @@ void mini_osd_interface::update(bool skip_redraw)
 		our_target->compute_minimum_size(minwidth, minheight);
 	}
 	else{
-     		 minwidth=1024;minheight=768;
+     		 minwidth=1600;minheight=1200;
         }
 
       if (FirstTimeUpdate == 1) {
@@ -128,8 +128,8 @@ void mini_osd_interface::update(bool skip_redraw)
       }
 
       if(videoapproach1_enable){
-		rtwi=topw=1024;
-		rthe=768;
+		rtwi=topw=1600;
+		rthe=1200;
       }
 
       // make that the size of our target
