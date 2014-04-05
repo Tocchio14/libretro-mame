@@ -105,7 +105,7 @@
 #include "sound/beep.h"
 #include "machine/ram.h"
 #include "rendlay.h"
-#include "mcfglgcy.h"
+
 
 #define VERBOSE 0
 #define LOG(x) do { if (VERBOSE) logerror x; } while (0)
@@ -1154,6 +1154,8 @@ MACHINE_START_MEMBER(nc_state,nc200)
 	/* keyboard timer */
 	m_keyboard_timer = machine().scheduler().timer_alloc(timer_expired_delegate(FUNC(nc_state::nc_keyboard_timer_callback),this));
 	m_keyboard_timer->adjust(attotime::from_msec(10));
+
+	m_nvram->set_base(m_ram->pointer(), m_ram->size());
 }
 
 /*

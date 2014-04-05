@@ -1400,7 +1400,7 @@ public:
 	required_device<screen_device> m_screen;
 	required_device<palette_device> m_palette;
 
-	
+
 	c404_t m_c404;
 	c361_t m_c361;
 	c417_t m_c417;
@@ -1497,7 +1497,7 @@ public:
 	DECLARE_WRITE16_MEMBER(iob_p4_w);
 	DECLARE_READ16_MEMBER(iob_p6_r);
 	DECLARE_WRITE16_MEMBER(iob_p6_w);
-	DECLARE_READ16_MEMBER(iob_gun_r);
+	DECLARE_READ8_MEMBER(iob_gun_r);
 	DECLARE_READ16_MEMBER(iob_analog_r);
 	DECLARE_DRIVER_INIT(s23);
 	TILE_GET_INFO_MEMBER(TextTilemapGetInfo);
@@ -2765,14 +2765,19 @@ WRITE32_MEMBER(namcos23_state::sh2_shared_w)
 static ADDRESS_MAP_START( gmen_mips_map, AS_PROGRAM, 32, namcos23_state )
 	AM_IMPORT_FROM(s23_map)
 	AM_RANGE(0x0e400000, 0x0e400003) AM_READ(gmen_trigger_sh2)
-	AM_RANGE(0x0e700000, 0x0e707fff) AM_READWRITE(sh2_shared_r, sh2_shared_w)
+	AM_RANGE(0x0e700000, 0x0e70ffff) AM_READWRITE(sh2_shared_r, sh2_shared_w)
 ADDRESS_MAP_END
 
 
 // SH2 memmap
+/* TODO: of course, I believe that area 0x008***** is actually a bank of some sort ... */
 static ADDRESS_MAP_START( gmen_sh2_map, AS_PROGRAM, 32, namcos23_state )
-	AM_RANGE(0x00000000, 0x00007fff) AM_RAM AM_SHARE("gmen_sh2_shared")
-	AM_RANGE(0x04000000, 0x043fffff) AM_RAM // SH-2 main work RAM
+	AM_RANGE(0x00000000, 0x0000ffff) AM_RAM AM_SHARE("gmen_sh2_shared")
+	AM_RANGE(0x00800000, 0x008fffff) AM_ROM AM_REGION("data", 0xc00000) //c00000 "data" for final furlong 2. 0x1b6bc0 "user1" for gunmen wars
+	AM_RANGE(0x01800000, 0x0183ffff) AM_RAM // ???
+	//AM_RANGE(0x02800000, 0x02800003) AM_RAM // probably transfer status related, reads/writes after each end of flash transfer, TBD
+	AM_RANGE(0x04000000, 0x043fffff) AM_RAM // SH-2 main work RAM (SDRAM)
+	AM_RANGE(0x06000000, 0x06000003) AM_NOP // serial port for camera?
 ADDRESS_MAP_END
 
 
@@ -2980,7 +2985,7 @@ ADDRESS_MAP_END
 
 // Time Crisis lightgun
 
-READ16_MEMBER(namcos23_state::iob_gun_r)
+READ8_MEMBER(namcos23_state::iob_gun_r)
 {
 	UINT16 xpos = m_lightx->read();
 	UINT16 ypos = m_lighty->read();
@@ -2988,17 +2993,19 @@ READ16_MEMBER(namcos23_state::iob_gun_r)
 
 	switch(offset)
 	{
-		case 0: return xpos;
-		case 1: return ypos;
-		case 2: return ypos;
-		default: break;
+		case 0: return xpos&0xff;
+		case 1: return ypos&0xff;
+		case 2: return ypos&0xff;
+		case 3: return xpos>>8;
+		case 4: return ypos>>8;
+		case 5: return ypos>>8;
 	}
 
 	return 0;
 }
 
 static ADDRESS_MAP_START( timecrs2iobrdmap, AS_PROGRAM, 16, namcos23_state )
-	AM_RANGE(0x7000, 0x700f) AM_READ(iob_gun_r)
+	AM_RANGE(0x7000, 0x700f) AM_READ8(iob_gun_r, 0xffff)
 	AM_IMPORT_FROM( s23iobrdmap )
 ADDRESS_MAP_END
 
@@ -3029,7 +3036,7 @@ static INPUT_PORTS_START( rapidrvr )
 
 	PORT_START("IN23")
 	PORT_BIT( 0x0800, IP_ACTIVE_LOW, IPT_COIN1 )
-	PORT_BIT( 0xf700, IP_ACTIVE_LOW, IPT_UNKNOWN )
+	PORT_BIT( 0xf7ff, IP_ACTIVE_LOW, IPT_UNKNOWN )
 
 	PORT_START("SERVICE")
 	PORT_BIT( 0x01, IP_ACTIVE_LOW, IPT_SERVICE1 )
@@ -3350,7 +3357,7 @@ static MACHINE_CONFIG_START( gorgon, namcos23_state )
 	MCFG_LINE_DISPATCH_ADD("clk_dispatch", 2)
 	MCFG_LINE_DISPATCH_FWD_CB(0, 2, DEVWRITELINE(":rtc", rtc4543_device, clk_w)) MCFG_DEVCB_INVERT
 	MCFG_LINE_DISPATCH_FWD_CB(1, 2, DEVWRITELINE(":namco_settings", namco_settings_device, clk_w))
-	
+
 	MCFG_DEVICE_MODIFY("subcpu:sci1")
 	MCFG_H8_SCI_TX_CALLBACK(DEVWRITELINE(":namco_settings", namco_settings_device, data_w))
 	MCFG_H8_SCI_CLK_CALLBACK(DEVWRITELINE(":clk_dispatch", devcb2_line_dispatch_device<2>, in_w))
@@ -3418,7 +3425,7 @@ static MACHINE_CONFIG_START( s23, namcos23_state )
 	MCFG_LINE_DISPATCH_ADD("clk_dispatch", 2)
 	MCFG_LINE_DISPATCH_FWD_CB(0, 2, DEVWRITELINE(":rtc", rtc4543_device, clk_w)) MCFG_DEVCB_INVERT
 	MCFG_LINE_DISPATCH_FWD_CB(1, 2, DEVWRITELINE(":namco_settings", namco_settings_device, clk_w))
-	
+
 	MCFG_DEVICE_MODIFY("subcpu:sci1")
 	MCFG_H8_SCI_TX_CALLBACK(DEVWRITELINE(":namco_settings", namco_settings_device, data_w))
 	MCFG_H8_SCI_CLK_CALLBACK(DEVWRITELINE(":clk_dispatch", devcb2_line_dispatch_device<2>, in_w))
@@ -3497,7 +3504,7 @@ static MACHINE_CONFIG_START( ss23, namcos23_state )
 	MCFG_LINE_DISPATCH_ADD("clk_dispatch", 2)
 	MCFG_LINE_DISPATCH_FWD_CB(0, 2, DEVWRITELINE(":rtc", rtc4543_device, clk_w)) MCFG_DEVCB_INVERT
 	MCFG_LINE_DISPATCH_FWD_CB(1, 2, DEVWRITELINE(":namco_settings", namco_settings_device, clk_w))
-	
+
 	MCFG_DEVICE_MODIFY("subcpu:sci1")
 	MCFG_H8_SCI_TX_CALLBACK(DEVWRITELINE(":namco_settings", namco_settings_device, data_w))
 	MCFG_H8_SCI_CLK_CALLBACK(DEVWRITELINE(":clk_dispatch", devcb2_line_dispatch_device<2>, in_w))

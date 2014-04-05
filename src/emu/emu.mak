@@ -65,6 +65,7 @@ EMUOBJS = \
 	$(EMUOBJ)/device.o \
 	$(EMUOBJ)/didisasm.o \
 	$(EMUOBJ)/diexec.o \
+	$(EMUOBJ)/digfx.o \
 	$(EMUOBJ)/diimage.o \
 	$(EMUOBJ)/dimemory.o \
 	$(EMUOBJ)/dinetwork.o \
@@ -121,6 +122,7 @@ EMUOBJS = \
 	$(EMUOBJ)/ui/selgame.o \
 	$(EMUOBJ)/ui/filemngr.o \
 	$(EMUOBJ)/ui/filesel.o \
+	$(EMUOBJ)/ui/imgcntrl.o \
 	$(EMUOBJ)/ui/imginfo.o \
 	$(EMUOBJ)/ui/bbcontrl.o \
 	$(EMUOBJ)/ui/barcode.o \

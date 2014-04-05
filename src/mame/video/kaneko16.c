@@ -42,6 +42,7 @@ void kaneko16_state::kaneko16_fill_bitmap(palette_device* palette, _BitmapClass 
 
 
 	typename _BitmapClass::pixel_t *dest;
+	(void)dest; // shut up Visual Studio
 	if (sizeof(*dest) == 2)
 	{
 		bitmap.fill(pen, cliprect);
@@ -231,6 +232,6 @@ UINT32 kaneko16_berlwall_state::screen_update_berlwall(screen_device &screen, bi
 	if (!m_disp_enable) return 0;
 
 	screen_update_common(screen, bitmap, cliprect);
-	m_kaneko_spr->kaneko16_render_sprites(machine(),bitmap,cliprect, screen.priority(), m_spriteram, m_spriteram.bytes());
+	m_kaneko_spr->kaneko16_render_sprites(machine(),bitmap,cliprect, screen.priority(), m_spriteram, m_spriteram.bytes()/2);
 	return 0;
 }
