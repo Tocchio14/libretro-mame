@@ -424,7 +424,7 @@ int mmain(int argc, const char *argv)
 	osd_init_midi();
 
 	cli_options MRoptions;
-	mini_osd_interface MRosd;
+	retro_osd_interface MRosd;
 	cli_frontend frontend(MRoptions, MRosd);
 	result = frontend.execute(PARAMCOUNT, ( char **)xargv_cmd); 
 

@@ -12,7 +12,7 @@
 //  constructor
 //============================================================
 
-mini_osd_interface::mini_osd_interface()
+retro_osd_interface::retro_osd_interface()
 {
 }
 
@@ -21,11 +21,11 @@ mini_osd_interface::mini_osd_interface()
 //  destructor
 //============================================================
 
-mini_osd_interface::~mini_osd_interface()
+retro_osd_interface::~retro_osd_interface()
 {
 }
 
-void mini_osd_interface::osd_exit(running_machine &machine)
+void retro_osd_interface::osd_exit(running_machine &machine)
 {	
 	write_log("osd_exit called \n");
 
@@ -37,7 +37,7 @@ void mini_osd_interface::osd_exit(running_machine &machine)
 	global_free(mouse_device);
 }
 
-void mini_osd_interface::init(running_machine &machine)
+void retro_osd_interface::init(running_machine &machine)
 {
 	int gamRot=0;
 
@@ -72,7 +72,7 @@ void mini_osd_interface::init(running_machine &machine)
 
 bool draw_this_frame;
 
-void mini_osd_interface::update(bool skip_redraw)
+void retro_osd_interface::update(bool skip_redraw)
 {
 	//const render_primitive_list *primlist;
 	UINT8 *surfptr;
@@ -166,7 +166,7 @@ software_renderer<UINT16, 3,2,3, 11,5,0>::draw_primitives(primlist, surfptr, min
 //============================================================
 //  update_audio_stream
 //============================================================
-void mini_osd_interface::update_audio_stream(const INT16 *buffer, int samples_this_frame) 
+void retro_osd_interface::update_audio_stream(const INT16 *buffer, int samples_this_frame) 
 {
 	if(pauseg!=-1)audio_batch_cb(buffer, samples_this_frame);
 }
@@ -175,7 +175,7 @@ void mini_osd_interface::update_audio_stream(const INT16 *buffer, int samples_th
 //============================================================
 //  set_mastervolume
 //============================================================
-void mini_osd_interface::set_mastervolume(int attenuation)
+void retro_osd_interface::set_mastervolume(int attenuation)
 {
 	// if we had actual sound output, we would adjust the global
 	// volume in response to this function
@@ -185,7 +185,7 @@ void mini_osd_interface::set_mastervolume(int attenuation)
 //============================================================
 //  customize_input_type_list
 //============================================================
-void mini_osd_interface::customize_input_type_list(simple_list<input_type_entry> &typelist)
+void retro_osd_interface::customize_input_type_list(simple_list<input_type_entry> &typelist)
 {
 	// This function is called on startup, before reading the
 	// configuration from disk. Scan the list, and change the

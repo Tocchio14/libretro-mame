@@ -7,12 +7,12 @@
 //  TYPE DEFINITIONS
 //============================================================
 
-class mini_osd_interface : public osd_interface
+class retro_osd_interface : public osd_interface
 {
 public:
 	// construction/destruction
-	mini_osd_interface();
-	virtual ~mini_osd_interface();
+	retro_osd_interface();
+	virtual ~retro_osd_interface();
 
 	// general overridables
 	virtual void init(running_machine &machine);
