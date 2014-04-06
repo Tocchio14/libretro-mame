@@ -1,7 +1,7 @@
 
 //Args for experimental_cmdline
 static char ARGUV[32][1024];
-static char ARGUC=0;
+static unsigned char ARGUC=0;
 
 void parse_cmdline( const char *argv ){
 
@@ -37,7 +37,7 @@ void parse_cmdline( const char *argv ){
 			if (c == '"') {
 				/* word goes from start_of_word to p-1 */
 				//... do something with the word ...
-				for (c2=0,p2 = start_of_word; p2 <p; p2++,c2++)ARGUV[ARGUC][c2] = (unsigned char) *p2;
+				for (c2=0,p2 = start_of_word; p2 < p; p2++,c2++)ARGUV[ARGUC][c2] = (unsigned char) *p2;
 				ARGUC++; 
 				
 				state = DULL; /* back to "not in word, not in string" state */
