@@ -177,7 +177,7 @@ int mame_execute(emu_options &options, osd_interface &osd)
 			astring errors;
 			options.parse_standard_inis(errors);
 		}
-		
+
 		// otherwise, perform validity checks before anything else
 		if (system != NULL)
 		{

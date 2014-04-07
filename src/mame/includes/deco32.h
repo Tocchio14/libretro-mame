@@ -91,11 +91,11 @@ public:
 
 	required_device<deco16ic_device> m_deco_tilegen1;
 	required_device<deco16ic_device> m_deco_tilegen2;
-	
+
 	required_device<gfxdecode_device> m_gfxdecode;
 	required_device<screen_device> m_screen;
 	required_device<palette_device> m_palette;
-	
+
 	UINT8 m_irq_source;
 	DECLARE_WRITE_LINE_MEMBER(sound_irq_nslasher);
 	DECLARE_READ32_MEMBER(deco32_irq_controller_r);
@@ -168,6 +168,9 @@ public:
 	UINT16 port_b_tattass(int unused);
 	void tattass_sound_cb( address_space &space, UINT16 data, UINT16 mem_mask );
 
+	int fghthist_bank_callback( int bank );
+	int captaven_bank_callback( int bank );
+	int tattass_bank_callback( int bank );
 };
 
 class dragngun_state : public deco32_state
@@ -202,4 +205,7 @@ public:
 	void screen_eof_dragngun(screen_device &screen, bool state);
 	void dragngun_draw_sprites( bitmap_rgb32 &bitmap, const rectangle &cliprect, const UINT32 *spritedata);
 	READ32_MEMBER( dragngun_unk_video_r );
+	
+	int bank_1_callback( int bank );
+	int bank_2_callback( int bank );
 };

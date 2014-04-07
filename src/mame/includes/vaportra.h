@@ -38,7 +38,7 @@ public:
 	required_device<deco_mxc06_device> m_spritegen;
 	required_device<buffered_spriteram16_device> m_spriteram;
 	required_device<palette_device> m_palette;
-	
+
 	DECLARE_WRITE16_MEMBER(vaportra_sound_w);
 	DECLARE_READ16_MEMBER(vaportra_control_r);
 	DECLARE_READ8_MEMBER(vaportra_soundlatch_r);
@@ -50,4 +50,5 @@ public:
 	virtual void machine_reset();
 	UINT32 screen_update_vaportra(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	void update_24bitcol( int offset );
+	int bank_callback(int bank);
 };
