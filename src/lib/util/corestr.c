@@ -8,10 +8,10 @@
 
 ****************************************************************************/
 
-#include "corestr.h"
-#include "osdcore.h"
 #include <ctype.h>
 #include <stdlib.h>
+#include "corestr.h"
+#include "osdcore.h"
 
 
 /*-------------------------------------------------

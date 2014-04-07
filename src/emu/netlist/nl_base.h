@@ -1043,38 +1043,38 @@ public:
 	ATTR_COLD void warning(const char *format, ...) const ATTR_PRINTF(2,3);
 	ATTR_COLD void log(const char *format, ...) const ATTR_PRINTF(2,3);
 
-	template<class _C>
-	netlist_list_t<_C *> get_device_list()
+	template<class T>
+	netlist_list_t<T *> get_device_list()
 	{
-		netlist_list_t<_C *> tmp;
+		netlist_list_t<T *> tmp;
 		for (tagmap_devices_t::entry_t *entry = m_devices.first(); entry != NULL; entry = m_devices.next(entry))
 		{
-			_C *dev = dynamic_cast<_C *>(entry->object());
+			T *dev = dynamic_cast<T *>(entry->object());
 			if (dev != NULL)
 				tmp.add(dev);
 		}
 		return tmp;
 	}
 
-	template<class _C>
-	_C *get_first_device()
+	template<class T>
+	T *get_first_device()
 	{
 		for (tagmap_devices_t::entry_t *entry = m_devices.first(); entry != NULL; entry = m_devices.next(entry))
 		{
-			_C *dev = dynamic_cast<_C *>(entry->object());
+			T *dev = dynamic_cast<T *>(entry->object());
 			if (dev != NULL)
 				return dev;
 		}
 		return NULL;
 	}
 
-	template<class _C>
-	_C *get_single_device(const char *classname)
+	template<class T>
+	T *get_single_device(const char *classname)
 	{
-		_C *ret = NULL;
+		T *ret = NULL;
 		for (tagmap_devices_t::entry_t *entry = m_devices.first(); entry != NULL; entry = m_devices.next(entry))
 		{
-			_C *dev = dynamic_cast<_C *>(entry->object());
+			T *dev = dynamic_cast<T *>(entry->object());
 			if (dev != NULL)
 			{
 				if (ret != NULL)
@@ -1281,11 +1281,11 @@ public:
 
 	ATTR_COLD void initialize();
 
-	template<class _C>
+	template<class T>
 	ATTR_COLD void register_device(const pstring &name, const pstring &classname,
 			const pstring &def_param)
 	{
-		m_list.add(new net_device_t_factory< _C >(name, classname, def_param) );
+		m_list.add(new net_device_t_factory< T >(name, classname, def_param) );
 	}
 
 	ATTR_COLD netlist_device_t *new_device_by_classname(const pstring &classname, netlist_setup_t &setup) const;
