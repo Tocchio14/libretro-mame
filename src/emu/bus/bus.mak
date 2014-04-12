@@ -653,6 +653,7 @@ BUSOBJS += $(BUSOBJ)/a2bus/a2estd80col.o
 BUSOBJS += $(BUSOBJ)/a2bus/a2eext80col.o
 BUSOBJS += $(BUSOBJ)/a2bus/a2eramworks3.o
 BUSOBJS += $(BUSOBJ)/a2bus/a2corvus.o
+BUSOBJS += $(BUSOBJ)/a2bus/a2diskiing.o
 endif
 
 #-------------------------------------------------
@@ -1046,4 +1047,15 @@ ifneq ($(filter MACPDS,$(BUSES)),)
 OBJDIRS += $(BUSOBJ)/macpds
 BUSOBJS += $(BUSOBJ)/macpds/macpds.o
 BUSOBJS += $(BUSOBJ)/macpds/pds_tpdfpd.o
+endif
+
+#-------------------------------------------------
+#
+#@src/emu/bus/oricext/oricext.h,BUSES += ORICEXT
+#-------------------------------------------------
+ifneq ($(filter ORICEXT,$(BUSES)),)
+OBJDIRS += $(BUSOBJ)/oricext
+BUSOBJS += $(BUSOBJ)/oricext/oricext.o
+BUSOBJS += $(BUSOBJ)/oricext/jasmin.o
+BUSOBJS += $(BUSOBJ)/oricext/microdisc.o
 endif

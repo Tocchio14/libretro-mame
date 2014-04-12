@@ -31,7 +31,7 @@
 const device_type SEGA005 = &device_creator<sega005_sound_device>;
 
 sega005_sound_device::sega005_sound_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
-	: device_t(mconfig, SEGA005, "005 Custom", tag, owner, clock, "sega005_sound", __FILE__),
+	: device_t(mconfig, SEGA005, "Sega 005 Audio Custom", tag, owner, clock, "sega005_sound", __FILE__),
 		device_sound_interface(mconfig, *this),
 		m_sega005_sound_timer(NULL),
 		m_sega005_stream(NULL)
@@ -711,14 +711,6 @@ static const samples_interface monsterb_samples_interface =
 };
 
 
-static const tms36xx_interface monsterb_tms3617_interface =
-{
-	TMS3617,
-	{0.5,0.5,0.5,0.5,0.5,0.5}  /* decay times of voices */
-};
-
-
-
 /*************************************
  *
  *  N7751 memory maps
@@ -769,7 +761,8 @@ MACHINE_CONFIG_FRAGMENT( monsterb_sound_board )
 	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 0.25)
 
 	MCFG_TMS36XX_ADD("music", 247)
-	MCFG_SOUND_CONFIG(monsterb_tms3617_interface)
+	MCFG_TMS36XX_TYPE(TMS3617)
+	MCFG_TMS36XX_DECAY_TIMES(0.5, 0.5, 0.5, 0.5, 0.5, 0.5)
 	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 0.50)
 
 	MCFG_DAC_ADD("dac")
