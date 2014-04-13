@@ -634,7 +634,7 @@ void ui_menubar::draw_menu_item_text(menu_item *mi, float x0, float y0, float x1
 		fgcolor = UI_UNAVAILABLE_COLOR;
 		bgcolor = UI_TEXT_BG_COLOR;
 	}
-	else if (mi == m_selected_item)
+	else if (is_highlighted_selection(mi))
 	{
 		// selected
 		fgcolor = UI_SELECTED_COLOR;
@@ -700,6 +700,34 @@ void ui_menubar::draw_menu_item_text(menu_item *mi, float x0, float y0, float x1
 		if (column_widths != NULL)
 			x0 += column_widths[iter.index()];
 	}
+}
+
+
+//-------------------------------------------------
+//  is_highlighted_selection
+//-------------------------------------------------
+
+bool ui_menubar::is_highlighted_selection(menu_item *mi)
+{
+	bool result = false;
+
+	if (mi == m_selected_item)
+	{
+		// this item _is_ the selection
+		result = true;
+	}
+	else if (m_selected_item != NULL)
+	{
+		// walk up the menu hierarchy; we want to also highlight ancestor sub menus
+		menu_item *selected_item_ancestor = m_selected_item;
+		do
+		{
+			selected_item_ancestor = selected_item_ancestor->parent();
+			result = mi == selected_item_ancestor;
+		}
+		while(!result && selected_item_ancestor != &root_menu());
+	}
+	return result;
 }
 
 
@@ -1012,9 +1040,9 @@ void ui_menubar::menu_item::sensible_seq_name(astring &text, const input_seq &se
 {
 	// special case; we don't want 'None'
 	if (seq[0] == input_seq::end_code)
-		m_shortcut_text.cpy("");
+		text.cpy("");
 	else
-		m_menubar.machine().input().seq_name(m_shortcut_text, seq);
+		m_menubar.machine().input().seq_name(text, seq);
 }
 
 
