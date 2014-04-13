@@ -315,7 +315,12 @@ void retro_deinit(void)
    LOGI("Retro DeInit\n");
 }
 
-void retro_reset (void) {}
+extern void retro_poll_reset(void);
+
+void retro_reset (void)
+{
+   retro_poll_reset();
+}
 
 
 
@@ -327,14 +332,13 @@ void retro_run (void)
 
    if(NEWGAME_FROM_OSD==1)
    {
-	struct retro_system_av_info ninfo;
-	retro_get_system_av_info(&ninfo);
+      struct retro_system_av_info ninfo;
+      retro_get_system_av_info(&ninfo);
 
-	environ_cb(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &ninfo);
+      environ_cb(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &ninfo);
 
-	printf("ChangeAV: w:%d h:%d ra:%f %f \n",ninfo.geometry.base_width,ninfo.geometry.base_height,ninfo.geometry.aspect_ratio);
-	NEWGAME_FROM_OSD=0;
-
+      printf("ChangeAV: w:%d h:%d ra:%f %f \n",ninfo.geometry.base_width,ninfo.geometry.base_height,ninfo.geometry.aspect_ratio);
+      NEWGAME_FROM_OSD=0;
    }
 
 	retro_poll_mame_input();

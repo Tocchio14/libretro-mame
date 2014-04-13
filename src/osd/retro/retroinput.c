@@ -288,7 +288,7 @@ static void initInput(running_machine &machine)
 
 }
 
-void retro_poll_mame_input()
+void retro_poll_mame_input(void)
 {
 	int i=0,j;
 
@@ -361,6 +361,13 @@ void retro_poll_mame_input()
 	      	joystate[j].a2[1] = 2*(input_state_cb(j, RETRO_DEVICE_ANALOG, RETRO_DEVICE_INDEX_ANALOG_RIGHT, RETRO_DEVICE_ID_ANALOG_Y));
 	}
 
+}
+
+extern void mame_reset();
+
+void retro_poll_reset(void)
+{
+   mame_reset();
 }
 
 static void Input_Binding(running_machine &machine){
