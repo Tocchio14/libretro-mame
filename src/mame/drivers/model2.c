@@ -7,6 +7,24 @@
     Hardware and protection reverse-engineering and general assistance by ElSemi.
     MAME driver by R. Belmont, Olivier Galibert, and ElSemi.
 
+	TODO (updated as for April 2014):
+	- all Model 2B games: FIFO comms looks way wrong, and 3d is mostly missing/incomplete. Games also stalls at some point;
+	- daytona: runs at half speed in gameplay;
+	- desert: several 3d bugs, presumably down to FIFO;
+	- dynamcop: stalls at stage select screen;
+	- fvipers: enables timers, but then irq register is empty, hence it crashes with an "interrupt halt" at POST (regression);
+	- manxtt: missing 3d;
+	- motoraid: stalls after course select;
+	- pltkidsa: after few secs of gameplay, background 3d disappears and everything reports a collision against the player;
+	- skytargt: MAME hardlocks after disclaimer screen;
+	- srallyc: opponent cars flickers like wild;
+	- vcop: lightgun input is offsetted;
+	- vcop: sound dies at enter initial screen (i.e. after played the game once);
+	- vcop: priority bug at stage select screen;
+	- vcop2: no 3d;
+	- vf2: stalls after disclaimer screen;
+	- zeroguna: stalls after some seconds of gameplay;
+
     OK (controls may be wrong/missing/incomplete)
     --
     daytona/daytonat/daytonam
@@ -337,12 +355,16 @@ TIMER_DEVICE_CALLBACK_MEMBER(model2_state::model2_timer_cb)
 	int tnum = (int)(FPTR)ptr;
 	int bit = tnum + 2;
 
+	if(m_timerrun[tnum] == 0)
+		return;
+
 	m_timers[tnum]->reset();
 
 	m_intreq |= (1<<bit);
+	//printf("%08x %08x (%08x)\n",m_intreq,m_intena,1<<bit);
 	model2_check_irq_state();
 
-	m_timervals[tnum] = 0;
+	m_timervals[tnum] = -1;
 	m_timerrun[tnum] = 0;
 }
 
@@ -641,6 +663,11 @@ WRITE32_MEMBER(model2_state::copro_prg_w)
 	}
 }
 
+READ32_MEMBER(model2_state::copro_ctl1_r)
+{
+	return m_coproctl;
+}
+
 WRITE32_MEMBER(model2_state::copro_ctl1_w)
 {
 	// did hi bit change?
@@ -664,7 +691,7 @@ WRITE32_MEMBER(model2_state::copro_ctl1_w)
 		}
 	}
 
-	m_coproctl = data;
+	COMBINE_DATA(&m_coproctl);
 }
 
 WRITE32_MEMBER(model2_state::copro_function_port_w)
@@ -1000,12 +1027,26 @@ READ32_MEMBER(model2_state::model2_irq_r)
 
 void model2_state::model2_check_irq_state()
 {
-	const int irq_type[16]= {I960_IRQ0,I960_IRQ1,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ3,I960_IRQ3};
+	const int irq_type[12]= {I960_IRQ0,I960_IRQ1,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ3,I960_IRQ3};
 
-	for(int i=0;i<16;i++)
+	for(int i=0;i<12;i++)
 	{
-		if (m_intena & (1<<i) && m_intreq & 1<<i)
+		if (m_intena & (1<<i) && m_intreq & (1<<i))
+		{
 			m_maincpu->set_input_line(irq_type[i], ASSERT_LINE);
+			return;
+		}
+	}
+}
+
+void model2_state::model2_check_irqack_state(UINT32 data)
+{
+	const int irq_type[12]= {I960_IRQ0,I960_IRQ1,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ2,I960_IRQ3,I960_IRQ3};
+
+	for(int i=0;i<12;i++)
+	{
+		if(data & 1<<i)
+			m_maincpu->set_input_line(irq_type[i], CLEAR_LINE);
 	}
 }
 
@@ -1021,15 +1062,8 @@ WRITE32_MEMBER(model2_state::model2_irq_w)
 	}
 
 	m_intreq &= data;
-	/* TODO: improve this */
-	UINT32 irq_ack = data ^ 0xffffffff;
 
-	if(irq_ack & 1<<0)
-		m_maincpu->set_input_line(I960_IRQ0, CLEAR_LINE);
-
-	if(irq_ack & 1<<10)
-		m_maincpu->set_input_line(I960_IRQ3, CLEAR_LINE);
-
+	model2_check_irqack_state(data ^ 0xffffffff);
 }
 
 /* TODO: rewrite this part. */
@@ -1474,8 +1508,8 @@ static ADDRESS_MAP_START( model2o_mem, AS_PROGRAM, 32, model2_state )
 	AM_RANGE(0x00880000, 0x00883fff) AM_WRITE(copro_function_port_w)
 	AM_RANGE(0x00884000, 0x00887fff) AM_READWRITE(copro_fifo_r, copro_fifo_w)
 
-	AM_RANGE(0x00980000, 0x00980003) AM_WRITE(copro_ctl1_w )
-	AM_RANGE(0x00980008, 0x0098000b) AM_WRITE(geo_ctl1_w )
+	AM_RANGE(0x00980000, 0x00980003) AM_READWRITE(copro_ctl1_r,copro_ctl1_w)
+	AM_RANGE(0x00980008, 0x0098000b) AM_WRITE(geo_ctl1_w)
 	AM_RANGE(0x009c0000, 0x009cffff) AM_READWRITE(model2_serial_r, model2o_serial_w )
 
 	AM_RANGE(0x12000000, 0x121fffff) AM_RAM_WRITE(model2o_tex_w0) AM_MIRROR(0x200000) AM_SHARE("textureram0")   // texture RAM 0
@@ -1506,8 +1540,8 @@ static ADDRESS_MAP_START( model2a_crx_mem, AS_PROGRAM, 32, model2_state )
 	AM_RANGE(0x00880000, 0x00883fff) AM_WRITE(copro_function_port_w)
 	AM_RANGE(0x00884000, 0x00887fff) AM_READWRITE(copro_fifo_r, copro_fifo_w)
 
-	AM_RANGE(0x00980000, 0x00980003) AM_WRITE(copro_ctl1_w )
-	AM_RANGE(0x00980008, 0x0098000b) AM_WRITE(geo_ctl1_w )
+	AM_RANGE(0x00980000, 0x00980003) AM_READWRITE(copro_ctl1_r,copro_ctl1_w)
+	AM_RANGE(0x00980008, 0x0098000b) AM_WRITE(geo_ctl1_w)
 	AM_RANGE(0x009c0000, 0x009cffff) AM_READWRITE(model2_serial_r, model2_serial_w )
 
 	AM_RANGE(0x12000000, 0x121fffff) AM_RAM_WRITE(model2o_tex_w0) AM_MIRROR(0x200000) AM_SHARE("textureram0")   // texture RAM 0
@@ -1538,9 +1572,9 @@ static ADDRESS_MAP_START( model2b_crx_mem, AS_PROGRAM, 32, model2_state )
 	AM_RANGE(0x00884000, 0x00887fff) AM_READWRITE(copro_fifo_r, copro_fifo_w)
 	AM_RANGE(0x008c0000, 0x008c0fff) AM_WRITE(copro_sharc_iop_w)
 
-	AM_RANGE(0x00980000, 0x00980003) AM_WRITE(copro_ctl1_w )
+	AM_RANGE(0x00980000, 0x00980003) AM_READWRITE(copro_ctl1_r,copro_ctl1_w)
 
-	AM_RANGE(0x00980008, 0x0098000b) AM_WRITE(geo_ctl1_w )
+	AM_RANGE(0x00980008, 0x0098000b) AM_WRITE(geo_ctl1_w)
 	//AM_RANGE(0x00980008, 0x0098000b) AM_WRITE(geo_sharc_ctl1_w )
 
 	AM_RANGE(0x009c0000, 0x009cffff) AM_READWRITE(model2_serial_r, model2_serial_w )
@@ -1568,7 +1602,7 @@ static ADDRESS_MAP_START( model2c_crx_mem, AS_PROGRAM, 32, model2_state )
 	AM_RANGE(0x00804000, 0x00807fff) AM_READWRITE(geo_prg_r, geo_prg_w)
 	AM_RANGE(0x00884000, 0x00887fff) AM_READWRITE(copro_prg_r, copro_prg_w)
 
-	AM_RANGE(0x00980000, 0x00980003) AM_WRITE(copro_ctl1_w )
+	AM_RANGE(0x00980000, 0x00980003) AM_READWRITE(copro_ctl1_r,copro_ctl1_w)
 	AM_RANGE(0x00980008, 0x0098000b) AM_WRITE(geo_ctl1_w )
 	AM_RANGE(0x009c0000, 0x009cffff) AM_READWRITE(model2_serial_r, model2_serial_w )
 
@@ -1989,23 +2023,24 @@ TIMER_DEVICE_CALLBACK_MEMBER(model2_state::model2c_interrupt)
 {
 	int scanline = param;
 
-	if(scanline == 0) // 384
-	{
-		m_intreq |= (1<<10);
-		model2_check_irq_state();
-	}
-
-	if(scanline == 256)
-	{
-		m_intreq |= (1<<2);
-		model2_check_irq_state();
-	}
-
-	if(scanline == 128)
+	if(scanline == 384)
 	{
 		m_intreq |= (1<<0);
 		model2_check_irq_state();
 	}
+	else if(scanline == 0) // 384
+	{
+		m_intreq |= (1<<10);
+		model2_check_irq_state();
+	}
+	else if(scanline == 256)
+	{
+		/* TODO: irq source? Source allocation in dynamcopc? */
+		m_intreq |= (1<<2);
+		model2_check_irq_state();
+	}
+
+
 }
 
 /* Model 2 sound board emulation */
@@ -2171,7 +2206,6 @@ static MACHINE_CONFIG_START( model2a, model2_state )
 	MCFG_MB86233_FIFO_WRITE_CB(WRITE32(model2_state,copro_tgp_fifoout_push))
 	MCFG_MB86233_TABLE_REGION("user5")
 
-
 	MCFG_MACHINE_START_OVERRIDE(model2_state,model2)
 	MCFG_MACHINE_RESET_OVERRIDE(model2_state,model2)
 
@@ -2295,10 +2329,7 @@ static MACHINE_CONFIG_START( model2b, model2_state )
 
 	MCFG_SCREEN_ADD("screen", RASTER)
 	MCFG_SCREEN_VIDEO_ATTRIBUTES(VIDEO_UPDATE_AFTER_VBLANK )
-	MCFG_SCREEN_REFRESH_RATE(60)
-	MCFG_SCREEN_VBLANK_TIME(ATTOSECONDS_IN_USEC(0))
-	MCFG_SCREEN_SIZE(62*8, 48*8)
-	MCFG_SCREEN_VISIBLE_AREA(0*8, 62*8-1, 0*8, 48*8-1)
+	MCFG_SCREEN_RAW_PARAMS(25000000/2, 496+16, 0, 496, 384+16, 0, 384) // not accurate
 	MCFG_SCREEN_UPDATE_DRIVER(model2_state, screen_update_model2)
 
 	MCFG_PALETTE_ADD("palette", 8192)
@@ -2344,10 +2375,7 @@ static MACHINE_CONFIG_START( model2c, model2_state )
 
 	MCFG_SCREEN_ADD("screen", RASTER)
 	MCFG_SCREEN_VIDEO_ATTRIBUTES(VIDEO_UPDATE_AFTER_VBLANK )
-	MCFG_SCREEN_REFRESH_RATE(60)
-	MCFG_SCREEN_VBLANK_TIME(ATTOSECONDS_IN_USEC(0))
-	MCFG_SCREEN_SIZE(62*8, 48*8)
-	MCFG_SCREEN_VISIBLE_AREA(0*8, 62*8-1, 0*8, 48*8-1)
+	MCFG_SCREEN_RAW_PARAMS(25000000/2, 496+16, 0, 496, 384+16, 0, 384) // not accurate
 	MCFG_SCREEN_UPDATE_DRIVER(model2_state, screen_update_model2)
 
 	MCFG_PALETTE_ADD("palette", 8192)
