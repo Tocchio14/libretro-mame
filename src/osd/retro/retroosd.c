@@ -77,7 +77,14 @@ void retro_osd_interface::update(bool skip_redraw)
 	//const render_primitive_list *primlist;
 	UINT8 *surfptr;
 
-	if(pauseg==-1){
+   if (mame_reset == 1)
+   {
+      machine().schedule_soft_reset();
+      mame_reset = -1;
+   }
+
+	if(pauseg == -1)
+   {
 		machine().schedule_exit();
 		return;
 	}

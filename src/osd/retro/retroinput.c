@@ -363,13 +363,6 @@ void retro_poll_mame_input(void)
 
 }
 
-extern void mame_reset();
-
-void retro_poll_reset(void)
-{
-   mame_reset();
-}
-
 static void Input_Binding(running_machine &machine){
 
    	fprintf(stderr, "SOURCE FILE: %s\n", machine.system().source_file);

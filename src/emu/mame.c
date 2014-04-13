@@ -374,13 +374,6 @@ void mame_printf_log(const char *format, ...)
     popmessage - pop up a user-visible message
 -------------------------------------------------*/
 
-#ifdef __LIBRETRO__
-void mame_reset(void)
-{
-   global_machine->schedule_soft_reset();
-}
-#endif
-
 void CLIB_DECL popmessage(const char *format, ...)
 {
 	// if the format is NULL, it is a signal to clear the popmessage

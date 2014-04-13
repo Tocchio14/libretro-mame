@@ -315,11 +315,9 @@ void retro_deinit(void)
    LOGI("Retro DeInit\n");
 }
 
-extern void retro_poll_reset(void);
-
 void retro_reset (void)
 {
-   retro_poll_reset();
+   mame_reset = 1;
 }
 
 

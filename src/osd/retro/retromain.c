@@ -71,6 +71,8 @@ static Joystate joystate[4];
 
 static int ui_ipt_pushchar=-1;
 
+static int mame_reset = -1;
+
 // Cores Options
 bool nagscreenpatch_enable = false;
 static bool mouse_enable = false;
