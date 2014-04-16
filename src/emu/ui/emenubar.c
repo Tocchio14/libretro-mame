@@ -16,7 +16,6 @@
 #include "ui/filesel.h"
 #include "ui/imginfo.h"
 #include "ui/tapectrl.h"
-#include "ui/bbcontrl.h"
 #include "ui/swlist.h"
 #include "ui/viewgfx.h"
 #include "ui/barcode.h"
@@ -202,7 +201,7 @@ void ui_emu_menubar::build_file_menu()
 	pause_menu.set_checked(machine().paused());
 
 	// single step
-	file_menu.append("Single Step", &ui_manager::do_single_step, machine().ui(), IPT_UI_PAUSE);
+	file_menu.append("Single Step", &ui_manager::do_single_step, machine().ui(), IPT_UI_SINGLE_STEP);
 
 	// reset
 	menu_item &reset_menu = file_menu.append("Reset");
@@ -264,14 +263,6 @@ void ui_emu_menubar::build_images_menu()
 		if (cassette != NULL)
 		{
 			menu_item &control_menu = menu.append("Tape Control...", &ui_emu_menubar::tape_control, *this, cassette);
-			control_menu.set_enabled(is_loaded);
-		}
-
-		// bitbanger control
-		bitbanger_device *bitbanger = dynamic_cast<bitbanger_device *>(image);
-		if (bitbanger != NULL)
-		{
-			menu_item &control_menu = menu.append("Bitbanger Control...", &ui_emu_menubar::bitbanger_control, *this, bitbanger);
 			control_menu.set_enabled(is_loaded);
 		}
 	}
@@ -426,6 +417,10 @@ void ui_emu_menubar::build_options_menu()
 	// memory card
 	if (machine().config().m_memcard_handler != NULL)
 		options_menu.append<ui_emu_menubar>("Memory Card...", &ui_emu_menubar::start_menu<ui_menu_memory_card>, *this);
+
+	// shortcuts enabled
+	menu_item &shortcuts_enabled_item = options_menu.append<ui_manager>("Menu Shorcuts Enabled", &ui_manager::set_shortcuts_enabled, &ui_manager::shortcuts_enabled, machine().ui(), IPT_UI_SHORTCUTS_ENABLED);
+	shortcuts_enabled_item.set_shortcut_always_enabled(true);
 
 	// cheat
 	if (machine().options().cheat() && machine().cheat().first() != NULL)
@@ -617,16 +612,6 @@ void ui_emu_menubar::select_from_software_list(device_image_interface *image, so
 void ui_emu_menubar::tape_control(cassette_image_device *image)
 {
 	start_menu(auto_alloc_clear(machine(), ui_menu_mess_tape_control(machine(), container(), image)));
-}
-
-
-//-------------------------------------------------
-//  bitbanger_control
-//-------------------------------------------------
-
-void ui_emu_menubar::bitbanger_control(bitbanger_device *image)
-{
-	start_menu(auto_alloc_clear(machine(), ui_menu_mess_bitbanger_control(machine(), container(), image)));
 }
 
 

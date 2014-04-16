@@ -134,9 +134,6 @@ public:
 	// floating bus
 	DECLARE_READ8_MEMBER( floating_bus_read )   { return floating_bus_read(); }
 	
-	// bitbanger
-	DECLARE_WRITE_LINE_MEMBER( bitbanger_callback );
-
 protected:
 	// device-level overrides
 	virtual void device_start();
