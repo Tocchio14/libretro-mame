@@ -14,7 +14,7 @@
 	- dynamcop: stalls at stage select screen;
 	- fvipers: enables timers, but then irq register is empty, hence it crashes with an "interrupt halt" at POST (regression);
 	- lastbrnx: uses external DMA port 0 for uploading SHARC program, hook-up might not be 100% right;
-	- lastbrnx: uses a shitload of unsupported SHARC opcodes (compute_fmul_avg, shift operation 0x11, ALU operation 0x89);
+	- lastbrnx: uses a shitload of unsupported SHARC opcodes (compute_fmul_avg, shift operation 0x11, ALU operation 0x89 (compute_favg));
 	- manxtt: missing 3d;
 	- motoraid: stalls after course select;
 	- pltkidsa: after few secs of gameplay, background 3d disappears and everything reports a collision against the player;
@@ -756,15 +756,18 @@ WRITE32_MEMBER(model2_state::copro_sharc_iop_w)
 		(strcmp(machine().system().name, "gunblade" ) == 0) ||
 		(strcmp(machine().system().name, "von" ) == 0) ||
 		(strcmp(machine().system().name, "vonj" ) == 0) ||
-		(strcmp(machine().system().name, "rchase2" ) == 0) ||
-		(strcmp(machine().system().name, "lastbrnx" ) == 0) ||
-		(strcmp(machine().system().name, "lastbrnxu" ) == 0) ||
-		(strcmp(machine().system().name, "lastbrnxj" ) == 0))
+		(strcmp(machine().system().name, "rchase2" ) == 0))
 	{
 		machine().device<adsp21062_device>("dsp")->external_iop_write(offset, data);
 	}
 	else
 	{
+		if(offset == 0x10/4)
+		{
+			machine().device<adsp21062_device>("dsp")->external_iop_write(offset, data);
+			return;
+		}
+
 		if ((m_iop_write_num & 1) == 0)
 		{
 			m_iop_data = data & 0xffff;
@@ -887,6 +890,7 @@ void model2_state::push_geo_data(UINT32 data)
 
 READ32_MEMBER(model2_state::geo_prg_r)
 {
+	popmessage("Read from Geometry FIFO at %08x, contact MAMEdev",offset*4);
 	return 0xffffffff;
 }
 
@@ -970,6 +974,8 @@ WRITE32_MEMBER(model2_state::geo_w)
 				UINT32 r = 0;
 				r |= data & 0x000fffff;
 				r |= ((address >> 4) & 0x3f) << 23;
+				if((address >> 4) & 0xc0)
+					popmessage("Eye mode? Contact MAMEdev");
 				push_geo_data(r);
 			}
 		}
