@@ -1394,6 +1394,7 @@ $(MAMEOBJ)/neogeo.a: \
 	$(MACHINE)/neoboot.o \
 	$(MACHINE)/neocrypt.o \
 	$(MACHINE)/neoprot.o \
+	$(MACHINE)/ng_memcard.o \
 
 $(MAMEOBJ)/nichibut.a: \
 	$(DRIVERS)/armedf.o $(VIDEO)/armedf.o \
@@ -1787,6 +1788,7 @@ $(MAMEOBJ)/taito.a: \
 	$(DRIVERS)/volfied.o $(MACHINE)/volfied.o $(VIDEO)/volfied.o \
 	$(DRIVERS)/warriorb.o $(VIDEO)/warriorb.o \
 	$(DRIVERS)/wgp.o $(VIDEO)/wgp.o \
+	$(DRIVERS)/wyvernf0.o \
 	$(AUDIO)/taitosnd.o \
 	$(AUDIO)/t5182.o \
 	$(MACHINE)/taitoio.o \

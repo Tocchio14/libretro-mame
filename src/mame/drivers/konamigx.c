@@ -775,7 +775,7 @@ READ32_MEMBER(konamigx_state::type1_roz_r2)
 
 READ32_MEMBER(konamigx_state::type3_sync_r)
 {
-	if(konamigx_current_frame==0)
+	if(m_konamigx_current_frame==0)
 		return -1;  //  return 0xfffffffe | 1;
 	else
 		return 0;// return 0xfffffffe | 0;
@@ -1008,7 +1008,7 @@ static ADDRESS_MAP_START( gx_base_memmap, AS_PROGRAM, 32, konamigx_state )
 	AM_RANGE(0xd5a000, 0xd5a003) AM_READ_PORT("SYSTEM_DSW")
 	AM_RANGE(0xd5c000, 0xd5c003) AM_READ_PORT("INPUTS")
 	AM_RANGE(0xd5e000, 0xd5e003) AM_READ_PORT("SERVICE")
-	AM_RANGE(0xd80000, 0xd8001f) AM_WRITE_LEGACY(K054338_long_w)
+	AM_RANGE(0xd80000, 0xd8001f) AM_DEVWRITE("k054338", k054338_device, long_w)
 	AM_RANGE(0xda0000, 0xda1fff) AM_DEVREADWRITE("k056832", k056832_device, ram_long_r, ram_long_w)
 	AM_RANGE(0xda2000, 0xda3fff) AM_DEVREADWRITE("k056832", k056832_device, ram_long_r, ram_long_w)
 #if GX_DEBUG
@@ -1638,6 +1638,10 @@ static MACHINE_CONFIG_START( konamigx, konamigx_state )
 	MCFG_K056832_GFXDECODE("gfxdecode")
 	MCFG_K056832_PALETTE("palette")
 	MCFG_K055555_ADD("k055555")
+
+	MCFG_DEVICE_ADD("k054338", K054338, 0)
+	MCFG_K054338_SET_SCREEN("screen")
+	MCFG_K054338_ALPHAINV(1)
 
 	MCFG_K055673_ADD_NOINTF("k055673")
 	MCFG_K055673_SET_SCREEN("screen")
@@ -3671,7 +3675,7 @@ DRIVER_INIT_MEMBER(konamigx_state,konamigx)
 					break;
 
 				case 9: // fantjour
-					fantjour_dma_install(machine());
+					fantjour_dma_install();
 					break;
 			}
 		}
