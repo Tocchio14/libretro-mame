@@ -5055,6 +5055,7 @@ column2j        // (c) 1990 Sega
 
 // System C-2 games
 borench         // (c) 1990 Sega
+borencha		// (c) 1990 Sega
 tfrceac         // (c) 1990 Sega / Technosoft
 tfrceacj        // (c) 1990 Sega / Technosoft
 tfrceacb        // bootleg
@@ -8787,6 +8788,7 @@ jjparad2        // 1997.12 (c) 1997 Electro Design Co. (Japan)
 cyvern          // 1998.02 (c) 1998 Kaneko (US)
 cyvernj         // 1998.02 (c) 1998 Kaneko (Japan)
 ryouran         // 1998.07 (c) 1998 Electro Design Co. (Japan)
+ryourano        // 1998.07 (c) 1998 Electro Design Co. (Japan)
 puzzloop        // 1998.?? (c) 1998 Mitchell (Europe)
 puzzloope       // 1998.?? (c) 1998 Mitchell (Europe)
 puzzloopj       // 1998.12 (c) 1998 Mitchell (Japan)
@@ -9302,6 +9304,7 @@ bubl2000        // (c) 1998 Tuning
 hotbubl         // (c) 1998 Pandora
 popspops        // (c) 1999
 firehawk        // (c) 2001 ESD
+firehawkv		// (c) 2001 ESD
 mangchi         // (c) 2000
 spec2k          // (c) 2000 Yonatech
 spec2kh			// (c) 2000 Yonatech

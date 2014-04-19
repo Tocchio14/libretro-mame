@@ -448,6 +448,7 @@ BUSOBJS += $(BUSOBJ)/pet/exp.o
 BUSOBJS += $(BUSOBJ)/pet/64k.o
 BUSOBJS += $(BUSOBJ)/pet/superpet.o
 BUSOBJS += $(BUSOBJ)/pet/user.o
+BUSOBJS += $(BUSOBJ)/pet/diag.o
 BUSOBJS += $(BUSOBJ)/pet/petuja.o
 endif
 
@@ -1066,3 +1067,16 @@ BUSOBJS += $(BUSOBJ)/oricext/oricext.o
 BUSOBJS += $(BUSOBJ)/oricext/jasmin.o
 BUSOBJS += $(BUSOBJ)/oricext/microdisc.o
 endif
+
+#-------------------------------------------------
+#
+#@src/emu/bus/a1bus/a1bus.h,BUSES += A1BUS
+#-------------------------------------------------
+
+ifneq ($(filter A1BUS,$(BUSES)),)
+OBJDIRS += $(BUSOBJ)/a1bus
+BUSOBJS += $(BUSOBJ)/a1bus/a1bus.o
+BUSOBJS += $(BUSOBJ)/a1bus/a1cassette.o
+BUSOBJS += $(BUSOBJ)/a1bus/a1cffa.o
+endif
+
