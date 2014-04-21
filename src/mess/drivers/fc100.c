@@ -2,13 +2,23 @@
 // copyright-holders:Robbbert
 /***************************************************************************
 
-Goldstar Famicom FC-100
+Goldstar FC-100 (FC stands for Famicom)
 
 2014/04/20 Skeleton driver.
+
+Known chips: M5C6847P, AY-3-8910, 8251. XTALS 7.15909, 4.9152
 
 No manuals or schematics available.
 Shift-Run to BREAK out of CLOAD.
 Cassette uses the uart.
+
+
+Test of semigraphic 6
+10 SCREEN 2:CLS
+20 FOR I=0 TO 360
+30 PSET(128+SIN(I)*90,91-COS(I)*90), 1
+40 NEXT
+
 
 TODO:
 - Cassette frequencies are guesses, need to be verified
@@ -16,7 +26,6 @@ TODO:
 - Unknown i/o ports
 - Does it have a cart slot? Yes. What address?
 - Expansion?
-- It misses keystrokes if you type quickly
 
 
 ****************************************************************************/
@@ -39,7 +48,7 @@ public:
 	fc100_state(const machine_config &mconfig, device_type type, const char *tag)
 		: driver_device(mconfig, type, tag)
 		, m_maincpu(*this, "maincpu")
-		, m_s68047p(*this, "s68047p")
+		, m_vdg(*this, "vdg")
 		, m_p_videoram(*this, "videoram")
 		, m_cass(*this, "cassette")
 		, m_uart(*this, "uart")
@@ -48,11 +57,11 @@ public:
 	DECLARE_READ8_MEMBER(mc6847_videoram_r);
 	DECLARE_WRITE8_MEMBER(port31_w);
 	DECLARE_WRITE8_MEMBER(port33_w);
-	DECLARE_WRITE_LINE_MEMBER(irq_w);
 	DECLARE_WRITE_LINE_MEMBER(txdata_callback);
 	DECLARE_WRITE_LINE_MEMBER(uart_clock_w);
 	TIMER_DEVICE_CALLBACK_MEMBER(timer_c);
 	TIMER_DEVICE_CALLBACK_MEMBER(timer_p);
+	TIMER_DEVICE_CALLBACK_MEMBER(timer_k);
 
 	UINT8 *m_p_chargen;
 	static UINT8 get_char_rom(running_machine &machine, UINT8 ch, int line)
@@ -75,9 +84,11 @@ private:
 	UINT8 m_inv;
 	UINT8 m_cass_data[4];
 	bool m_cass_state;
+	bool m_cassold;
+	UINT8 m_kbd_count;
 
 	required_device<cpu_device> m_maincpu;
-	required_device<s68047_device> m_s68047p;
+	required_device<mc6847_base_device> m_vdg;
 	required_shared_ptr<UINT8> m_p_videoram;
 	required_device<cassette_image_device> m_cass;
 	required_device<i8251_device> m_uart;
@@ -125,7 +136,7 @@ ADDRESS_MAP_END
 static INPUT_PORTS_START( fc100 )
 	PORT_START("00")
 	PORT_BIT(0x80, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_LALT) PORT_NAME("Graph") // does nothing
-	PORT_BIT(0x40, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_LSHIFT) PORT_CODE(KEYCODE_RSHIFT) PORT_NAME("Shift")
+	PORT_BIT(0x40, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_LSHIFT) PORT_CODE(KEYCODE_RSHIFT) PORT_NAME("Shift") PORT_CHAR(UCHAR_SHIFT_1)
 	PORT_BIT(0x20, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_LCONTROL) PORT_CODE(KEYCODE_RCONTROL) PORT_NAME("Ctrl")
 	PORT_BIT(0x10, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_CAPSLOCK) PORT_TOGGLE PORT_NAME("Caps")
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_OPENBRACE) PORT_NAME("[") PORT_CHAR('[') PORT_CHAR('{')
@@ -134,90 +145,105 @@ static INPUT_PORTS_START( fc100 )
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_O) PORT_NAME("O") PORT_CHAR('O') PORT_CHAR('o')
 
 	PORT_START("01")
+	PORT_BIT(0xF0, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_BACKSLASH) PORT_NAME("\\") PORT_CHAR('\\') PORT_CHAR('|')
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_BACKSPACE) PORT_NAME("Backspace") PORT_CHAR(8)
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_EQUALS) PORT_NAME("=") PORT_CHAR('=') PORT_CHAR('+')
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_ENTER) PORT_NAME("Enter") PORT_CHAR(13)
 
 	PORT_START("02")
+	PORT_BIT(0xF0, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_LEFT) PORT_NAME("Left")
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_DOWN) PORT_NAME("Down")
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_RIGHT) PORT_NAME("Right")
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_UP) PORT_NAME("Up")
 
 	PORT_START("03")
+	PORT_BIT(0xF0, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_9) PORT_NAME("9") PORT_CHAR('9') PORT_CHAR('(')
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_COLON) PORT_NAME(";") PORT_CHAR(';') PORT_CHAR(':')
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_QUOTE) PORT_NAME("'") PORT_CHAR('\'') PORT_CHAR('"')
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_TAB) PORT_NAME("Tab") PORT_CHAR(9)
 
 	PORT_START("04")
+	PORT_BIT(0xF0, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_5) PORT_NAME("5") PORT_CHAR('5') PORT_CHAR('^')
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_6) PORT_NAME("6") PORT_CHAR('6') PORT_CHAR('&')
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_7) PORT_NAME("7") PORT_CHAR('7') PORT_CHAR('%')
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_8) PORT_NAME("8") PORT_CHAR('8') PORT_CHAR('*')
 
 	PORT_START("05")
+	PORT_BIT(0xF0, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_1) PORT_NAME("1") PORT_CHAR('1') PORT_CHAR('!')
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_2) PORT_NAME("2") PORT_CHAR('2') PORT_CHAR('@')
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_3) PORT_NAME("3") PORT_CHAR('3') PORT_CHAR('#')
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_4) PORT_NAME("4") PORT_CHAR('4') PORT_CHAR('$')
 
 	PORT_START("06")
+	PORT_BIT(0xF0, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_F5) PORT_NAME("F5")
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_SPACE) PORT_NAME("Space") PORT_CHAR(32)
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_PGDN) PORT_NAME("Run")
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_0) PORT_NAME("0") PORT_CHAR('0') PORT_CHAR(')')
 
 	PORT_START("07")
+	PORT_BIT(0xF0, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_F1) PORT_NAME("F1")
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_F2) PORT_NAME("F2")
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_F3) PORT_NAME("F3")
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_F4) PORT_NAME("F4")
 
 	PORT_START("08")
+	PORT_BIT(0xF0, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_MINUS) PORT_NAME("-") PORT_CHAR('-') PORT_CHAR('_')
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_SLASH) PORT_NAME("/") PORT_CHAR('/') PORT_CHAR('?')
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_STOP) PORT_NAME(".") PORT_CHAR('.') PORT_CHAR('>')
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_COMMA) PORT_NAME(",") PORT_CHAR(',') PORT_CHAR('<')
 
 	PORT_START("09")
+	PORT_BIT(0xF0, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_HOME) PORT_NAME("Home")
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_INSERT) PORT_NAME("Ins")
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_DEL) PORT_NAME("Del")
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_ESC) PORT_NAME("Esc") PORT_CHAR(27)
 
 	PORT_START("0A")
+	PORT_BIT(0xF0, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_B) PORT_NAME("B") PORT_CHAR('B') PORT_CHAR('b')
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_N) PORT_NAME("N") PORT_CHAR('N') PORT_CHAR('n')
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_M) PORT_NAME("M") PORT_CHAR('M') PORT_CHAR('m')
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_L) PORT_NAME("L") PORT_CHAR('L') PORT_CHAR('l')
 
 	PORT_START("0B")
+	PORT_BIT(0xF0, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_Z) PORT_NAME("Z") PORT_CHAR('Z') PORT_CHAR('z')
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_X) PORT_NAME("X") PORT_CHAR('X') PORT_CHAR('x')
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_C) PORT_NAME("C") PORT_CHAR('C') PORT_CHAR('c')
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_V) PORT_NAME("V") PORT_CHAR('V') PORT_CHAR('v')
 
 	PORT_START("0C")
+	PORT_BIT(0xF0, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_G) PORT_NAME("G") PORT_CHAR('G') PORT_CHAR('g')
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_H) PORT_NAME("H") PORT_CHAR('H') PORT_CHAR('h')
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_J) PORT_NAME("J") PORT_CHAR('J') PORT_CHAR('j')
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_K) PORT_NAME("K") PORT_CHAR('K') PORT_CHAR('k')
 
 	PORT_START("0D")
+	PORT_BIT(0xF0, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_A) PORT_NAME("A") PORT_CHAR('A') PORT_CHAR('a')
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_S) PORT_NAME("S") PORT_CHAR('S') PORT_CHAR('s')
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_D) PORT_NAME("D") PORT_CHAR('D') PORT_CHAR('d')
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_F) PORT_NAME("F") PORT_CHAR('F') PORT_CHAR('f')
 
 	PORT_START("0E")
+	PORT_BIT(0xF0, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_T) PORT_NAME("T") PORT_CHAR('T') PORT_CHAR('t')
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_Y) PORT_NAME("Y") PORT_CHAR('Y') PORT_CHAR('y')
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_U) PORT_NAME("U") PORT_CHAR('U') PORT_CHAR('u')
 	PORT_BIT(0x01, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_I) PORT_NAME("I") PORT_CHAR('I') PORT_CHAR('i')
 
 	PORT_START("0F")
+	PORT_BIT(0xF0, IP_ACTIVE_LOW, IPT_UNUSED)
 	PORT_BIT(0x08, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_Q) PORT_NAME("Q") PORT_CHAR('Q') PORT_CHAR('q')
 	PORT_BIT(0x04, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_W) PORT_NAME("W") PORT_CHAR('W') PORT_CHAR('w')
 	PORT_BIT(0x02, IP_ACTIVE_LOW, IPT_KEYBOARD) PORT_CODE(KEYCODE_E) PORT_NAME("E") PORT_CHAR('E') PORT_CHAR('e')
@@ -239,12 +265,12 @@ WRITE8_MEMBER( fc100_state::ay_port_a_w )
 	m_gm0 = BIT(data, 3);
 	m_css = m_ag;
 
-	m_s68047p->ag_w( m_ag ? ASSERT_LINE : CLEAR_LINE );
-	m_s68047p->gm2_w( m_gm2 ? ASSERT_LINE : CLEAR_LINE );
-	m_s68047p->gm1_w( m_gm1 ? ASSERT_LINE : CLEAR_LINE );
-	m_s68047p->gm0_w( m_gm0 ? ASSERT_LINE : CLEAR_LINE );
-	m_s68047p->css_w( m_css ? ASSERT_LINE : CLEAR_LINE );
-	m_s68047p->hack_black_becomes_blue( BIT(data, 1) );
+	m_vdg->ag_w( m_ag ? ASSERT_LINE : CLEAR_LINE );
+	m_vdg->gm2_w( m_gm2 ? ASSERT_LINE : CLEAR_LINE );
+	m_vdg->gm1_w( m_gm1 ? ASSERT_LINE : CLEAR_LINE );
+	m_vdg->gm0_w( m_gm0 ? ASSERT_LINE : CLEAR_LINE );
+	m_vdg->css_w( m_css ? ASSERT_LINE : CLEAR_LINE );
+	m_vdg->hack_black_becomes_blue( BIT(data, 1) );
 }
 
 
@@ -289,15 +315,12 @@ READ8_MEMBER( fc100_state::mc6847_videoram_r )
 	UINT8 data = m_p_videoram[offset];
 	UINT8 attr = m_p_videoram[offset+0x200];
 
-	m_s68047p->inv_w( BIT( attr, 0 ));
+	// unknown bits 1,2,4,7
+	m_vdg->inv_w( BIT( attr, 0 ));
+	m_vdg->css_w( BIT( attr, 1)); // guess
+	m_vdg->as_w( BIT( attr, 6 ));
 
 	return data;
-}
-
-// irq is inverted in emulation, so we need this trampoline
-WRITE_LINE_MEMBER( fc100_state::irq_w )
-{
-	m_maincpu->set_input_line(0, state ? CLEAR_LINE : HOLD_LINE);
 }
 
 static const mc6847_interface fc100_mc6847_interface =
@@ -364,6 +387,12 @@ TIMER_DEVICE_CALLBACK_MEMBER( fc100_state::timer_c )
 {
 	m_cass_data[3]++;
 
+	if (m_cass_state != m_cassold)
+	{
+		m_cass_data[3] = 0;
+		m_cassold = m_cass_state;
+	}
+
 	if (m_cass_state)
 		m_cass->output(BIT(m_cass_data[3], 0) ? -1.0 : +1.0); // 2400Hz
 	else
@@ -382,6 +411,28 @@ TIMER_DEVICE_CALLBACK_MEMBER( fc100_state::timer_p)
 		m_uart->write_rxd((m_cass_data[1] < 12) ? 1 : 0);
 		m_cass_data[1] = 0;
 	}
+}
+
+TIMER_DEVICE_CALLBACK_MEMBER( fc100_state::timer_k)
+{
+	/* scan the keyboard */
+	UINT8 i;
+	char kbdrow[6];
+
+	for (i = 0; i < 16; i++)
+	{
+		sprintf(kbdrow,"0%X", i);
+		if ((ioport(kbdrow)->read() & 15) < 15)
+		{
+			// IRQ if key pressed
+			m_maincpu->set_input_line(0, HOLD_LINE);
+			return;
+		}
+	}
+	m_kbd_count++;
+
+	// also needs to know if no key pressed
+	m_maincpu->set_input_line(0, BIT(m_kbd_count, 2) ? HOLD_LINE : CLEAR_LINE);
 }
 
 static const cassette_interface fc100_cassette_interface =
@@ -420,6 +471,7 @@ void fc100_state::machine_start()
 void fc100_state::machine_reset()
 {
 	m_p_chargen = memregion("chargen")->base();
+	m_kbd_count = 0;
 }
 
 static MACHINE_CONFIG_START( fc100, fc100_state )
@@ -429,9 +481,8 @@ static MACHINE_CONFIG_START( fc100, fc100_state )
 	MCFG_CPU_IO_MAP(fc100_io)
 
 	/* video hardware */
-	MCFG_MC6847_ADD("s68047p", S68047, XTAL_7_15909MHz/3, fc100_mc6847_interface )  // Clock not verified
-	MCFG_MC6847_FSYNC_CALLBACK(WRITELINE(fc100_state, irq_w))
-	MCFG_SCREEN_MC6847_NTSC_ADD("screen", "s68047p")
+	MCFG_MC6847_ADD("vdg", MC6847_NTSC, XTAL_7_15909MHz/3, fc100_mc6847_interface )  // Clock not verified
+	MCFG_SCREEN_MC6847_NTSC_ADD("screen", "vdg")
 	MCFG_GFXDECODE_ADD("gfxdecode", "f4palette", fc100)
 	MCFG_PALETTE_ADD_MONOCHROME_AMBER("f4palette")
 
@@ -449,8 +500,9 @@ static MACHINE_CONFIG_START( fc100, fc100_state )
 	MCFG_I8251_TXD_HANDLER(WRITELINE(fc100_state, txdata_callback))
 	MCFG_DEVICE_ADD("uart_clock", CLOCK, XTAL_4_9152MHz/16/16) // gives 19200
 	MCFG_CLOCK_SIGNAL_HANDLER(WRITELINE(fc100_state, uart_clock_w))
-	MCFG_TIMER_DRIVER_ADD_PERIODIC("timer_c", fc100_state, timer_c, attotime::from_hz(4800))
-	MCFG_TIMER_DRIVER_ADD_PERIODIC("timer_p", fc100_state, timer_p, attotime::from_hz(40000))
+	MCFG_TIMER_DRIVER_ADD_PERIODIC("timer_c", fc100_state, timer_c, attotime::from_hz(4800)) // cass write
+	MCFG_TIMER_DRIVER_ADD_PERIODIC("timer_p", fc100_state, timer_p, attotime::from_hz(40000)) // cass read
+	MCFG_TIMER_DRIVER_ADD_PERIODIC("timer_k", fc100_state, timer_k, attotime::from_hz(200)) // keyb scan
 MACHINE_CONFIG_END
 
 /* ROM definition */
@@ -466,5 +518,5 @@ ROM_END
 
 /* Driver */
 
-/*    YEAR  NAME    PARENT  COMPAT   MACHINE  INPUT   CLASS          INIT    COMPANY   FULLNAME       STATUS                     FLAGS */
-CONS( 1982, fc100,  0,      0,       fc100,   fc100,  driver_device,   0,   "Goldstar", "Famicom FC-100", GAME_NOT_WORKING )
+/*    YEAR  NAME    PARENT  COMPAT   MACHINE  INPUT   CLASS          INIT    COMPANY    FULLNAME  FLAGS */
+CONS( 1982, fc100,  0,      0,       fc100,   fc100,  driver_device,   0,   "Goldstar", "FC-100", GAME_NOT_WORKING )

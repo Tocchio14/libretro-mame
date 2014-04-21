@@ -1288,16 +1288,16 @@ INPUT_PORTS_END
 
 static const adsp21xx_config ds3sdsp_config =
 {
-	hdds3sdsp_serial_rx_callback, /* callback for serial receive */
-	hdds3sdsp_serial_tx_callback, /* callback for serial transmit */
-	hdds3sdsp_timer_enable_callback /* callback for timer fired */
+	DEVCB_DRIVER_MEMBER32(harddriv_state, hdds3sdsp_serial_rx_callback), /* callback for serial receive */
+	DEVCB_DRIVER_MEMBER32(harddriv_state, hdds3sdsp_serial_tx_callback), /* callback for serial transmit */
+	DEVCB_DRIVER_LINE_MEMBER(harddriv_state, hdds3sdsp_timer_enable_callback) /* callback for timer fired */
 };
 
 static const adsp21xx_config ds3xdsp_config =
 {
-	hdds3xdsp_serial_rx_callback, /* callback for serial receive */
-	hdds3xdsp_serial_tx_callback, /* callback for serial transmit */
-	hdds3xdsp_timer_enable_callback /* callback for timer fired */
+	DEVCB_DRIVER_MEMBER32(harddriv_state, hdds3xdsp_serial_rx_callback), /* callback for serial receive */
+	DEVCB_DRIVER_MEMBER32(harddriv_state, hdds3xdsp_serial_tx_callback), /* callback for serial transmit */
+	DEVCB_DRIVER_LINE_MEMBER(harddriv_state, hdds3xdsp_timer_enable_callback) /* callback for timer fired */
 };
 
 
@@ -1424,13 +1424,13 @@ static MACHINE_CONFIG_FRAGMENT( ds3 )
 	MCFG_ADSP21XX_CONFIG(ds3sdsp_config)
 	MCFG_CPU_PROGRAM_MAP(ds3sdsp_program_map)
 	MCFG_CPU_DATA_MAP(ds3sdsp_data_map)
-	MCFG_TIMER_ADD("ds3sdsp_timer", ds3sdsp_internal_timer_callback)
+	MCFG_TIMER_DRIVER_ADD("ds3sdsp_timer", harddriv_state, ds3sdsp_internal_timer_callback)
 
 	MCFG_CPU_ADD("ds3xdsp", ADSP2105, XTAL_10MHz)
 	MCFG_ADSP21XX_CONFIG(ds3xdsp_config)
 	MCFG_CPU_PROGRAM_MAP(ds3xdsp_program_map)
 	MCFG_CPU_DATA_MAP(ds3xdsp_data_map)
-	MCFG_TIMER_ADD("ds3xdsp_timer", ds3xdsp_internal_timer_callback)
+	MCFG_TIMER_DRIVER_ADD("ds3xdsp_timer", harddriv_state, ds3xdsp_internal_timer_callback)
 
 	MCFG_SPEAKER_STANDARD_STEREO("lspeaker", "rspeaker")
 

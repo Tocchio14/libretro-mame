@@ -16,7 +16,6 @@ public:
 		: driver_device(mconfig, type, tag),
 		m_workram(*this, "workram"),
 		m_bufferram(*this, "bufferram"),
-		m_paletteram32(*this, "paletteram32"),
 		m_colorxlat(*this, "colorxlat"),
 		m_textureram0(*this, "textureram0"),
 		m_textureram1(*this, "textureram1"),
@@ -37,7 +36,7 @@ public:
 
 	required_shared_ptr<UINT32> m_workram;
 	required_shared_ptr<UINT32> m_bufferram;
-	required_shared_ptr<UINT32> m_paletteram32;
+	UINT16 *m_palram;
 	required_shared_ptr<UINT32> m_colorxlat;
 	required_shared_ptr<UINT32> m_textureram0;
 	required_shared_ptr<UINT32> m_textureram1;
@@ -113,7 +112,8 @@ public:
 	DECLARE_CUSTOM_INPUT_MEMBER(rchase2_devices_r);
 	DECLARE_READ32_MEMBER(timers_r);
 	DECLARE_WRITE32_MEMBER(timers_w);
-	DECLARE_WRITE32_MEMBER(pal32_w);
+	DECLARE_READ16_MEMBER(model2_palette_r);
+	DECLARE_WRITE16_MEMBER(model2_palette_w);
 	DECLARE_WRITE32_MEMBER(ctrl0_w);
 	DECLARE_WRITE32_MEMBER(analog_2b_w);
 	DECLARE_READ32_MEMBER(fifoctl_r);
@@ -210,6 +210,12 @@ public:
 	DECLARE_WRITE32_MEMBER(copro_tgp_fifoout_push);
 	DECLARE_READ8_MEMBER(virtuacop_lightgun_r);
 	DECLARE_READ8_MEMBER(virtuacop_lightgun_offscreen_r);
+
+	bool copro_fifoin_pop(device_t *device, UINT32 *result,UINT32 offset, UINT32 mem_mask);
+	void copro_fifoin_push(device_t *device, UINT32 data, UINT32 offset, UINT32 mem_mask);
+	UINT32 copro_fifoout_pop(address_space &space, UINT32 offset, UINT32 mem_mask);
+	void copro_fifoout_push(device_t *device, UINT32 data,UINT32 offset,UINT32 mem_mask);
+
 };
 
 /*----------- defined in video/model2.c -----------*/
