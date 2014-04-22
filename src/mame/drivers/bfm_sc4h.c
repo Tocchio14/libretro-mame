@@ -112,7 +112,7 @@ READ16_MEMBER(sc4_state::sc4_cs1_r)
 READ16_MEMBER(sc4_state::sc4_mem_r)
 {
 	int pc = space.device().safe_pc();
-	int cs = m68307_get_cs(m_maincpu, offset * 2);
+	int cs = m_maincpu->get_cs(offset * 2);
 	int base = 0, end = 0, base2 = 0, end2 = 0;
 //  if (!(debugger_access())) printf("cs is %d\n", cs);
 	UINT16 retvalue;
@@ -172,22 +172,22 @@ READ16_MEMBER(sc4_state::sc4_mem_r)
 							return retvalue;
 
 						case 0x02e0:
-							return 0x0080;//space.machine().rand();;
+							return 0x0080; // status of something?
 
 						case 0x1000:
-							return 0x0000;//space.machine().rand();;
+							return ioport("IN-16")->read();
 
 						case 0x1010:
-							return 0x0000;//space.machine().rand();;
+							return ioport("IN-17")->read();
 
 						case 0x1020:
-							return 0x0000;//space.machine().rand();;
+							return ioport("IN-18")->read();
 
 						case 0x1030:
-							return 0x0000;//space.machine().rand();;
+							return ioport("IN-19")->read();
 
 						case 0x1040: // door switch, test switch etc.
-							return 0x0000;//space.machine().rand();;
+							return ioport("IN-20")->read();
 
 						case 0x1244:
 							return m_ymz->read(space,0);
@@ -233,8 +233,6 @@ READ16_MEMBER(sc4_state::sc4_mem_r)
 	return 0x0000;
 }
 
-static DECLARE_WRITE8_HANDLER( bfm_sc4_reel4_w );
-
 WRITE8_MEMBER(bfm_sc45_state::mux_output_w)
 {
 	int i;
@@ -268,7 +266,7 @@ WRITE8_MEMBER(bfm_sc45_state::mux_output2_w)
 WRITE16_MEMBER(sc4_state::sc4_mem_w)
 {
 	int pc = space.device().safe_pc();
-	int cs = m68307_get_cs(m_maincpu, offset * 2);
+	int cs = m_maincpu->get_cs(offset * 2);
 	int base = 0, end = 0, base2 = 0, end2 = 0;
 
 	switch ( cs )
@@ -443,111 +441,101 @@ ADDRESS_MAP_END
 
 
 
-void bfm_sc4_reset_serial_vfd(running_machine &machine)
+void bfm_sc45_state::bfm_sc4_reset_serial_vfd()
 {
-	bfm_sc45_state *state = machine.driver_data<bfm_sc45_state>();
-
-	state->m_vfd0->reset();
-	state->vfd_old_clock = false;
+	m_vfd0->reset();
+	vfd_old_clock = false;
 }
 
-void bfm_sc45_write_serial_vfd(running_machine &machine, bool cs, bool clock, bool data)
+void bfm_sc45_state::bfm_sc45_write_serial_vfd(bool cs, bool clock, bool data)
 {
-	bfm_sc45_state *state = machine.driver_data<bfm_sc45_state>();
-
 	// if we're turned on
 	if ( cs )
 	{
-		if ( !state->vfd_enabled )
+		if ( !vfd_enabled )
 		{
-			bfm_sc4_reset_serial_vfd(machine);
-			state->vfd_old_clock = clock;
-			state->vfd_enabled = true;
+			bfm_sc4_reset_serial_vfd();
+			vfd_old_clock = clock;
+			vfd_enabled = true;
 		}
 		else
 		{
 			// if the clock line changes
-			if ( clock != state->vfd_old_clock )
+			if ( clock != vfd_old_clock )
 			{
 				if ( !clock )
 				{
 				//Should move to the internal serial process when DM01 is device-ified
 //                  m_vfd0->shift_data(!data);
-					state->vfd_ser_value <<= 1;
-					if (data) state->vfd_ser_value |= 1;
+					vfd_ser_value <<= 1;
+					if (data) vfd_ser_value |= 1;
 
-					state->vfd_ser_count++;
-					if ( state->vfd_ser_count == 8 )
+					vfd_ser_count++;
+					if ( vfd_ser_count == 8 )
 					{
-						state->vfd_ser_count = 0;
-						if (machine.device("matrix"))
+						vfd_ser_count = 0;
+						if (machine().device("matrix"))
 						{
-							state->m_dm01->writedata(state->vfd_ser_value);
+							m_dm01->writedata(vfd_ser_value);
 						}
 						else
 						{
-							state->m_vfd0->write_char(state->vfd_ser_value);
+							m_vfd0->write_char(vfd_ser_value);
 						}
 					}
 				}
-				state->vfd_old_clock = clock;
+				vfd_old_clock = clock;
 			}
 		}
 	}
 	else
 	{
-		state->vfd_enabled = false;
+		vfd_enabled = false;
 	}
 }
 
 
-void bfm_sc4_68307_porta_w(address_space &space, bool dedicated, UINT8 data, UINT8 line_mask)
+void sc4_state::bfm_sc4_68307_porta_w(address_space &space, bool dedicated, UINT8 data, UINT8 line_mask)
 {
-	sc4_state *state = space.machine().driver_data<sc4_state>();
+	m_reel12_latch = data;
 
-	state->m_reel12_latch = data;
+	if ( stepper_update(0, data&0x0f   ) ) m_reel_changed |= 0x01;
+	if ( stepper_update(1, (data>>4))&0x0f ) m_reel_changed |= 0x02;
 
-	if ( stepper_update(0, data&0x0f   ) ) state->m_reel_changed |= 0x01;
-	if ( stepper_update(1, (data>>4))&0x0f ) state->m_reel_changed |= 0x02;
-
-	if ( stepper_optic_state(0) ) state->m_optic_pattern |=  0x01;
-	else                          state->m_optic_pattern &= ~0x01;
-	if ( stepper_optic_state(1) ) state->m_optic_pattern |=  0x02;
-	else                          state->m_optic_pattern &= ~0x02;
+	if ( stepper_optic_state(0) ) m_optic_pattern |=  0x01;
+	else                          m_optic_pattern &= ~0x01;
+	if ( stepper_optic_state(1) ) m_optic_pattern |=  0x02;
+	else                          m_optic_pattern &= ~0x02;
 
 	awp_draw_reel(0);
 	awp_draw_reel(1);
 }
 
-static WRITE8_HANDLER( bfm_sc4_reel3_w )
+WRITE8_MEMBER( sc4_state::bfm_sc4_reel3_w )
 {
-	sc4_state *state = space.machine().driver_data<sc4_state>();
+	m_reel3_latch = data;
 
-	state->m_reel3_latch = data;
+	if ( stepper_update(2, data&0x0f ) ) m_reel_changed |= 0x04;
 
-	if ( stepper_update(2, data&0x0f ) ) state->m_reel_changed |= 0x04;
-
-	if ( stepper_optic_state(2) ) state->m_optic_pattern |=  0x04;
-	else                          state->m_optic_pattern &= ~0x04;
+	if ( stepper_optic_state(2) ) m_optic_pattern |=  0x04;
+	else                          m_optic_pattern &= ~0x04;
 
 	awp_draw_reel(2);
 }
 
-static WRITE8_HANDLER( bfm_sc4_reel4_w )
+WRITE8_MEMBER( sc4_state::bfm_sc4_reel4_w )
 {
-	sc4_state *state = space.machine().driver_data<sc4_state>();
+	m_reel4_latch = data;
 
-	state->m_reel4_latch = data;
+	if ( stepper_update(3, data&0x0f ) ) m_reel_changed |= 0x08;
 
-	if ( stepper_update(3, data&0x0f ) ) state->m_reel_changed |= 0x08;
-
-	if ( stepper_optic_state(3) ) state->m_optic_pattern |=  0x08;
-	else                          state->m_optic_pattern &= ~0x08;
+	if ( stepper_optic_state(3) ) m_optic_pattern |=  0x08;
+	else                          m_optic_pattern &= ~0x08;
 
 	awp_draw_reel(3);
 }
 
-void bfm_sc4_68307_portb_w(address_space &space, bool dedicated, UINT16 data, UINT16 line_mask)
+void sc4_state::bfm_sc4_68307_portb_w(address_space &space, bool dedicated, UINT16 data, UINT16 line_mask)
 {
 //  if (dedicated == false)
 	{
@@ -556,20 +544,20 @@ void bfm_sc4_68307_portb_w(address_space &space, bool dedicated, UINT16 data, UI
 		// serial output to the VFD at least..
 		logerror("%08x bfm_sc4_68307_portb_w %04x %04x\n", pc, data, line_mask);
 
-		bfm_sc45_write_serial_vfd(space.machine(), (data & 0x4000)?1:0, (data & 0x1000)?1:0, !(data & 0x2000)?1:0);
+		bfm_sc45_write_serial_vfd((data & 0x4000)?1:0, (data & 0x1000)?1:0, !(data & 0x2000)?1:0);
 
 		bfm_sc4_reel3_w(space, 0, (data&0x0f00)>>8, 0xff);
 	}
 
 }
-UINT8 bfm_sc4_68307_porta_r(address_space &space, bool dedicated, UINT8 line_mask)
+UINT8 sc4_state::bfm_sc4_68307_porta_r(address_space &space, bool dedicated, UINT8 line_mask)
 {
 	int pc = space.device().safe_pc();
 	logerror("%08x bfm_sc4_68307_porta_r\n", pc);
-	return space.machine().rand();
+	return machine().rand();
 }
 
-UINT16 bfm_sc4_68307_portb_r(address_space &space, bool dedicated, UINT16 line_mask)
+UINT16 sc4_state::bfm_sc4_68307_portb_r(address_space &space, bool dedicated, UINT16 line_mask)
 {
 	if (dedicated==false)
 	{
@@ -605,11 +593,11 @@ MACHINE_START_MEMBER(sc4_state,sc4)
 	m_nvram->set_base(m_mainram, sizeof(m_mainram));
 
 
-	m68307_set_port_callbacks(m_maincpu,
-		bfm_sc4_68307_porta_r,
-		bfm_sc4_68307_porta_w,
-		bfm_sc4_68307_portb_r,
-		bfm_sc4_68307_portb_w );
+	m_maincpu->set_port_callbacks(
+		m68307_porta_read_delegate(FUNC(sc4_state::bfm_sc4_68307_porta_r),this),
+		m68307_porta_write_delegate(FUNC(sc4_state::bfm_sc4_68307_porta_w),this),
+		m68307_portb_read_delegate(FUNC(sc4_state::bfm_sc4_68307_portb_r),this),
+		m68307_portb_write_delegate(FUNC(sc4_state::bfm_sc4_68307_portb_w),this) );
 
 	int reels = 6;
 	m_reels=reels;
@@ -635,7 +623,7 @@ WRITE_LINE_MEMBER(sc4_state::bfm_sc4_duart_irq_handler)
 	logerror("bfm_sc4_duart_irq_handler\n");
 	if (state == ASSERT_LINE)
 	{
-		m68307_licr2_interrupt(m_maincpu);
+		m_maincpu->licr2_interrupt();
 	}
 }
 
@@ -753,32 +741,330 @@ MACHINE_CONFIG_DERIVED_CLASS( sc4dmd, sc4, sc4_state )
 	MCFG_MACHINE_START_OVERRIDE(sc4_state, sc4 )
 MACHINE_CONFIG_END
 
-INPUT_PORTS_START( sc4_base )
+INPUT_PORTS_START( sc4_raw ) // completley unmapped, but named inputs for all the ports, used for testing.
 	PORT_START("IN-0")
-	PORT_DIPNAME( 0x01, 0x00, "IN-0:0" )
+	PORT_DIPNAME( 0x01, 0x00, "IN 0-0 (STRB 0 Data 0)" )
 	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
-	PORT_DIPNAME( 0x02, 0x00, "IN-0:1" )
+	PORT_DIPNAME( 0x02, 0x00, "IN 0-1 (STRB 0 Data 1)" )
 	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
-	PORT_DIPNAME( 0x04, 0x00, "IN-0:2" )
+	PORT_DIPNAME( 0x04, 0x00, "IN 0-2 (STRB 0 Data 2)" )
 	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
-	PORT_DIPNAME( 0x08, 0x00, "IN-0:3" )
+	PORT_DIPNAME( 0x08, 0x00, "IN 0-3 (STRB 0 Data 3)" )
 	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
-	PORT_DIPNAME( 0x10, 0x00, "IN-0:4" )
+	PORT_DIPNAME( 0x10, 0x00, "IN 0-4 (STRB 0 Data 4)" )
 	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
 
 	PORT_START("IN-1")
+	PORT_DIPNAME( 0x01, 0x00, "IN 1-0 (STRB 1 Data 0)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
+	PORT_DIPNAME( 0x02, 0x00, "IN 1-1 (STRB 1 Data 1)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
+	PORT_DIPNAME( 0x04, 0x00, "IN 1-2 (STRB 1 Data 2)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
+	PORT_DIPNAME( 0x08, 0x00, "IN 1-3 (STRB 1 Data 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
+	PORT_DIPNAME( 0x10, 0x00, "IN 1-4 (STRB 1 Data 4)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+	PORT_START("IN-2")
+	PORT_DIPNAME( 0x01, 0x00, "IN 2-0 (STRB 2 Data 0)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
+	PORT_DIPNAME( 0x02, 0x00, "IN 2-1 (STRB 2 Data 1)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
+	PORT_DIPNAME( 0x04, 0x00, "IN 2-2 (STRB 2 Data 2)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
+	PORT_DIPNAME( 0x08, 0x00, "IN 2-3 (STRB 2 Data 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
+	PORT_DIPNAME( 0x10, 0x00, "IN 2-4 (STRB 2 Data 4)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+	PORT_START("IN-3")
+	PORT_DIPNAME( 0x01, 0x00, "IN 3-0 (STRB 3 Data 0)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
+	PORT_DIPNAME( 0x02, 0x00, "IN 3-1 (STRB 3 Data 1)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
+	PORT_DIPNAME( 0x04, 0x00, "IN 3-2 (STRB 3 Data 2)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
+	PORT_DIPNAME( 0x08, 0x00, "IN 3-3 (STRB 3 Data 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
+	PORT_DIPNAME( 0x10, 0x00, "IN 3-4 (STRB 3 Data 4)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+	PORT_START("IN-4")
+	PORT_DIPNAME( 0x01, 0x00, "IN 4-0 (STRB 4 Data 0)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
+	PORT_DIPNAME( 0x02, 0x00, "IN 4-1 (STRB 4 Data 1)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
+	PORT_DIPNAME( 0x04, 0x00, "IN 4-2 (STRB 4 Data 2)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
+	PORT_DIPNAME( 0x08, 0x00, "IN 4-3 (STRB 4 Data 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
+	PORT_DIPNAME( 0x10, 0x00, "IN 4-4 (STRB 4 Data 4)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+
+	PORT_START("IN-5")
+	PORT_DIPNAME( 0x01, 0x00, "IN 5-0 (STRB 5 Data 0)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
+	PORT_DIPNAME( 0x02, 0x00, "IN 5-1 (STRB 5 Data 1)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
+	PORT_DIPNAME( 0x04, 0x00, "IN 5-2 (STRB 5 Data 2)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
+	PORT_DIPNAME( 0x08, 0x00, "IN 5-3 (STRB 5 Data 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
+	PORT_DIPNAME( 0x10, 0x00, "IN 5-4 (STRB 5 Data 4)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+	PORT_START("IN-6")
+	PORT_DIPNAME( 0x01, 0x00, "IN 6-0 (STRB 6 Data 0)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
+	PORT_DIPNAME( 0x02, 0x00, "IN 6-1 (STRB 6 Data 1)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
+	PORT_DIPNAME( 0x04, 0x00, "IN 6-2 (STRB 6 Data 2)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
+	PORT_DIPNAME( 0x08, 0x00, "IN 6-3 (STRB 6 Data 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
+	PORT_DIPNAME( 0x10, 0x00, "IN 6-4 (STRB 6 Data 4)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+	PORT_START("IN-7")
+	PORT_DIPNAME( 0x01, 0x00, "IN 7-0 (STRB 7 Data 0)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
+	PORT_DIPNAME( 0x02, 0x00, "IN 7-1 (STRB 7 Data 1)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
+	PORT_DIPNAME( 0x04, 0x00, "IN 7-2 (STRB 7 Data 2)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
+	PORT_DIPNAME( 0x08, 0x00, "IN 7-3 (STRB 7 Data 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
+	PORT_DIPNAME( 0x10, 0x00, "IN 7-4 (STRB 7 Data 4)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+	PORT_START("IN-8")
+	PORT_DIPNAME( 0x01, 0x00, "IN 8-0 (STRB 8 Data 0)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
+	PORT_DIPNAME( 0x02, 0x00, "IN 8-1 (STRB 8 Data 1)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
+	PORT_DIPNAME( 0x04, 0x00, "IN 8-2 (STRB 8 Data 2)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
+	PORT_DIPNAME( 0x08, 0x00, "IN 8-3 (STRB 8 Data 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
+	PORT_DIPNAME( 0x10, 0x00, "IN 8-4 (STRB 8 Data 4)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+
+	PORT_START("IN-9")
+	PORT_DIPNAME( 0x01, 0x00, "IN 9-0 (STRB 9 Data 0)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
+	PORT_DIPNAME( 0x02, 0x00, "IN 9-1 (STRB 9 Data 1)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
+	PORT_DIPNAME( 0x04, 0x00, "IN 9-2 (STRB 9 Data 2)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
+	PORT_DIPNAME( 0x08, 0x00, "IN 9-3 (STRB 9 Data 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
+	PORT_DIPNAME( 0x10, 0x00, "IN 9-4 (STRB 9 Data 4)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+	PORT_START("IN-A") 
+	PORT_DIPNAME( 0x01, 0x00, "IN 10-0 (STRB 10 Data 0)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
+	PORT_DIPNAME( 0x02, 0x00, "IN 10-1 (STRB 10 Data 1)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
+	PORT_DIPNAME( 0x04, 0x00, "IN 10-2 (STRB 10 Data 2)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
+	PORT_DIPNAME( 0x08, 0x00, "IN 10-3 (STRB 10 Data 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
+	PORT_DIPNAME( 0x10, 0x00, "IN 10-4 (STRB 10 Data 4)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+
+	PORT_START("IN-B")
+	PORT_DIPNAME( 0x01, 0x00, "IN 11-0 (STRB 11 Data 0)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
+	PORT_DIPNAME( 0x02, 0x00, "IN 11-1 (STRB 11 Data 1)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
+	PORT_DIPNAME( 0x04, 0x00, "IN 11-2 (STRB 11 Data 2)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
+	PORT_DIPNAME( 0x08, 0x00, "IN 11-3 (STRB 11 Data 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
+	PORT_DIPNAME( 0x10, 0x00, "IN 11-4 (STRB 11 Data 4)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+	// where are 11,12,13,14,15 ?
+	
+	PORT_START("IN-16")
+	PORT_DIPNAME( 0x01, 0x00, "IN 16-0 (STRB 16 Data 0)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
+	PORT_DIPNAME( 0x02, 0x00, "IN 16-1 (STRB 16 Data 1)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
+	PORT_DIPNAME( 0x04, 0x00, "IN 16-2 (STRB 16 Data 2)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
+	PORT_DIPNAME( 0x08, 0x00, "IN 16-3 (STRB 16 Data 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
+	PORT_DIPNAME( 0x10, 0x00, "IN 16-4 (STRB 16 Data 4)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+	PORT_START("IN-17")
+	PORT_DIPNAME( 0x01, 0x00, "IN 17-0 (STRB 17 Data 0)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
+	PORT_DIPNAME( 0x02, 0x00, "IN 17-1 (STRB 17 Data 1)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
+	PORT_DIPNAME( 0x04, 0x00, "IN 17-2 (STRB 17 Data 2)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
+	PORT_DIPNAME( 0x08, 0x00, "IN 17-3 (STRB 17 Data 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
+	PORT_DIPNAME( 0x10, 0x00, "IN 17-4 (STRB 17 Data 4)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+	PORT_START("IN-18")
+	PORT_DIPNAME( 0x01, 0x00, "IN 18-0 (STRB 18 Data 0)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
+	PORT_DIPNAME( 0x02, 0x00, "IN 18-1 (STRB 18 Data 1)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
+	PORT_DIPNAME( 0x04, 0x00, "IN 18-2 (STRB 18 Data 2)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
+	PORT_DIPNAME( 0x08, 0x00, "IN 18-3 (STRB 18 Data 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
+	PORT_DIPNAME( 0x10, 0x00, "IN 18-4 (STRB 18 Data 4)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+	PORT_START("IN-19")
+	PORT_DIPNAME( 0x01, 0x00, "IN 19-0 (STRB 19 Data 0)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
+	PORT_DIPNAME( 0x02, 0x00, "IN 19-1 (STRB 19 Data 1)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
+	PORT_DIPNAME( 0x04, 0x00, "IN 19-2 (STRB 19 Data 2)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
+	PORT_DIPNAME( 0x08, 0x00, "IN 19-3 (STRB 19 Data 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
+	PORT_DIPNAME( 0x10, 0x00, "IN 19-4 (STRB 19 Data 4)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
+
+	PORT_START("IN-20")
+	PORT_DIPNAME( 0x01, 0x00, "IN 20-0 (STRB 20 Data 0)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
+	PORT_DIPNAME( 0x02, 0x00, "IN 20-1 (STRB 20 Data 1)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
+	PORT_DIPNAME( 0x04, 0x00, "IN 20-2 (STRB 20 Data 2)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
+	PORT_DIPNAME( 0x08, 0x00, "IN 20-3 (STRB 20 Data 3)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
+	PORT_DIPNAME( 0x10, 0x00, "IN 20-4 (STRB 20 Data 4)" )
+	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
+	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_BIT(           0xffe0, IP_ACTIVE_HIGH, IPT_UNUSED )
+INPUT_PORTS_END
+
+
+INPUT_PORTS_START( sc4_base ) // just some fairly generic defaults we map to games where there isn't a specific mapping yet
+	PORT_INCLUDE ( sc4_raw )
+	PORT_MODIFY("IN-1")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_BUTTON1 )
-	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_BUTTON2 )
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_BUTTON2 ) 
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_BUTTON3 )
 	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_BUTTON4 )
 	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_BUTTON5 )
 
-	PORT_START("IN-2")
+	PORT_MODIFY("IN-2")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_BUTTON6 )
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_BUTTON7 )
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_BUTTON8 )
@@ -786,150 +1072,58 @@ INPUT_PORTS_START( sc4_base )
 	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_START1 ) PORT_NAME("Start 1 / P1 Button 1") // also gives you 0.50 credits at the moment, I guess because we're in freeplay?
 
 
-	PORT_START("IN-3")
-	PORT_DIPNAME( 0x01, 0x00, "IN-3:0" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
-	PORT_DIPNAME( 0x02, 0x00, "IN-3:1" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
-	PORT_DIPNAME( 0x04, 0x00, "IN-3:2" )
+	PORT_MODIFY("IN-3")
+	PORT_DIPNAME( 0x04, 0x00, "IN 3-2 (STK 4  3.2)" )
 	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
-	PORT_DIPNAME( 0x08, 0x00, "IN-3:3" )
+	PORT_DIPNAME( 0x08, 0x00, "IN 3-3 (STK 2  3.3)" ) 
 	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
-	PORT_DIPNAME( 0x10, 0x00, "IN-3:4" )
+	PORT_DIPNAME( 0x10, 0x00, "IN 3-4 (STK 3  3.4)" )
 	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
 
-
-	PORT_START("IN-4")
-	PORT_DIPNAME( 0x01, 0x00, "IN-4:0" )
+	PORT_MODIFY("IN-5")
+	PORT_DIPNAME( 0x01, 0x00, "IN 5-0 (PRIZ4 5.0)" ) // (PRIZ4 5.0)  // Jackpot key
 	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
-	PORT_DIPNAME( 0x02, 0x00, "IN-4:1" )
+	PORT_DIPNAME( 0x02, 0x00, "IN 5-1 (PRIZ35.1)" ) // (PRI31 5.1)
 	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
-	PORT_DIPNAME( 0x04, 0x00, "IN-4:2" )
+	PORT_DIPNAME( 0x04, 0x00, "IN 5-2 (PRIZ2 5.2)" ) // (PRIZ2 5.2)
 	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
-	PORT_DIPNAME( 0x08, 0x00, "IN-4:3" )
+	PORT_DIPNAME( 0x08, 0x00, "IN 5-3 (PRIZ1 5.3)" ) // (PRIZ1 5.3)
 	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
-	PORT_DIPNAME( 0x10, 0x00, "IN-4:4" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
 
-
-	PORT_START("IN-5")
-	PORT_BIT( 0x0f, IP_ACTIVE_LOW, IPT_UNUSED ) // Jackpot Key, filled in later
-	PORT_DIPNAME( 0x10, 0x00, "IN-5:4" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
-
-	PORT_START("IN-6")
-	PORT_DIPNAME( 0x01, 0x00, "IN-6:0" )
+	PORT_MODIFY("IN-6")
+	PORT_DIPNAME( 0x01, 0x00, "IN 6-0 (PERC1 6.0)" ) // (PERC1 6.0)  // %age key
 	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
-	PORT_DIPNAME( 0x02, 0x00, "IN-6:1" )
+	PORT_DIPNAME( 0x02, 0x00, "IN 6-1 (PERC2 6.1)" ) // (PERC2 6.1)
 	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
-	PORT_DIPNAME( 0x04, 0x00, "IN-6:2" )
+	PORT_DIPNAME( 0x04, 0x00, "IN 6-2 (PERC3 6.2)" ) // (PERC3 6.2)
 	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
-	PORT_DIPNAME( 0x08, 0x00, "IN-6:3" )
+	PORT_DIPNAME( 0x08, 0x00, "IN 6-3 (PERC4 6.3)" ) // (PERC4 6.3)
 	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
 	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
-	PORT_DIPNAME( 0x10, 0x00, "IN-6:4" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	
 
-	PORT_START("IN-7")
-	PORT_DIPNAME( 0x01, 0x00, "IN-7:0" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
-	PORT_DIPNAME( 0x02, 0x00, "IN-7:1" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
-	PORT_DIPNAME( 0x04, 0x00, "IN-7:2" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
-	PORT_DIPNAME( 0x08, 0x00, "IN-7:3" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
-	PORT_DIPNAME( 0x10, 0x00, "IN-7:4" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
-
-	PORT_START("IN-8")
-	PORT_DIPNAME( 0x01, 0x00, "IN-8:0" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
-	PORT_DIPNAME( 0x02, 0x00, "IN-8:1" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
-	PORT_DIPNAME( 0x04, 0x00, "IN-8:2" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
-	PORT_DIPNAME( 0x08, 0x00, "IN-8:3" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
-	PORT_DIPNAME( 0x10, 0x00, "IN-8:4" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
-
-
-	PORT_START("IN-9")
-	PORT_DIPNAME( 0x01, 0x00, "IN-9:0" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
-	PORT_DIPNAME( 0x02, 0x00, "IN-9:1" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
-	PORT_DIPNAME( 0x04, 0x00, "IN-9:2" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
-	PORT_DIPNAME( 0x08, 0x00, "IN-9:3" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
-	PORT_DIPNAME( 0x10, 0x00, "IN-9:4" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
-
-
-	PORT_START("IN-A")
-	PORT_DIPNAME( 0x01, 0x00, "IN-a:0" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
-	PORT_DIPNAME( 0x02, 0x00, "IN-a:1" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
-	PORT_DIPNAME( 0x04, 0x00, "IN-a:2" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
-	PORT_DIPNAME( 0x08, 0x00, "IN-a:3" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
-	PORT_DIPNAME( 0x10, 0x00, "IN-a:4" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
-
-
-	PORT_START("IN-B")
-	PORT_DIPNAME( 0x01, 0x00, "IN-b:0" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x01, DEF_STR( On ) )
-	PORT_DIPNAME( 0x02, 0x00, "IN-b:1" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x02, DEF_STR( On ) )
-	PORT_DIPNAME( 0x04, 0x00, "IN-b:2" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x04, DEF_STR( On ) )
-	PORT_DIPNAME( 0x08, 0x00, "IN-b:3" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x08, DEF_STR( On ) )
-	PORT_DIPNAME( 0x10, 0x00, "IN-b:4" )
-	PORT_DIPSETTING(    0x00, DEF_STR( Off ) )
-	PORT_DIPSETTING(    0x10, DEF_STR( On ) )
+	PORT_MODIFY("IN-20")
+	PORT_BIT(0x0001, IP_ACTIVE_HIGH, IPT_SERVICE1) PORT_NAME("Green Button")
+	PORT_DIPNAME( 0x0002, 0x0000, "Door Lock" ) // DORLOK20.1
+	PORT_DIPSETTING(      0x0000, DEF_STR( Off ) )
+	PORT_DIPSETTING(      0x0002, DEF_STR( On ) )
+	PORT_DIPNAME( 0x0004, 0x0000, "Service Door" ) // SERDOR20.2
+	PORT_DIPSETTING(      0x0000, DEF_STR( Off ) )
+	PORT_DIPSETTING(      0x0004, DEF_STR( On ) )
+	PORT_DIPNAME( 0x0008, 0x0000, "Cashbox Door" ) // CSHDOR20.3	
+	PORT_DIPSETTING(      0x0000, DEF_STR( Off ) )
+	PORT_DIPSETTING(      0x0008, DEF_STR( On ) )
+	PORT_DIPNAME( 0x0010, 0x0000, "Hopper DMP" ) // HOPDMP20.4
+	PORT_DIPSETTING(      0x0000, DEF_STR( Off ) )
+	PORT_DIPSETTING(      0x0010, DEF_STR( On ) )
 INPUT_PORTS_END
