@@ -8198,8 +8198,8 @@ void m68000_base_device_ops::m68k_op_bkpt(m68000_base_device* mc68kcpu)
 {
 	if(CPU_TYPE_IS_010_PLUS((mc68kcpu)->cpu_type))
 	{
-		if ((mc68kcpu)->bkpt_ack_callback != NULL)
-			(*(mc68kcpu)->bkpt_ack_callback)((mc68kcpu), CPU_TYPE_IS_EC020_PLUS((mc68kcpu)->cpu_type) ? (mc68kcpu)->ir & 7 : 0);
+		if (!(mc68kcpu)->bkpt_ack_callback.isnull())
+			((mc68kcpu)->bkpt_ack_callback)((*mc68kcpu->program), 0, CPU_TYPE_IS_EC020_PLUS((mc68kcpu)->cpu_type) ? (mc68kcpu)->ir & 7 : 0, 0xffffffff);
 	}
 	m68ki_exception_illegal(mc68kcpu);
 }
@@ -12245,8 +12245,8 @@ void m68000_base_device_ops::m68k_op_cmpi_32_d(m68000_base_device* mc68kcpu)
 	UINT32 dst = DY(mc68kcpu);
 	UINT32 res = dst - src;
 
-	if ((mc68kcpu)->cmpild_instr_callback != NULL)
-		(*(mc68kcpu)->cmpild_instr_callback)((mc68kcpu), src, (mc68kcpu)->ir & 7);
+	if (!(mc68kcpu)->cmpild_instr_callback.isnull())
+		((mc68kcpu)->cmpild_instr_callback)(*(mc68kcpu)->program, (mc68kcpu)->ir & 7, src, 0xffffffff);
 
 	(mc68kcpu)->n_flag = NFLAG_32(res);
 	(mc68kcpu)->not_z_flag = MASK_OUT_ABOVE_32(res);
@@ -26555,8 +26555,8 @@ void m68000_base_device_ops::m68k_op_reset(m68000_base_device* mc68kcpu)
 {
 	if((mc68kcpu)->s_flag)
 	{
-		if ((mc68kcpu)->reset_instr_callback != NULL)
-			(*(mc68kcpu)->reset_instr_callback)((mc68kcpu));
+		if (!(mc68kcpu)->reset_instr_callback.isnull())
+			((mc68kcpu)->reset_instr_callback)(1);
 		(mc68kcpu)->remaining_cycles -= (mc68kcpu)->cyc_reset;
 		return;
 	}
@@ -27645,8 +27645,8 @@ void m68000_base_device_ops::m68k_op_rte_32(m68000_base_device* mc68kcpu)
 		UINT32 new_pc;
 		UINT32 format_word;
 
-		if ((mc68kcpu)->rte_instr_callback != NULL)
-			(*(mc68kcpu)->rte_instr_callback)((mc68kcpu));
+		if (!(mc68kcpu)->rte_instr_callback.isnull())
+			((mc68kcpu)->rte_instr_callback)(1);
 		m68ki_trace_t0(mc68kcpu);              /* auto-disable (see m68kcpu.h) */
 
 		if(CPU_TYPE_IS_000((mc68kcpu)->cpu_type))
@@ -31260,21 +31260,20 @@ void m68000_base_device_ops::m68k_op_tas_8_ai(m68000_base_device* mc68kcpu)
 {
 	UINT32 ea = EA_AY_AI_8(mc68kcpu);
 	UINT32 dst = m68ki_read_8((mc68kcpu), ea);
-	UINT32 allow_writeback = TRUE;
 
 	(mc68kcpu)->not_z_flag = dst;
 	(mc68kcpu)->n_flag = NFLAG_8(dst);
 	(mc68kcpu)->v_flag = VFLAG_CLEAR;
 	(mc68kcpu)->c_flag = CFLAG_CLEAR;
 
-	/* The Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS writeback
-	   disabled in order to function properly.  Some Amiga software may also rely
-	   on this, but only when accessing specific addresses so additional functionality
-	   will be needed. */
-	if ((mc68kcpu)->tas_instr_callback != NULL)
-		allow_writeback = (*(mc68kcpu)->tas_instr_callback)((mc68kcpu));
-
-	if (allow_writeback)
+	/* On the 68000 and 68010, the TAS instruction uses a unique bus cycle that may have
+	   side effects (e.g. delaying DMA) or may fail to write back at all depending on the
+	   bus implementation.
+	   In particular, the Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS
+	   to fail to write back in order to function properly. */
+	if (CPU_TYPE_IS_010_LESS((mc68kcpu)->cpu_type) && !(mc68kcpu)->tas_write_callback.isnull())
+		((mc68kcpu)->tas_write_callback)(*(mc68kcpu)->program, ea, dst | 0x80, 0xff);
+	else
 		m68ki_write_8((mc68kcpu), ea, dst | 0x80);
 }
 
@@ -31283,21 +31282,20 @@ void m68000_base_device_ops::m68k_op_tas_8_pi(m68000_base_device* mc68kcpu)
 {
 	UINT32 ea = EA_AY_PI_8(mc68kcpu);
 	UINT32 dst = m68ki_read_8((mc68kcpu), ea);
-	UINT32 allow_writeback = TRUE;
 
 	(mc68kcpu)->not_z_flag = dst;
 	(mc68kcpu)->n_flag = NFLAG_8(dst);
 	(mc68kcpu)->v_flag = VFLAG_CLEAR;
 	(mc68kcpu)->c_flag = CFLAG_CLEAR;
 
-	/* The Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS writeback
-	   disabled in order to function properly.  Some Amiga software may also rely
-	   on this, but only when accessing specific addresses so additional functionality
-	   will be needed. */
-	if ((mc68kcpu)->tas_instr_callback != NULL)
-		allow_writeback = (*(mc68kcpu)->tas_instr_callback)((mc68kcpu));
-
-	if (allow_writeback)
+	/* On the 68000 and 68010, the TAS instruction uses a unique bus cycle that may have
+	   side effects (e.g. delaying DMA) or may fail to write back at all depending on the
+	   bus implementation.
+	   In particular, the Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS
+	   to fail to write back in order to function properly. */
+	if (CPU_TYPE_IS_010_LESS((mc68kcpu)->cpu_type) && !(mc68kcpu)->tas_write_callback.isnull())
+		((mc68kcpu)->tas_write_callback)(*(mc68kcpu)->program, ea, dst | 0x80, 0xff);
+	else
 		m68ki_write_8((mc68kcpu), ea, dst | 0x80);
 }
 
@@ -31306,21 +31304,20 @@ void m68000_base_device_ops::m68k_op_tas_8_pi7(m68000_base_device* mc68kcpu)
 {
 	UINT32 ea = EA_A7_PI_8(mc68kcpu);
 	UINT32 dst = m68ki_read_8((mc68kcpu), ea);
-	UINT32 allow_writeback = TRUE;
 
 	(mc68kcpu)->not_z_flag = dst;
 	(mc68kcpu)->n_flag = NFLAG_8(dst);
 	(mc68kcpu)->v_flag = VFLAG_CLEAR;
 	(mc68kcpu)->c_flag = CFLAG_CLEAR;
 
-	/* The Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS writeback
-	   disabled in order to function properly.  Some Amiga software may also rely
-	   on this, but only when accessing specific addresses so additional functionality
-	   will be needed. */
-	if ((mc68kcpu)->tas_instr_callback != NULL)
-		allow_writeback = (*(mc68kcpu)->tas_instr_callback)((mc68kcpu));
-
-	if (allow_writeback)
+	/* On the 68000 and 68010, the TAS instruction uses a unique bus cycle that may have
+	   side effects (e.g. delaying DMA) or may fail to write back at all depending on the
+	   bus implementation.
+	   In particular, the Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS
+	   to fail to write back in order to function properly. */
+	if (CPU_TYPE_IS_010_LESS((mc68kcpu)->cpu_type) && !(mc68kcpu)->tas_write_callback.isnull())
+		((mc68kcpu)->tas_write_callback)(*(mc68kcpu)->program, ea, dst | 0x80, 0xff);
+	else
 		m68ki_write_8((mc68kcpu), ea, dst | 0x80);
 }
 
@@ -31329,21 +31326,20 @@ void m68000_base_device_ops::m68k_op_tas_8_pd(m68000_base_device* mc68kcpu)
 {
 	UINT32 ea = EA_AY_PD_8(mc68kcpu);
 	UINT32 dst = m68ki_read_8((mc68kcpu), ea);
-	UINT32 allow_writeback = TRUE;
 
 	(mc68kcpu)->not_z_flag = dst;
 	(mc68kcpu)->n_flag = NFLAG_8(dst);
 	(mc68kcpu)->v_flag = VFLAG_CLEAR;
 	(mc68kcpu)->c_flag = CFLAG_CLEAR;
 
-	/* The Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS writeback
-	   disabled in order to function properly.  Some Amiga software may also rely
-	   on this, but only when accessing specific addresses so additional functionality
-	   will be needed. */
-	if ((mc68kcpu)->tas_instr_callback != NULL)
-		allow_writeback = (*(mc68kcpu)->tas_instr_callback)((mc68kcpu));
-
-	if (allow_writeback)
+	/* On the 68000 and 68010, the TAS instruction uses a unique bus cycle that may have
+	   side effects (e.g. delaying DMA) or may fail to write back at all depending on the
+	   bus implementation.
+	   In particular, the Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS
+	   to fail to write back in order to function properly. */
+	if (CPU_TYPE_IS_010_LESS((mc68kcpu)->cpu_type) && !(mc68kcpu)->tas_write_callback.isnull())
+		((mc68kcpu)->tas_write_callback)(*(mc68kcpu)->program, ea, dst | 0x80, 0xff);
+	else
 		m68ki_write_8((mc68kcpu), ea, dst | 0x80);
 }
 
@@ -31352,21 +31348,20 @@ void m68000_base_device_ops::m68k_op_tas_8_pd7(m68000_base_device* mc68kcpu)
 {
 	UINT32 ea = EA_A7_PD_8(mc68kcpu);
 	UINT32 dst = m68ki_read_8((mc68kcpu), ea);
-	UINT32 allow_writeback = TRUE;
 
 	(mc68kcpu)->not_z_flag = dst;
 	(mc68kcpu)->n_flag = NFLAG_8(dst);
 	(mc68kcpu)->v_flag = VFLAG_CLEAR;
 	(mc68kcpu)->c_flag = CFLAG_CLEAR;
 
-	/* The Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS writeback
-	   disabled in order to function properly.  Some Amiga software may also rely
-	   on this, but only when accessing specific addresses so additional functionality
-	   will be needed. */
-	if ((mc68kcpu)->tas_instr_callback != NULL)
-		allow_writeback = (*(mc68kcpu)->tas_instr_callback)((mc68kcpu));
-
-	if (allow_writeback)
+	/* On the 68000 and 68010, the TAS instruction uses a unique bus cycle that may have
+	   side effects (e.g. delaying DMA) or may fail to write back at all depending on the
+	   bus implementation.
+	   In particular, the Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS
+	   to fail to write back in order to function properly. */
+	if (CPU_TYPE_IS_010_LESS((mc68kcpu)->cpu_type) && !(mc68kcpu)->tas_write_callback.isnull())
+		((mc68kcpu)->tas_write_callback)(*(mc68kcpu)->program, ea, dst | 0x80, 0xff);
+	else
 		m68ki_write_8((mc68kcpu), ea, dst | 0x80);
 }
 
@@ -31375,21 +31370,20 @@ void m68000_base_device_ops::m68k_op_tas_8_di(m68000_base_device* mc68kcpu)
 {
 	UINT32 ea = EA_AY_DI_8(mc68kcpu);
 	UINT32 dst = m68ki_read_8((mc68kcpu), ea);
-	UINT32 allow_writeback = TRUE;
 
 	(mc68kcpu)->not_z_flag = dst;
 	(mc68kcpu)->n_flag = NFLAG_8(dst);
 	(mc68kcpu)->v_flag = VFLAG_CLEAR;
 	(mc68kcpu)->c_flag = CFLAG_CLEAR;
 
-	/* The Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS writeback
-	   disabled in order to function properly.  Some Amiga software may also rely
-	   on this, but only when accessing specific addresses so additional functionality
-	   will be needed. */
-	if ((mc68kcpu)->tas_instr_callback != NULL)
-		allow_writeback = (*(mc68kcpu)->tas_instr_callback)((mc68kcpu));
-
-	if (allow_writeback)
+	/* On the 68000 and 68010, the TAS instruction uses a unique bus cycle that may have
+	   side effects (e.g. delaying DMA) or may fail to write back at all depending on the
+	   bus implementation.
+	   In particular, the Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS
+	   to fail to write back in order to function properly. */
+	if (CPU_TYPE_IS_010_LESS((mc68kcpu)->cpu_type) && !(mc68kcpu)->tas_write_callback.isnull())
+		((mc68kcpu)->tas_write_callback)(*(mc68kcpu)->program, ea, dst | 0x80, 0xff);
+	else
 		m68ki_write_8((mc68kcpu), ea, dst | 0x80);
 }
 
@@ -31398,21 +31392,20 @@ void m68000_base_device_ops::m68k_op_tas_8_ix(m68000_base_device* mc68kcpu)
 {
 	UINT32 ea = EA_AY_IX_8(mc68kcpu);
 	UINT32 dst = m68ki_read_8((mc68kcpu), ea);
-	UINT32 allow_writeback = TRUE;
 
 	(mc68kcpu)->not_z_flag = dst;
 	(mc68kcpu)->n_flag = NFLAG_8(dst);
 	(mc68kcpu)->v_flag = VFLAG_CLEAR;
 	(mc68kcpu)->c_flag = CFLAG_CLEAR;
 
-	/* The Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS writeback
-	   disabled in order to function properly.  Some Amiga software may also rely
-	   on this, but only when accessing specific addresses so additional functionality
-	   will be needed. */
-	if ((mc68kcpu)->tas_instr_callback != NULL)
-		allow_writeback = (*(mc68kcpu)->tas_instr_callback)((mc68kcpu));
-
-	if (allow_writeback)
+	/* On the 68000 and 68010, the TAS instruction uses a unique bus cycle that may have
+	   side effects (e.g. delaying DMA) or may fail to write back at all depending on the
+	   bus implementation.
+	   In particular, the Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS
+	   to fail to write back in order to function properly. */
+	if (CPU_TYPE_IS_010_LESS((mc68kcpu)->cpu_type) && !(mc68kcpu)->tas_write_callback.isnull())
+		((mc68kcpu)->tas_write_callback)(*(mc68kcpu)->program, ea, dst | 0x80, 0xff);
+	else
 		m68ki_write_8((mc68kcpu), ea, dst | 0x80);
 }
 
@@ -31421,21 +31414,20 @@ void m68000_base_device_ops::m68k_op_tas_8_aw(m68000_base_device* mc68kcpu)
 {
 	UINT32 ea = EA_AW_8(mc68kcpu);
 	UINT32 dst = m68ki_read_8((mc68kcpu), ea);
-	UINT32 allow_writeback = TRUE;
 
 	(mc68kcpu)->not_z_flag = dst;
 	(mc68kcpu)->n_flag = NFLAG_8(dst);
 	(mc68kcpu)->v_flag = VFLAG_CLEAR;
 	(mc68kcpu)->c_flag = CFLAG_CLEAR;
 
-	/* The Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS writeback
-	   disabled in order to function properly.  Some Amiga software may also rely
-	   on this, but only when accessing specific addresses so additional functionality
-	   will be needed. */
-	if ((mc68kcpu)->tas_instr_callback != NULL)
-		allow_writeback = (*(mc68kcpu)->tas_instr_callback)((mc68kcpu));
-
-	if (allow_writeback)
+	/* On the 68000 and 68010, the TAS instruction uses a unique bus cycle that may have
+	   side effects (e.g. delaying DMA) or may fail to write back at all depending on the
+	   bus implementation.
+	   In particular, the Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS
+	   to fail to write back in order to function properly. */
+	if (CPU_TYPE_IS_010_LESS((mc68kcpu)->cpu_type) && !(mc68kcpu)->tas_write_callback.isnull())
+		((mc68kcpu)->tas_write_callback)(*(mc68kcpu)->program, ea, dst | 0x80, 0xff);
+	else
 		m68ki_write_8((mc68kcpu), ea, dst | 0x80);
 }
 
@@ -31444,21 +31436,20 @@ void m68000_base_device_ops::m68k_op_tas_8_al(m68000_base_device* mc68kcpu)
 {
 	UINT32 ea = EA_AL_8(mc68kcpu);
 	UINT32 dst = m68ki_read_8((mc68kcpu), ea);
-	UINT32 allow_writeback = TRUE;
 
 	(mc68kcpu)->not_z_flag = dst;
 	(mc68kcpu)->n_flag = NFLAG_8(dst);
 	(mc68kcpu)->v_flag = VFLAG_CLEAR;
 	(mc68kcpu)->c_flag = CFLAG_CLEAR;
 
-	/* The Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS writeback
-	   disabled in order to function properly.  Some Amiga software may also rely
-	   on this, but only when accessing specific addresses so additional functionality
-	   will be needed. */
-	if ((mc68kcpu)->tas_instr_callback != NULL)
-		allow_writeback = (*(mc68kcpu)->tas_instr_callback)((mc68kcpu));
-
-	if (allow_writeback)
+	/* On the 68000 and 68010, the TAS instruction uses a unique bus cycle that may have
+	   side effects (e.g. delaying DMA) or may fail to write back at all depending on the
+	   bus implementation.
+	   In particular, the Genesis/Megadrive games Gargoyles and Ex-Mutants need the TAS
+	   to fail to write back in order to function properly. */
+	if (CPU_TYPE_IS_010_LESS((mc68kcpu)->cpu_type) && !(mc68kcpu)->tas_write_callback.isnull())
+		((mc68kcpu)->tas_write_callback)(*(mc68kcpu)->program, ea, dst | 0x80, 0xff);
+	else
 		m68ki_write_8((mc68kcpu), ea, dst | 0x80);
 }
 
