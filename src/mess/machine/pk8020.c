@@ -890,16 +890,6 @@ WRITE_LINE_MEMBER(pk8020_state::pk8020_pit_out1)
 }
 
 
-WRITE_LINE_MEMBER(pk8020_state::pk8020_pic_set_int_line)
-{
-	m_maincpu->set_input_line(0, state ? HOLD_LINE : CLEAR_LINE);
-}
-
-IRQ_CALLBACK_MEMBER(pk8020_state::pk8020_irq_callback)
-{
-	return m_pic8259->acknowledge();
-}
-
 void pk8020_state::machine_start()
 {
 	static const char *const keynames[] = {
@@ -916,7 +906,6 @@ void pk8020_state::machine_start()
 void pk8020_state::machine_reset()
 {
 	pk8020_set_bank(0);
-	m_maincpu->set_irq_acknowledge_callback(device_irq_acknowledge_delegate(FUNC(pk8020_state::pk8020_irq_callback),this));
 
 	m_sound_gate = 0;
 	m_sound_level = 0;

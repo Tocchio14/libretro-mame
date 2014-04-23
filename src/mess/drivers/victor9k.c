@@ -348,12 +348,6 @@ WRITE_LINE_MEMBER(victor9k_state::mux_serial_a_w)
 
 */
 
-IRQ_CALLBACK_MEMBER( victor9k_state::victor9k_irq_callback )
-{
-	return m_pic->inta_r();
-}
-
-
 //-------------------------------------------------
 //  UPD7201_INTERFACE( mpsc_intf )
 //-------------------------------------------------
@@ -895,9 +889,6 @@ SLOT_INTERFACE_END
 
 void victor9k_state::machine_start()
 {
-	// set interrupt callback
-	m_maincpu->set_irq_acknowledge_callback(device_irq_acknowledge_delegate(FUNC(victor9k_state::victor9k_irq_callback),this));
-
 	// set floppy callbacks
 	m_floppy0->setup_ready_cb(floppy_image_device::ready_cb(FUNC(victor9k_state::ready0_cb), this));
 	m_floppy0->setup_load_cb(floppy_image_device::load_cb(FUNC(victor9k_state::load0_cb), this));
@@ -928,6 +919,7 @@ static MACHINE_CONFIG_START( victor9k, victor9k_state )
 	// basic machine hardware
 	MCFG_CPU_ADD(I8088_TAG, I8088, XTAL_30MHz/6)
 	MCFG_CPU_PROGRAM_MAP(victor9k_mem)
+	MCFG_CPU_IRQ_ACKNOWLEDGE_DEVICE(I8259A_TAG, pic8259_device, inta_cb)
 
 	MCFG_CPU_ADD(I8048_TAG, I8048, XTAL_30MHz/6)
 	MCFG_CPU_IO_MAP(floppy_io)

@@ -176,11 +176,6 @@ WRITE_LINE_MEMBER(mc1502_state::mc1502_pit8253_out2_changed)
 	m_cassette->output(state ? 1 : -1);
 }
 
-IRQ_CALLBACK_MEMBER( mc1502_state::mc1502_irq_callback )
-{
-	return m_pic8259->acknowledge();
-}
-
 DRIVER_INIT_MEMBER( mc1502_state, mc1502 )
 {
 	address_space &program = m_maincpu->space(AS_PROGRAM);
@@ -196,7 +191,6 @@ MACHINE_START_MEMBER( mc1502_state, mc1502 )
 {
 	DBG_LOG(0,"init",("machine_start()\n"));
 
-	m_maincpu->set_irq_acknowledge_callback(device_irq_acknowledge_delegate(FUNC(mc1502_state::mc1502_irq_callback),this));
 	/*
 	       Keyboard polling circuit holds IRQ1 high until a key is
 	       pressed, then it starts a timer that pulses IRQ1 low each
@@ -251,6 +245,7 @@ static MACHINE_CONFIG_START( mc1502, mc1502_state )
 	MCFG_CPU_ADD("maincpu", I8088, XTAL_16MHz/3)
 	MCFG_CPU_PROGRAM_MAP(mc1502_map)
 	MCFG_CPU_IO_MAP(mc1502_io)
+	MCFG_CPU_IRQ_ACKNOWLEDGE_DEVICE("pic8259", pic8259_device, inta_cb)
 
 	MCFG_MACHINE_START_OVERRIDE( mc1502_state, mc1502 )
 	MCFG_MACHINE_RESET_OVERRIDE( mc1502_state, mc1502 )

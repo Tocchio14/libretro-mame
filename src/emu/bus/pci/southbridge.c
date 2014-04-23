@@ -141,11 +141,6 @@ southbridge_device::southbridge_device(const machine_config &mconfig, device_typ
  *
  **********************************************************/
 
-IRQ_CALLBACK_MEMBER(southbridge_device::at_irq_callback)
-{
-	return m_pic8259_master->inta_r();
-}
-
 /// HACK: the memory system cannot cope with mixing the  8 bit device map from the fdc with a 32 bit handler
 READ8_MEMBER(southbridge_device::ide_read_cs1_r)
 {
@@ -192,9 +187,6 @@ void southbridge_device::device_start()
 	spaceio.install_readwrite_handler(0x0374, 0x0377, read8_delegate(FUNC(southbridge_device::ide2_read_cs1_r),this), write8_delegate(FUNC(southbridge_device::ide2_write_cs1_w), this),0xff0000);
 	spaceio.install_readwrite_handler(0x03f4, 0x03f7, read8_delegate(FUNC(southbridge_device::ide_read_cs1_r),this), write8_delegate(FUNC(southbridge_device::ide_write_cs1_w), this),0xff0000);
 	spaceio.nop_readwrite(0x00e0, 0x00ef);
-
-
-	machine().device(":maincpu")->execute().set_irq_acknowledge_callback(device_irq_acknowledge_delegate(FUNC(southbridge_device::at_irq_callback),this));
 }
 
 //-------------------------------------------------
@@ -220,7 +212,7 @@ void southbridge_device::device_reset()
 READ8_MEMBER( southbridge_device::get_slave_ack )
 {
 	if (offset==2) // IRQ = 2
-		return m_pic8259_slave->inta_r();
+		return m_pic8259_slave->acknowledge();
 
 	return 0x00;
 }

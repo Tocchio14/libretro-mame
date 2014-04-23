@@ -57,8 +57,6 @@ public:
 	DECLARE_WRITE8_MEMBER(pcjx_port_1ff_w);
 	void pcjx_set_bank(int unk1, int unk2, int unk3);
 
-	IRQ_CALLBACK_MEMBER(pc_irq_callback) { return m_pic8259->acknowledge(); }
-
 	DECLARE_DEVICE_IMAGE_LOAD_MEMBER( pcjr_cartridge );
 	void pc_speaker_set_spkrdata(UINT8 data);
 
@@ -109,7 +107,6 @@ DRIVER_INIT_MEMBER(pcjr_state, pcjr)
 	m_pc_int_delay_timer = timer_alloc(TIMER_IRQ_DELAY);
 	m_pcjr_watchdog = timer_alloc(TIMER_WATCHDOG);
 	m_keyb_signal_timer = timer_alloc(TIMER_KB_SIGNAL);
-	m_maincpu->set_irq_acknowledge_callback(device_irq_acknowledge_delegate(FUNC(pcjr_state::pc_irq_callback),this));
 }
 
 void pcjr_state::machine_reset()
@@ -612,6 +609,7 @@ static MACHINE_CONFIG_START( ibmpcjr, pcjr_state)
 	MCFG_CPU_ADD("maincpu", I8088, 4900000)
 	MCFG_CPU_PROGRAM_MAP(ibmpcjr_map)
 	MCFG_CPU_IO_MAP(ibmpcjr_io)
+	MCFG_CPU_IRQ_ACKNOWLEDGE_DEVICE("pic8259", pic8259_device, inta_cb)
 
 /*
   On the PC Jr the input for clock 1 seems to be selectable
