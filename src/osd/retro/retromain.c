@@ -383,7 +383,7 @@ void Set_Path_Option(){
 
 }
 
-#include "../portmedia/pmmidi.inc"
+//#include "../portmedia/pmmidi.inc"
  
 //============================================================
 //  main
@@ -423,7 +423,7 @@ int mmain(int argc, const char *argv)
 		write_log("  %s\n",XARGV[i]);
 	}
 
-	osd_init_midi();
+//	osd_init_midi();
 
 	cli_options MRoptions;
 	retro_osd_interface MRosd;
