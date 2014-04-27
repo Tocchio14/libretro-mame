@@ -56,7 +56,7 @@
 #define FLAC__U64L(x) x##LLU
 #endif
 
-#ifdef RETRO
+#ifdef __LIBRETRO__
 #define VERSION "1.2.1"
 #endif
 

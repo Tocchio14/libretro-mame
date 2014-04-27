@@ -104,7 +104,7 @@ ifeq ($(platform), unix)
    fpic := -fPIC
    SHARED := -shared -Wl,--version-script=src/osd/retro/link.T -Wl,--no-undefined
 	CCOMFLAGS += $(fpic) -fsigned-char -finline  -fno-common -fno-builtin -fweb -frename-registers -falign-functions=16 -fsingle-precision-constant
-	PLATCFLAGS += -DRETRO -DALIGN_INTS -DALIGN_SHORTS -fstrict-aliasing -fno-merge-constants  $(fpic) -D__LIBRETRO__
+	PLATCFLAGS +=  -DALIGN_INTS -DALIGN_SHORTS -fstrict-aliasing -fno-merge-constants  $(fpic)
 	LDFLAGS +=  $(fpic) $(SHARED)
 	NATIVELD = g++
 	NATIVELDFLAGS = -Wl,--warn-common -lstdc++ -Wl,--no-undefined
@@ -142,7 +142,7 @@ armplatform := 1
 	LD = @arm-linux-androideabi-g++ 
 	FORCE_DRC_C_BACKEND = 1
 	CCOMFLAGS += -fPIC -mstructure-size-boundary=32 -mthumb-interwork -falign-functions=16 -fsigned-char -finline  -fno-common -fno-builtin -fweb -frename-registers -falign-functions=16 -fsingle-precision-constant
-	PLATCFLAGS += -march=armv7-a -mfloat-abi=softfp -DRETRO -DRETRO_AND -DALIGN_INTS -DALIGN_SHORTS -DLSB_FIRST -fstrict-aliasing -fno-merge-constants -DSDLMAME_NO64BITIO -DANDTIME -DRANDPATH -DANDROID_BUILD -DUSE_ARM_HACK
+	PLATCFLAGS += -march=armv7-a -mfloat-abi=softfp -DRETRO_AND -DALIGN_INTS -DALIGN_SHORTS -DLSB_FIRST -fstrict-aliasing -fno-merge-constants -DSDLMAME_NO64BITIO -DANDTIME -DRANDPATH -DANDROID_BUILD -DUSE_ARM_HACK
 	LDFLAGS += -Wl,--fix-cortex-a8 -llog $(fpic) $(SHARED)
 	NATIVELD = g++
 	NATIVELDFLAGS = -Wl,--warn-common -lstdc++
@@ -302,7 +302,7 @@ else ifeq ($(platform), wincross)
 	NATIVELD = $(LD)
 	CC_AS ?= gcc
 	SHARED := -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=src/osd/retro/link.T
-   	CCOMFLAGS += -DRETRO -D__WIN32__ -D__WIN32_LIBRETRO__
+   	CCOMFLAGS += -D__WIN32__ -D__WIN32_LIBRETRO__
 	LDFLAGS +=   $(SHARED)
 	EXE = .exe
 	#LIBS += -lpthread
@@ -319,7 +319,7 @@ else
 	CC_AS = gcc
 	SHARED := -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=src/osd/retro/link.T
    	#CFLAGS += -D__WIN32__ -D__WIN32_LIBRETRO__
-   	CCOMFLAGS += -DRETRO -D__WIN32__ -D__WIN32_LIBRETRO__
+   	CCOMFLAGS += -D__WIN32__ -D__WIN32_LIBRETRO__
 	LDFLAGS +=   $(SHARED)
 	EXE = .exe
 	LIBS += -lws2_32
@@ -329,6 +329,8 @@ ifneq (,$(findstring mingw64-w64,$(PATH)))
 PTR64=1
 endif
 endif
+
+PLATCFLAGS += -D__LIBRETRO__
 
 ###########################################################################
 #################   BEGIN USER-CONFIGURABLE OPTIONS   #####################
