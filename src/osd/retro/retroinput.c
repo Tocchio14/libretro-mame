@@ -643,10 +643,11 @@ static void Input_Binding(running_machine &machine){
          (core_stricmp(machine.system().parent, "mk2") == 0) ||
          (core_stricmp(machine.system().name, "mk3") == 0) ||
          (core_stricmp(machine.system().name, "umk3") == 0) ||
-         (core_stricmp(machine.system().parent, "umk3") == 0)
+         (core_stricmp(machine.system().parent, "umk3") == 0) ||
+         (core_stricmp(machine.system().parent, "wwfmania") == 0)
       )
    {
-      /* Mortal Kombat 1/2/3/Ultimate */
+      /* Mortal Kombat 1/2/3/Ultimate/WWF: Wrestlemania */
 
 	Buttons_mapping[0]=RETROPAD_Y;
 	Buttons_mapping[1]=RETROPAD_L;
