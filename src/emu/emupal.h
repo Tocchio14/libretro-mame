@@ -109,7 +109,6 @@
 
 #define PALETTE_INIT_NAME(_Name) palette_init_##_Name
 #define DECLARE_PALETTE_INIT(_Name) void PALETTE_INIT_NAME(_Name)(palette_device &palette)
-#define PALETTE_INIT(_Name) void PALETTE_INIT_NAME(_Name)(palette_device &dummy, palette_device &palette) // legacy
 #define PALETTE_INIT_MEMBER(_Class, _Name) void _Class::PALETTE_INIT_NAME(_Name)(palette_device &palette)
 
 // standard 3-3-2 formats
@@ -143,6 +142,7 @@
 #define PALETTE_FORMAT_xRGBRRRRGGGGBBBB raw_to_rgb_converter(2, &raw_to_rgb_converter::xRGBRRRRGGGGBBBB_decoder)
 
 // standard 5-6-5 formats
+#define PALETTE_FORMAT_RRRRRGGGGGGBBBBB raw_to_rgb_converter(2, &raw_to_rgb_converter::standard_rgb_decoder<5,6,5, 11,5,0>)
 #define PALETTE_FORMAT_BBBBBGGGGGGRRRRR raw_to_rgb_converter(2, &raw_to_rgb_converter::standard_rgb_decoder<5,6,5, 0,5,11>)
 
 // standard 5-5-5-1 formats
