@@ -39,6 +39,9 @@
 #define MCFG_MSX_LAYOUT(_layout) \
 	msx_state::set_layout(*owner, msx_slot_layout_##_layout);
 
+#define MCFG_MSX_RAMIO_SET_BITS(_ramio_set_bits) \
+	msx_state::set_ramio_set_bits(*owner, _ramio_set_bits);
+
 class msx_state : public driver_device
 {
 public:
@@ -70,6 +73,7 @@ public:
 		m_bank10(*this, "bank10"),
 		m_bank11(*this, "bank11"),
 		m_region_maincpu(*this, "maincpu"),
+		m_region_kanji(*this, "kanji"),
 		m_io_joy0(*this, "JOY0"),
 		m_io_joy1(*this, "JOY1"),
 		m_io_dsw(*this, "DSW"),
@@ -84,6 +88,7 @@ public:
 
 	// static configuration helpers
 	static void set_layout(device_t &device, const msx_slot_layout *layout) { downcast<msx_state &>(device).m_layout = layout; }
+	static void set_ramio_set_bits(device_t &device, UINT8 ramio_set_bits) { downcast<msx_state &>(device).m_ramio_set_bits = ramio_set_bits; }
 
 	DECLARE_WRITE8_MEMBER(msx_page0_w);
 	DECLARE_WRITE8_MEMBER(msx_page0_1_w);
@@ -123,8 +128,6 @@ public:
 	int m_rtc_latch;
 	/* disk */
 	UINT8 m_dsk_stat;
-	/* kanji */
-	UINT8 *m_kanji_mem;
 	int m_kanji_latch;
 	/* memory */
 	const msx_slot_layout *m_layout;
@@ -206,6 +209,7 @@ public:
 
 protected:
 	required_memory_region m_region_maincpu;
+	optional_memory_region m_region_kanji;
 	required_ioport m_io_joy0;
 	required_ioport m_io_joy1;
 	required_ioport m_io_dsw;
