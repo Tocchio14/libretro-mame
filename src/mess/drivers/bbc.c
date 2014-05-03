@@ -578,15 +578,6 @@ INTERRUPT_GEN_MEMBER(bbc_state::bbcb_vsync)
 //};
 
 
-static const cassette_interface bbc_cassette_interface =
-{
-	bbc_cassette_formats,
-	NULL,
-	(cassette_state)(CASSETTE_PLAY),
-	"bbc_cass",
-	NULL
-};
-
 
 WRITE_LINE_MEMBER(bbc_state::bbcb_acia6850_irq_w)
 {
@@ -612,15 +603,9 @@ LEGACY_FLOPPY_OPTIONS_END
 
 static const floppy_interface bbc_floppy_interface =
 {
-	DEVCB_NULL,
-	DEVCB_NULL,
-	DEVCB_NULL,
-	DEVCB_NULL,
-	DEVCB_NULL,
 	FLOPPY_STANDARD_5_25_DSDD,
 	LEGACY_FLOPPY_OPTIONS_NAME(bbc),
-	"floppy_5_25",
-	NULL
+	"floppy_5_25"
 };
 
 WRITE_LINE_MEMBER(bbc_state::econet_clk_w)
@@ -704,7 +689,10 @@ static MACHINE_CONFIG_START( bbca, bbc_state )
 	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 1.00)
 
 	/* cassette */
-	MCFG_CASSETTE_ADD( "cassette", bbc_cassette_interface )
+	MCFG_CASSETTE_ADD( "cassette" )
+	MCFG_CASSETTE_FORMATS(bbc_cassette_formats)
+	MCFG_CASSETTE_DEFAULT_STATE(CASSETTE_PLAY)
+	MCFG_CASSETTE_INTERFACE("bbc_cass")
 
 	/* software lists */
 	MCFG_SOFTWARE_LIST_ADD("cass_ls_a", "bbca_cass")
@@ -937,7 +925,10 @@ static MACHINE_CONFIG_START( bbcm, bbc_state )
 	MCFG_CENTRONICS_OUTPUT_LATCH_ADD("cent_data_out", "centronics")
 
 	/* cassette */
-	MCFG_CASSETTE_ADD( "cassette", bbc_cassette_interface )
+	MCFG_CASSETTE_ADD( "cassette" )
+	MCFG_CASSETTE_FORMATS(bbc_cassette_formats)
+	MCFG_CASSETTE_DEFAULT_STATE(CASSETTE_PLAY)
+	MCFG_CASSETTE_INTERFACE("bbc_cass")
 
 	/* cartridges */
 	MCFG_CARTSLOT_ADD("cart1")

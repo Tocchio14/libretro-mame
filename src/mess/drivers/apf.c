@@ -476,17 +476,6 @@ static INPUT_PORTS_START( apfimag )
 	PORT_BIT(0xff, 0xff, IPT_UNUSED)
 INPUT_PORTS_END
 
-
-
-static const cassette_interface apf_cassette_interface =
-{
-	apf_cassette_formats,
-	NULL,
-	(cassette_state)(CASSETTE_PLAY),
-	NULL,
-	NULL
-};
-
 static LEGACY_FLOPPY_OPTIONS_START(apfimag)
 	LEGACY_FLOPPY_OPTION(apfimag, "apd", "APF disk image", basicdsk_identify_default, basicdsk_construct_default, NULL,
 		HEADS([1])
@@ -498,14 +487,8 @@ LEGACY_FLOPPY_OPTIONS_END
 
 static const floppy_interface apfimag_floppy_interface =
 {
-	DEVCB_NULL,
-	DEVCB_NULL,
-	DEVCB_NULL,
-	DEVCB_NULL,
-	DEVCB_NULL,
 	FLOPPY_STANDARD_5_25_SSDD_40,
 	LEGACY_FLOPPY_OPTIONS_NAME(apfimag),
-	NULL,
 	NULL
 };
 
@@ -573,7 +556,10 @@ static MACHINE_CONFIG_DERIVED( apfimag, apfm1000 )
 	MCFG_PIA_READPB_HANDLER(READ8(apf_state, pia1_portb_r))
 	MCFG_PIA_WRITEPB_HANDLER(WRITE8(apf_state, pia1_portb_w))
 
-	MCFG_CASSETTE_ADD( "cassette", apf_cassette_interface )
+	MCFG_CASSETTE_ADD( "cassette" )
+	MCFG_CASSETTE_FORMATS(apf_cassette_formats)
+	MCFG_CASSETTE_DEFAULT_STATE(CASSETTE_PLAY)
+	
 	MCFG_FD1771_ADD("fdc", default_wd17xx_interface )
 	MCFG_LEGACY_FLOPPY_2_DRIVES_ADD(apfimag_floppy_interface)
 MACHINE_CONFIG_END

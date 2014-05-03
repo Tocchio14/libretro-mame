@@ -287,7 +287,7 @@ static MACHINE_CONFIG_START( nascom1, nascom1_state )
 	/* devices */
 	MCFG_SNAPSHOT_ADD("snapshot", nascom1_state, nascom1, "nas", 0.5)
 
-	MCFG_CASSETTE_ADD( "cassette", default_cassette_interface )
+	MCFG_CASSETTE_ADD( "cassette" )
 
 	/* internal ram */
 	MCFG_RAM_ADD(RAM_TAG)
@@ -312,14 +312,8 @@ LEGACY_FLOPPY_OPTIONS_END
 
 static const floppy_interface nascom2_floppy_interface =
 {
-	DEVCB_NULL,
-	DEVCB_NULL,
-	DEVCB_NULL,
-	DEVCB_NULL,
-	DEVCB_NULL,
 	FLOPPY_STANDARD_5_25_DSHD,
 	LEGACY_FLOPPY_OPTIONS_NAME(nascom2),
-	NULL,
 	NULL
 };
 
