@@ -932,6 +932,7 @@ $(MAMEOBJ)/bfm.a: \
 	$(DRIVERS)/bfm_sc5sw.o \
 	$(DRIVERS)/bfm_ad5.o \
 	$(DRIVERS)/bfm_ad5sw.o \
+	$(DRIVERS)/bfm_sc45_helper.o \
 	$(DRIVERS)/bfm_swp.o \
 	$(DRIVERS)/bfmsys83.o \
 	$(DRIVERS)/bfmsys85.o \
@@ -2243,6 +2244,7 @@ $(MAMEOBJ)/misc.a: \
 	$(DRIVERS)/esripsys.o $(VIDEO)/esripsys.o \
 	$(DRIVERS)/ettrivia.o \
 	$(DRIVERS)/extrema.o \
+	$(DRIVERS)/fireball.o \
 	$(DRIVERS)/flipjack.o \
 	$(DRIVERS)/flower.o $(AUDIO)/flower.o $(VIDEO)/flower.o \
 	$(DRIVERS)/fortecar.o \
@@ -2416,7 +2418,7 @@ $(MAMEOBJ)/misc.a: \
 	$(DRIVERS)/wms.o \
 	$(DRIVERS)/xtom3d.o \
 	$(DRIVERS)/xyonix.o $(VIDEO)/xyonix.o \
-
+	
 
 #-------------------------------------------------
 # layout dependencies
@@ -2495,7 +2497,8 @@ $(DRIVERS)/bfm_sc2.o:   $(LAYOUT)/sc2_vfd.lh \
 			$(LAYOUT)/sltblgtk.lh
 
 $(DRIVERS)/bfm_sc4.o:   $(LAYOUT)/bfm_sc4.lh \
-			$(LAYOUT)/sc4_dmd.lh
+			$(LAYOUT)/sc4_dmd.lh \
+			$(LAYOUT)/sc4dnd.lh
 
 $(DRIVERS)/bfm_sc4h.o:  $(LAYOUT)/bfm_sc4.lh \
 			$(LAYOUT)/sc4_dmd.lh
@@ -2563,6 +2566,8 @@ $(DRIVERS)/ecoinfr.o:   $(LAYOUT)/ecoinfr.lh
 $(DRIVERS)/ecoinf2.o:   $(LAYOUT)/ecoinf2.lh
 
 $(DRIVERS)/ecoinf3.o:   $(LAYOUT)/ecoinf3.lh
+
+$(DRIVERS)/fireball.o:  $(LAYOUT)/fireball.lh
 
 $(DRIVERS)/firebeat.o:  $(LAYOUT)/firebeat.lh
 
