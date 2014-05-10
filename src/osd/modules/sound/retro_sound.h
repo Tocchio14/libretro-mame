@@ -1,8 +1,6 @@
-// license:BSD-3-Clause
-// copyright-holders:Miodrag Milanovic
 /***************************************************************************
 
-    none.h
+    retro_sound.h
 
     Dummy sound interface.
 

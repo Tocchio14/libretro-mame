@@ -77,7 +77,6 @@ void retro_osd_interface::init(running_machine &machine)
 	write_log("W:%d H:%d , aspect ratio %d/%d=%f\n",rtwi,rthe,width,height,rtaspect);
 	NEWGAME_FROM_OSD=1;
 	write_log("osd init done\n");
-	write_log("snd:%s\n",machine.options().sound());
 	co_switch(mainThread);
 }
 
@@ -186,8 +185,8 @@ software_renderer<UINT32, 0,0,0, 16,8,0>::draw_primitives(primlist, surfptr, min
 
 void retro_osd_interface::sound_register()
 {
-sound_options_add("retro", OSD_SOUND_RETRO);
-sound_options_add("auto", OSD_SOUND_RETRO); // making RETRO audio default one
+	sound_options_add("retro", OSD_SOUND_RETRO);
+	sound_options_add("auto", OSD_SOUND_RETRO); // making RETRO audio default one
 }
 
 
