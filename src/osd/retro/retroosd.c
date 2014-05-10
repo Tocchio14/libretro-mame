@@ -1,5 +1,8 @@
 #include "retroosd.h"
 #include "../../emu/drawgfx.h"
+#include "modules/sound/retro_sound.h"
+
+#include "osdepend.h"
 
 #ifndef M16B
 #define PIXEL_TYPE UINT32
@@ -25,16 +28,20 @@ retro_osd_interface::~retro_osd_interface()
 {
 }
 
-void retro_osd_interface::osd_exit(running_machine &machine)
+void retro_osd_interface::osd_exit()
 {	
 	write_log("osd_exit called \n");
 
+	osd_interface::osd_exit();
+	
+/*
 	global_free(Pad_device[0]);
 	global_free(Pad_device[1]);
 	global_free(joy_device[0]);
 	global_free(joy_device[1]);
 	global_free(retrokbd_device);
 	global_free(mouse_device);
+*/
 }
 
 void retro_osd_interface::init(running_machine &machine)
@@ -56,7 +63,10 @@ void retro_osd_interface::init(running_machine &machine)
         gamRot = (ROT270 == orient) ? 1 : gamRot;
         gamRot = (ROT180 == orient) ? 2 : gamRot;
         gamRot = (ROT90  == orient) ? 3 : gamRot;
-        
+
+       	// initialize the subsystems
+	osd_interface::init_subsystems();
+
 	//prep_retro_rotation(gamRot);
 	our_target->compute_minimum_size(rtwi, rthe);
 	topw=rtwi;
@@ -67,6 +77,7 @@ void retro_osd_interface::init(running_machine &machine)
 	write_log("W:%d H:%d , aspect ratio %d/%d=%f\n",rtwi,rthe,width,height,rtaspect);
 	NEWGAME_FROM_OSD=1;
 	write_log("osd init done\n");
+	write_log("snd:%s\n",machine.options().sound());
 	co_switch(mainThread);
 }
 
@@ -169,24 +180,16 @@ software_renderer<UINT32, 0,0,0, 16,8,0>::draw_primitives(primlist, surfptr, min
    co_switch(mainThread);
 }  
  
- 
 //============================================================
-//  update_audio_stream
+// sound_register
 //============================================================
-void retro_osd_interface::update_audio_stream(const INT16 *buffer, int samples_this_frame) 
-{
-	if(pauseg!=-1)audio_batch_cb(buffer, samples_this_frame);
-}
-  
 
-//============================================================
-//  set_mastervolume
-//============================================================
-void retro_osd_interface::set_mastervolume(int attenuation)
+void retro_osd_interface::sound_register()
 {
-	// if we had actual sound output, we would adjust the global
-	// volume in response to this function
+sound_options_add("retro", OSD_SOUND_RETRO);
+sound_options_add("auto", OSD_SOUND_RETRO); // making RETRO audio default one
 }
+
 
 
 //============================================================

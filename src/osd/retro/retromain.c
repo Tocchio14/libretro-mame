@@ -394,7 +394,7 @@ void Set_Path_Option(){
 
 #ifdef __cplusplus
 extern "C"
-#endif
+#endif 
 int mmain(int argc, const char *argv)
 {
 	int result = 0;
@@ -425,9 +425,11 @@ int mmain(int argc, const char *argv)
 
 //	osd_init_midi();
 
-	cli_options MRoptions;
 	retro_osd_interface MRosd;
+	cli_options MRoptions;
+	MRosd.register_options(MRoptions);
 	cli_frontend frontend(MRoptions, MRosd);
+
 	result = frontend.execute(PARAMCOUNT, ( char **)xargv_cmd); 
 
 	xargv_cmd[PARAMCOUNT - 2] = NULL;

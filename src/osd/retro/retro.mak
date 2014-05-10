@@ -59,7 +59,8 @@ OSDCOREOBJS := \
 	$(MINIOBJ)/retromisc.o \
 	$(MINIOBJ)/retrosync.o \
 	$(MINIOBJ)/retrowork.o \
-	$(MINIOBJ)/retroos.o
+	$(MINIOBJ)/retroos.o \
+	$(MINIOBJ)/../modules/sound/retro_sound.o \
 
 #-------------------------------------------------
 # OSD mini library
