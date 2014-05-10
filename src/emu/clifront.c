@@ -133,13 +133,6 @@ int cli_frontend::execute(int argc, char **argv)
 		astring option_errors;
 		m_options.parse_command_line(argc, argv, option_errors);
 
-		// We need to preprocess the config files once to determine the web server's configuration
-		// and file locations
-		if (m_options.read_config())
-		{
-			m_options.revert(OPTION_PRIORITY_INI);
-			m_options.parse_standard_inis(option_errors);
-		}
 		if (*(m_options.software_name()) != 0)
 		{
 			const game_driver *system = m_options.system();
@@ -215,7 +208,7 @@ int cli_frontend::execute(int argc, char **argv)
 			throw emu_fatalerror(MAMERR_INVALID_CONFIG, "%s", option_errors.trimspace().cstr());
 		}
 		if (option_errors)
-			printf("Error in command line:\n%s\n", option_errors.trimspace().cstr());
+			osd_printf_error("Error in command line:\n%s\n", option_errors.trimspace().cstr());
 
 		// determine the base name of the EXE
 		astring exename;
@@ -228,6 +221,16 @@ int cli_frontend::execute(int argc, char **argv)
 		// otherwise, check for a valid system
 		else
 		{
+			// We need to preprocess the config files once to determine the web server's configuration
+			// and file locations
+			if (m_options.read_config())
+			{
+				m_options.revert(OPTION_PRIORITY_INI);
+				m_options.parse_standard_inis(option_errors);
+			}
+			if (option_errors)
+				osd_printf_error("Error in command line:\n%s\n", option_errors.trimspace().cstr());
+		
 			// if we can't find it, give an appropriate error
 			const game_driver *system = m_options.system();
 			if (system == NULL && *(m_options.system_name()) != 0)
@@ -242,7 +245,7 @@ int cli_frontend::execute(int argc, char **argv)
 	catch (emu_fatalerror &fatal)
 	{
 		astring string(fatal.string());
-		fprintf(stderr, "%s\n", string.trimspace().cstr());
+		osd_printf_error("%s\n", string.trimspace().cstr());
 		m_result = (fatal.exitcode() != 0) ? fatal.exitcode() : MAMERR_FATALERROR;
 
 		// if a game was specified, wasn't a wildcard, and our error indicates this was the
@@ -255,26 +258,26 @@ int cli_frontend::execute(int argc, char **argv)
 			drivlist.find_approximate_matches(m_options.system_name(), ARRAY_LENGTH(matches), matches);
 
 			// print them out
-			fprintf(stderr, "\n\"%s\" approximately matches the following\n"
+			osd_printf_error("\n\"%s\" approximately matches the following\n"
 					"supported %s (best match first):\n\n", m_options.system_name(),emulator_info::get_gamesnoun());
 			for (int matchnum = 0; matchnum < ARRAY_LENGTH(matches); matchnum++)
 				if (matches[matchnum] != -1)
-					fprintf(stderr, "%-18s%s\n", drivlist.driver(matches[matchnum]).name, drivlist.driver(matches[matchnum]).description);
+					osd_printf_error("%-18s%s\n", drivlist.driver(matches[matchnum]).name, drivlist.driver(matches[matchnum]).description);
 		}
 	}
 	catch (emu_exception &)
 	{
-		fprintf(stderr, "Caught unhandled emulator exception\n");
+		osd_printf_error("Caught unhandled emulator exception\n");
 		m_result = MAMERR_FATALERROR;
 	}
 	catch (std::bad_alloc &)
 	{
-		fprintf(stderr, "Out of memory!\n");
+		osd_printf_error("Out of memory!\n");
 		m_result = MAMERR_FATALERROR;
 	}
 	catch (...)
 	{
-		fprintf(stderr, "Caught unhandled exception\n");
+		osd_printf_error("Caught unhandled exception\n");
 		m_result = MAMERR_FATALERROR;
 	}
 
@@ -1585,7 +1588,7 @@ void cli_frontend::execute_commands(const char *exename)
 	astring option_errors;
 	m_options.parse_standard_inis(option_errors);
 	if (option_errors)
-		printf("%s\n", option_errors.cstr());
+		osd_printf_error("%s\n", option_errors.cstr());
 
 	// createconfig?
 	if (strcmp(m_options.command(), CLICOMMAND_CREATECONFIG) == 0)
