@@ -1021,14 +1021,6 @@ PALETTE_INIT_MEMBER(smc777_state, smc777)
 	}
 }
 
-static const wd17xx_interface smc777_mb8876_interface =
-{
-	DEVCB_NULL,
-	DEVCB_DRIVER_LINE_MEMBER(smc777_state, smc777_fdc_intrq_w),
-	DEVCB_DRIVER_LINE_MEMBER(smc777_state, smc777_fdc_drq_w),
-	{FLOPPY_0, FLOPPY_1, NULL, NULL}
-};
-
 static LEGACY_FLOPPY_OPTIONS_START( smc777 )
 	LEGACY_FLOPPY_OPTION( img, "img", "SMC70 disk image", basicdsk_identify_default, basicdsk_construct_default, NULL,
 		HEADS([1])
@@ -1079,7 +1071,9 @@ static MACHINE_CONFIG_START( smc777, smc777_state )
 	MCFG_MC6845_SHOW_BORDER_AREA(true)
 	MCFG_MC6845_CHAR_WIDTH(8)
 
-	MCFG_MB8876_ADD("fdc",smc777_mb8876_interface)
+	MCFG_MB8876_ADD("fdc",default_wd17xx_interface_2_drives)
+	MCFG_WD17XX_INTRQ_CALLBACK(WRITELINE(smc777_state, smc777_fdc_intrq_w))
+	MCFG_WD17XX_DRQ_CALLBACK(WRITELINE(smc777_state, smc777_fdc_drq_w))
 	MCFG_LEGACY_FLOPPY_2_DRIVES_ADD(smc777_floppy_interface)
 	MCFG_SOFTWARE_LIST_ADD("flop_list","smc777")
 

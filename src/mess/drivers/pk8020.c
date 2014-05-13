@@ -155,14 +155,6 @@ static const floppy_interface pk8020_floppy_interface =
 	"floppy_5_25"
 };
 
-static const wd17xx_interface pk8020_wd17xx_interface =
-{
-	DEVCB_LINE_VCC,
-	DEVCB_NULL,
-	DEVCB_NULL,
-	{ FLOPPY_0, FLOPPY_1, FLOPPY_2, FLOPPY_3 }
-};
-
 /* F4 Character Displayer */
 static const gfx_layout pk8020_charlayout =
 {
@@ -227,7 +219,8 @@ static MACHINE_CONFIG_START( pk8020, pk8020_state )
 	MCFG_DEVICE_ADD("rs232", I8251, 0)
 	MCFG_DEVICE_ADD("lan", I8251, 0)
 
-	MCFG_FD1793_ADD("wd1793", pk8020_wd17xx_interface)
+	MCFG_FD1793_ADD("wd1793", default_wd17xx_interface)
+	MCFG_WD17XX_DDEN_CALLBACK(VCC)
 
 	/* audio hardware */
 	MCFG_SPEAKER_STANDARD_MONO("mono")
