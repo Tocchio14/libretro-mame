@@ -3889,6 +3889,7 @@ dsfdct          // 1999 - Dancing Stage featuring Dreams Come True (GC910 VER. J
 dsfdcta         // 1999 - Dancing Stage featuring Dreams Come True (GC910 VER. JAA)
 drmn2m          // 1999 - DrumMania 2nd Mix (GE912 VER. JAB)
 drmn2mpu        // 1999 - DrumMania 2nd Mix Session Power Up Kit (GE912 VER. JAB)
+stepchmp        // 1999 - Step Champ (GE930 VER. JA)
 dncfrks         // 2000 - Dance Freaks (G*874 VER. KAA)
 dmx             // 2000 - Dance Maniax (G*874 VER. JAA)
 gunmania        // 2000 - GunMania (GL906 VER. JAA)
@@ -7659,7 +7660,9 @@ skyadvnt        // Alpha-68K96V  'SA' (c) 1989 Alpha Denshi Co.
 skyadvntu       // Alpha-68K96V  'SA' (c) 1989 SNK of America licensed from Alpha
 skyadvntj       // Alpha-68K96V  'SA' (c) 1989 Alpha Denshi Co.
 gangwars        // Alpha-68K96V       (c) 1989 Alpha Denshi Co.
+gangwarsj		// Alpha-68K96V       (c) 1989 Alpha Denshi Co.
 gangwarsu       // Alpha-68K96V       (c) 1989 Alpha Denshi Co.
+gangwarsb		// bootleg
 sbasebal        // Alpha-68K96V       (c) 1989 SNK of America licensed from Alpha
 tnextspc        // A8003 'NS' (c) 1989 - MASKROM
 tnextspc2       // A8003 'NS' (c) 1989 - EPROMs

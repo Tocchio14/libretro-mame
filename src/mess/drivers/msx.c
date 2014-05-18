@@ -1,6 +1,17 @@
 /*
 ** msx.c : driver for MSX
 **
+** cpc300:
+**  To get out of the MSX Tutor press the SELECT key. Entering SET SYSTEM 1 should
+**  disable the MSX Tutor on next boot and SET SYSTEM 0 should enable.
+**
+** tpp311:
+**  This machine is supposed to boot into logo; it was made to only run logo.
+**
+** tps312:
+**  - To get into MSX-WRITE type: CALL WRITE
+**  - To get into MSX-PLAN type: CALL MSXPLAN
+**
 **
 ** Todo/known issues:
 ** - piopx7: Laserdisc integration doesn't exist
@@ -16,49 +27,32 @@
 ** - y503iir, y503iir2: Net not emulated
 ** - y503iir, y503iir2: Floppy support broken
 ** - yis503m: sfg not emulated
-** - ax370: Floppy not emulated
-** - cpc300: How to get passed MSX-TUTOR?
-** - cpc300e: How to test han support?
-** - cpc400: How to test han support?
+** - cpc300: Config for MSX Tutor ON/OFF is not saved
 ** - expert20: Does not boot
-** - fs4500: Firmware not emulated
-** - fs4500: Matsuhita switched device not emulated
-** - fs4600: Firmware not emulated
-** - fs4600: Kanji12 not emulated
-** - fs4700: Firmware not emulated
-** - fs4700: Matsushita switched device not emulated
-** - fs5500: Matsushita switched device not emulated
-** - fsa1f: Floppy not emulated
-** - fsa1fm: Floppy not emulated
+** - fs4600: Kanji12 not emulated; how to trigger usage of kanji12??
 ** - fsa1fm: Firmware not emulated
 ** - fsa1fm: kanji12 not emulated
+** - fsa1fm: Modem not emulated
 ** - nms8280, nms8280g: Digitizer functionality not emulated
 ** - vg8230j: Floppy support broken?
 ** - hotbit20: Does not boot
-** - hbf1: Does not boot
-** - hbf12: Does not boot
-** - hbf5: Does not boot
+** - hbf1: Does not boot. This seems to be caused by a raise condition between setting the VBlank bit in the
+           VDP status register and the z80 taking the interrupt. Currently the interrupt gets taken before the
+           bit can be read, so the code goes into an infinite loop.
+** - hbf12: Does not boot; see hbf1.
 ** - tpc310: Floppy support broken
-** - tpp311: Firmware not working?
-** - tps312: Firmware?
-** - hx23: Firmware?
-** - hx23f: Firmware support broken, can't get into basic
+** - hx23f: The builtin word processor displays white squares instead of text
 ** - cx7m: sfg not emulated
 ** - expert3i: IDE not emulated
 ** - expert3t: Turbo not emulated
 ** - expertac: Does not boot
-** - expertdx: Floppy not emulated
 ** - fsa1fx: Floppy not emulated
 ** - fsa1fx: Keeps rebooting into firmware
 ** - fsa1wsx: Firmware not emulated
-** - fsa1wsx: Floppy not emulated
 ** - fsa1wx: Firmware not emulated
 ** - fsa1wx: Floppy not emulated
 ** - fsa1wxa: Firmware not emulated
 ** - fsa1wxa: Floppy not emulated
-** - phc70fd: Floppy not emulated
-** - phc70fd2: Floppy not emulated
-** - hbf9sp: Firmware not working, can't get into basic
 ** - fsa1gt: Add Turbo-R support
 ** - fsa1st: Add Turbo-R support
 **
@@ -1171,9 +1165,7 @@ static MACHINE_CONFIG_FRAGMENT( msx_mb8877a )
 MACHINE_CONFIG_END
 
 static MACHINE_CONFIG_FRAGMENT( msx_tc8566af )
-	// TODO: Implement TC8566AF, the fragment below is to keep the core happy
-	MCFG_WD2793x_ADD("fdc", XTAL_4MHz / 4)
-	MCFG_WD_FDC_FORCE_READY
+	MCFG_TC8566AF_ADD("fdc")
 MACHINE_CONFIG_END
 
 static MACHINE_CONFIG_FRAGMENT( msx_microsol )
@@ -3162,7 +3154,7 @@ static MACHINE_CONFIG_DERIVED( ax370, msx2_pal )
 	MCFG_MSX_RAMIO_SET_BITS(0xf8)
 	MCFG_MSX_LAYOUT_ROM("ext", 3, 1, 0, 1, "maincpu", 0x8000)  /* Ext */
 	MCFG_MSX_LAYOUT_ROM("arab", 3, 1, 1, 2, "maincpu", 0x20000)  /* Arab */
-//	MCFG_MSX_LAYOUT_DISK("disk", 3, 2, 1, 1, "maincpu", 0x40000) /* TC8566AF Disk controller*/
+	MCFG_MSX_LAYOUT_DISK3("disk", 3, 2, 1, 1, "maincpu", 0x40000)
 	MCFG_MSX_LAYOUT_ROM("paint", 3, 3, 0, 4, "maincpu", 0x30000)  /* Paint */
 
 	MCFG_FRAGMENT_ADD( msx_tc8566af )
@@ -3218,6 +3210,7 @@ static MACHINE_CONFIG_DERIVED( cpc300e, msx2 )
 	// AY8910/YM2149?
 	// FDC: None, 0 drives
 	// 2 Cartridge slots?
+	// No joystick port??
 
 	MCFG_MSX_LAYOUT_ROM("bios", 0, 0, 0, 2, "maincpu", 0x0000)
 	MCFG_MSX_LAYOUT_ROM("han", 0, 1, 1, 1, "maincpu", 0x28000)
@@ -3402,7 +3395,7 @@ static MACHINE_CONFIG_DERIVED( fs4500, msx2 )
 	MCFG_MSX_LAYOUT_ROM("bios", 0, 0, 0, 2, "maincpu", 0x0000)
 	MCFG_MSX_LAYOUT_ROM("ext", 0, 1, 0, 1, "maincpu", 0x8000)
 	MCFG_MSX_LAYOUT_ROM("font", 0, 2, 0, 1, "maincpu", 0x20000)
-	MCFG_MSX_LAYOUT_BUNSETSU("buns", 0, 2, 2, 2, "maincpu", 0x24000, "bunsetsu")
+	MCFG_MSX_LAYOUT_BUNSETSU("buns", 0, 2, 1, 2, "maincpu", 0x24000, "bunsetsu")
 	MCFG_MSX_LAYOUT_ROM("jush", 0, 3, 1, 2, "maincpu", 0x2c000)
 	MCFG_MSX_LAYOUT_CARTRIDGE("cartslot1", 1, 0)
 	MCFG_MSX_LAYOUT_CARTRIDGE("cartslot2", 2, 0)
@@ -3413,6 +3406,8 @@ static MACHINE_CONFIG_DERIVED( fs4500, msx2 )
 	MCFG_MSX_LAYOUT_RAM("ram", 3, 2, 0, 4)  /* 64KB RAM */
 
 	MCFG_MSX_S1985_ADD("s1985")
+
+	MCFG_MSX_MATSUSHITA_ADD( "matsushita" )
 
 	MCFG_FRAGMENT_ADD( msx2_cartlist )
 MACHINE_CONFIG_END
@@ -3452,7 +3447,6 @@ static MACHINE_CONFIG_DERIVED( fs4600, msx2 )
 	MCFG_MSX_LAYOUT_ROM("fon2", 0, 3, 0, 1, "maincpu", 0x24000)
 	MCFG_MSX_LAYOUT_CARTRIDGE("cartslot1", 1, 0)
 	MCFG_MSX_LAYOUT_CARTRIDGE("cartslot2", 2, 0)
-	//MCFG_MSX_LAYOUT_("firm", 3, 1, 0, 4, ASCII16, 0x100000, 0x30000) /* National FS-4600 Mapper must be emulated */
 	MCFG_MSX_LAYOUT_FS4600("firm", 3, 1, 0, 4, "maincpu", 0x30000)
 	MCFG_MSX_LAYOUT_RAM_MM("ram_mm", 3, 2, 0x20000)   /* 128KB Mapper RAM */
 	MCFG_MSX_RAMIO_SET_BITS(0x80)
@@ -3514,6 +3508,8 @@ static MACHINE_CONFIG_DERIVED( fs4700, msx2 )
 	MCFG_MSX_LAYOUT_DISK2("disk", 3, 3, 1, 1, "maincpu", 0xc000)
 
 	MCFG_MSX_S1985_ADD("s1985")
+
+	MCFG_MSX_MATSUSHITA_ADD( "matsushita" )
 
 	MCFG_FRAGMENT_ADD( msx_mb8877a )
 	MCFG_FRAGMENT_ADD( msx_1_35_dd_drive )
@@ -3606,6 +3602,8 @@ static MACHINE_CONFIG_DERIVED( fs5500f1, msx2 )
 
 	MCFG_MSX_S1985_ADD("s1985")
 
+	MCFG_MSX_MATSUSHITA_ADD( "matsushita" )
+
 	MCFG_FRAGMENT_ADD( msx_mb8877a )
 	MCFG_FRAGMENT_ADD( msx_1_35_dd_drive )
 	MCFG_FRAGMENT_ADD( msx2_floplist )
@@ -3652,6 +3650,8 @@ static MACHINE_CONFIG_DERIVED( fs5500f2, msx2 )
 	MCFG_MSX_LAYOUT_DISK2("disk", 3, 3, 1, 1, "maincpu", 0xc000)
 
 	MCFG_MSX_S1985_ADD("s1985")
+
+	MCFG_MSX_MATSUSHITA_ADD( "matsushita" )
 
 	MCFG_FRAGMENT_ADD( msx_mb8877a )
 	MCFG_FRAGMENT_ADD( msx_2_35_dd_drive )
@@ -3744,7 +3744,7 @@ static MACHINE_CONFIG_DERIVED( fsa1f, msx2 )
 	MCFG_MSX_RAMIO_SET_BITS(0x80)
 	MCFG_MSX_LAYOUT_ROM("ext", 3, 1, 0, 1, "maincpu", 0x8000)
 	MCFG_MSX_LAYOUT_ROM("fkdr", 3, 1, 1, 2, "maincpu", 0x20000)
-/*  MCFG_MSX_LAYOUT_DISK1("disk", 3, 2, 1, 1, "maincpu", 0xc000) */ /* FDC Emulation of TC8566AF must be emulated */
+	MCFG_MSX_LAYOUT_DISK3("disk", 3, 2, 1, 1, "maincpu", 0xc000)
 	MCFG_MSX_LAYOUT_ROM("fcock", 3, 3, 1, 2, "maincpu", 0x28000)
 
 	MCFG_FRAGMENT_ADD( msx_tc8566af )
@@ -3786,7 +3786,7 @@ static MACHINE_CONFIG_DERIVED( fsa1fm, msx2 )
 	MCFG_MSX_RAMIO_SET_BITS(0x80)
 	MCFG_MSX_LAYOUT_ROM("ext", 3, 1, 0, 1, "maincpu", 0x8000)
 /*  MSX_LAYOUT_SLOT (3, 1, 1, 4, MODEM_ROM, 0x20000, 0x20000) */ /* Modem Mapper of FS-CM1/A1FM must be emulated */
-/*  MSX_LAYOUT_SLOT (3, 2, 1, 1, DISK_ROM, 0x4000, 0xc000) */ /* FDC Emulation of TC8566AF must be emulated */
+	MCFG_MSX_LAYOUT_DISK3("disk", 3, 2, 1, 1, "maincpu", 0xc000)
 /*  MSX_LAYOUT_SLOT (3, 3, 0, 4, FSA1FM_ROM, 0x100000, 0x20000) */ /* Panasonic FS-A1FM Mapper must be emulated */
 
 	MCFG_FRAGMENT_ADD( msx_tc8566af )
@@ -4519,7 +4519,7 @@ static MACHINE_CONFIG_DERIVED( hbf5, msx2_pal )
 
 	MCFG_MSX_LAYOUT_ROM("bios", 0, 0, 0, 2, "maincpu", 0x0000)
 	MCFG_MSX_LAYOUT_ROM("ext", 0, 1, 0, 1, "maincpu", 0x8000)
-	MCFG_MSX_LAYOUT_ROM("note", 0, 1, 2, 1, "maincpu", 0xc000)
+	MCFG_MSX_LAYOUT_ROM("note", 0, 1, 1, 1, "maincpu", 0xc000)
 	MCFG_MSX_LAYOUT_RAM_MM("ram_mm", 0, 2, 0x10000)   /* 64KB?? Mapper RAM */
 	MCFG_MSX_LAYOUT_CARTRIDGE("cartslot1", 1, 0)
 	MCFG_MSX_LAYOUT_CARTRIDGE("cartslot2", 2, 0)
@@ -5001,7 +5001,7 @@ static MACHINE_CONFIG_DERIVED( tpp311, msx2_pal )
 
 	MCFG_MSX_LAYOUT_ROM("bios", 0, 0, 0, 2, "maincpu", 0x0000)
 	MCFG_MSX_LAYOUT_RAM_MM("ram_mm", 1, 0, 0x10000)   /* 64KB?? Mapper RAM */
-	MCFG_MSX_LAYOUT_ROM("logo", 2, 0, 0, 2, "maincpu", 0x20000)
+	MCFG_MSX_LAYOUT_ROM("logo", 2, 0, 1, 2, "maincpu", 0x20000)
 	MCFG_MSX_LAYOUT_ROM("ext", 3, 0, 0, 1, "maincpu", 0x8000)
 MACHINE_CONFIG_END
 
@@ -5024,8 +5024,9 @@ static MACHINE_CONFIG_DERIVED( tps312, msx2_pal )
 	MCFG_MSX_LAYOUT_RAM_MM("ram_mm", 1, 0, 0x20000)   /* 128KB?? Mapper RAM */
 	MCFG_MSX_LAYOUT_CARTRIDGE("cartslot1", 2, 0)
 	MCFG_MSX_LAYOUT_ROM("ext", 3, 0, 0, 1, "maincpu", 0x8000)
-	MCFG_MSX_LAYOUT_ROM("write", 3, 1, 0, 1, "maincpu", 0x28000)
-	MCFG_MSX_LAYOUT_ROM("plan", 3, 2, 0, 2, "maincpu", 0x20000)
+	MCFG_MSX_LAYOUT_ROM("write", 3, 1, 1, 1, "maincpu", 0x28000)
+	MCFG_MSX_LAYOUT_ROM("plan", 3, 2, 1, 1, "maincpu", 0x20000)
+	MCFG_MSX_LAYOUT_ROM("planlow", 3, 2, 0, 1, "maincpu", 0x24000)
 	MCFG_MSX_LAYOUT_CARTRIDGE("cartslot2", 3, 3)
 
 	MCFG_FRAGMENT_ADD( msx2_cartlist )
@@ -5054,7 +5055,7 @@ static MACHINE_CONFIG_DERIVED( hx23, msx2_pal )
 	MCFG_MSX_LAYOUT_CARTRIDGE("cartslot2", 2, 0)
 	MCFG_MSX_LAYOUT_RAM("ram2", 3, 0, 0, 2)   /* 32KB RAM */
 	MCFG_MSX_LAYOUT_ROM("ext", 3, 1, 0, 1, "maincpu", 0x8000)
-	MCFG_MSX_LAYOUT_ROM("word", 3, 3, 0, 4, "maincpu", 0x20000)
+	MCFG_MSX_LAYOUT_ROM("word", 3, 3, 1, 2, "maincpu", 0x20000)
 
 	MCFG_FRAGMENT_ADD( msx2_cartlist )
 MACHINE_CONFIG_END
@@ -5082,7 +5083,7 @@ static MACHINE_CONFIG_DERIVED( hx23f, msx2_pal )
 	MCFG_MSX_LAYOUT_RAM_MM("ram_mm", 3, 0, 0x20000)   /* 128KB Mapper RAM */
 	MCFG_MSX_RAMIO_SET_BITS(0x80)
 	MCFG_MSX_LAYOUT_ROM("ext", 3, 1, 0, 1, "maincpu", 0x8000)
-	MCFG_MSX_LAYOUT_ROM("word", 3, 3, 0, 4, "maincpu", 0x20000)
+	MCFG_MSX_LAYOUT_ROM("word", 3, 3, 1, 2, "maincpu", 0x20000)
 
 	MCFG_FRAGMENT_ADD( msx2_cartlist )
 MACHINE_CONFIG_END
@@ -5298,7 +5299,7 @@ static MACHINE_CONFIG_DERIVED( expertdx, msx2p )
 	MCFG_MSX_LAYOUT_CARTRIDGE("cartslot1", 1, 0)
 	MCFG_MSX_LAYOUT_ROM("ext", 1, 1, 0, 1, "maincpu", 0x8000)
 	MCFG_MSX_LAYOUT_ROM("xbasic", 1, 2, 1, 1, "maincpu", 0x20000)
-	//MCFG_MSX_LAYOUT_DISK1("disk", 1, 3, 1, 1, "maincpu", 0xc000)  /* TC8566AF Disk controller  /* TC8566AF Disk controller*/*/
+	MCFG_MSX_LAYOUT_DISK3("disk", 1, 3, 1, 1, "maincpu", 0xc000)
 	MCFG_MSX_LAYOUT_RAM_MM("ram_mm", 2, 0, 0x10000)   /* 64KB Mapper RAM?? */
 	MCFG_MSX_LAYOUT_CARTRIDGE("cartslot2", 3, 0)
 	/* Kanji? */
@@ -5338,7 +5339,7 @@ static MACHINE_CONFIG_DERIVED( fsa1fx, msx2p )
 	MCFG_MSX_RAMIO_SET_BITS(0x80)
 	MCFG_MSX_LAYOUT_ROM("ext", 3, 1, 0, 1, "maincpu", 0x8000)
 	MCFG_MSX_LAYOUT_ROM("kdr", 3, 1, 1, 2, "maincpu", 0x20000)
-/*	MCFG_MSX_LAYOUT_DISK1("disk", 3, 2, 1, 1, "maincpu", 0xc000) */ /* FDC Emulation of TC8566AF must be emulated */
+	MCFG_MSX_LAYOUT_DISK3("disk", 3, 2, 1, 1, "maincpu", 0xc000)
 	MCFG_MSX_LAYOUT_ROM("cock", 3, 3, 1, 2, "maincpu", 0x28000)
 
 	MCFG_MSX_MATSUSHITA_ADD( "matsushita" )
@@ -5384,7 +5385,7 @@ static MACHINE_CONFIG_DERIVED( fsa1wsx, msx2p )
 	MCFG_MSX_RAMIO_SET_BITS(0x80)
 	MCFG_MSX_LAYOUT_ROM("ext", 3, 1, 0, 1, "maincpu", 0x8000)
 	MCFG_MSX_LAYOUT_ROM("kdr", 3, 1, 1, 2, "maincpu", 0x20000)
-/*	MCFG_MSX_LAYOUT_DISK1("disk", 3, 2, 1, 1, "maincpu", 0xc000) */ /* FDC Emulation of TC8566AF must be emulated */
+	MCFG_MSX_LAYOUT_DISK3("disk", 3, 2, 1, 1, "maincpu", 0xc000)
 	MCFG_MSX_LAYOUT_PANASONIC08("firm", 3, 3, 0, 4, "maincpu", 0x30000)
 
 	MCFG_MSX_MATSUSHITA_ADD( "matsushita" )
@@ -5432,7 +5433,7 @@ static MACHINE_CONFIG_DERIVED( fsa1wx, msx2p )
 	MCFG_MSX_RAMIO_SET_BITS(0x80)
 	MCFG_MSX_LAYOUT_ROM("ext", 3, 1, 0, 1, "maincpu", 0x8000)
 	MCFG_MSX_LAYOUT_ROM("kdr", 3, 1, 1, 2, "maincpu", 0x20000)
-/*	MCFG_MSX_LAYOUT_DISK1("disk", 3, 2, 1, 1, "maincpu", 0xc000) */ /* FDC Emulation of TC8566AF must be emulated */
+	MCFG_MSX_LAYOUT_DISK3("disk", 3, 2, 1, 1, "maincpu", 0xc000)
 	MCFG_MSX_LAYOUT_PANASONIC08("firm", 3, 3, 0, 4, "maincpu", 0x30000)
 
 	MCFG_MSX_MATSUSHITA_ADD( "matsushita" )
@@ -5478,7 +5479,7 @@ static MACHINE_CONFIG_DERIVED( fsa1wxa, msx2p )
 	MCFG_MSX_RAMIO_SET_BITS(0x80)
 	MCFG_MSX_LAYOUT_ROM("ext", 3, 1, 0, 1, "maincpu", 0x8000)
 	MCFG_MSX_LAYOUT_ROM("kdr", 3, 1, 1, 2, "maincpu", 0x20000)
-/*	MCFG_MSX_LAYOUT_DISK1("disk", 3, 2, 1, 1, "maincpu", 0xc000) */ /* FDC Emulation of TC8566AF must be emulated */
+	MCFG_MSX_LAYOUT_DISK3("disk", 3, 2, 1, 1, "maincpu", 0xc000)
 	MCFG_MSX_LAYOUT_PANASONIC08("firm", 3, 3, 0, 4, "maincpu", 0x30000)
 
 	MCFG_MSX_MATSUSHITA_ADD( "matsushita" )
@@ -5553,7 +5554,7 @@ static MACHINE_CONFIG_DERIVED( phc70fd, msx2p )
 	MCFG_MSX_RAMIO_SET_BITS(0x80)
 	MCFG_MSX_LAYOUT_ROM("ext", 3, 1, 0, 1, "maincpu", 0x8000)
 	MCFG_MSX_LAYOUT_ROM("kdr", 3, 1, 1, 2, "maincpu", 0x20000)
-/*	MCFG_MSX_LAYOUT_DISK1("disk", 3, 2, 1, 1, "maincpu", 0xc000) */ /* FDC Emulation of TC8566AF must be emulated */
+	MCFG_MSX_LAYOUT_DISK3("disk", 3, 2, 1, 1, "maincpu", 0xc000)
 	MCFG_MSX_LAYOUT_MUSIC("mus", 3, 3, 1, 1, "maincpu", 0x28000)
 	MCFG_MSX_LAYOUT_ROM("bas", 3, 3, 2, 1, "maincpu", 0x2c000)
 
@@ -5595,7 +5596,7 @@ static MACHINE_CONFIG_DERIVED( phc70fd2, msx2p )
 	MCFG_MSX_RAMIO_SET_BITS(0x80)
 	MCFG_MSX_LAYOUT_ROM("ext", 3, 1, 0, 1, "maincpu", 0x8000)
 	MCFG_MSX_LAYOUT_ROM("kdr", 3, 1, 1, 2, "maincpu", 0x20000)
-/*	MCFG_MSX_LAYOUT_DISK("disk", 3, 2, 1, 1, "maincpu", 0xc000) */ /* FDC Emulation of TC8566AF must be emulated */
+	MCFG_MSX_LAYOUT_DISK3("disk", 3, 2, 1, 1, "maincpu", 0xc000)
 	MCFG_MSX_LAYOUT_MUSIC("mus", 3, 3, 1, 1, "maincpu", 0x28000)
 	MCFG_MSX_LAYOUT_ROM("bas", 3, 3, 2, 1, "maincpu", 0x2c000)
 
@@ -5721,8 +5722,8 @@ static MACHINE_CONFIG_DERIVED( hbf9sp, msx2p )
 	MCFG_MSX_LAYOUT_CARTRIDGE("cartslot1", 1, 0)
 	MCFG_MSX_LAYOUT_CARTRIDGE("cartslot2", 2, 0)
 	MCFG_MSX_LAYOUT_ROM("ext", 3, 0, 0, 1, "maincpu", 0x8000)
-	MCFG_MSX_LAYOUT_ROM("firm1", 3, 0, 2, 1, "maincpu", 0x20000)
-	MCFG_MSX_LAYOUT_ROM("firm2", 3, 1, 2, 2, "maincpu", 0x24000)
+	MCFG_MSX_LAYOUT_ROM("firm1", 3, 0, 1, 1, "maincpu", 0x20000)
+	MCFG_MSX_LAYOUT_ROM("firm2", 3, 1, 1, 2, "maincpu", 0x24000)
 	MCFG_MSX_LAYOUT_RAM_MM("ram_mm", 3, 2, 0x10000)   /* 64KB?? Mapper RAM */
 
 	MCFG_FRAGMENT_ADD( msx2_cartlist )
@@ -5757,7 +5758,7 @@ static MACHINE_CONFIG_DERIVED( fsa1gt, msx2 )
 	MCFG_MSX_LAYOUT_RAM_MM("ram_mm", 3, 0, 0x20000)   /* 128KB?? Mapper RAM */
 	MCFG_MSX_LAYOUT_ROM("ext", 3, 1, 0, 1, "maincpu", 0x8000)
 	MCFG_MSX_LAYOUT_ROM("kdr", 3, 1, 1, 2, "maincpu", 0x30000)
-	MCFG_MSX_LAYOUT_ROM("dos", 3, 2, 1, 3, "maincpu", 0x20000)
+	MCFG_MSX_LAYOUT_DISK4("dos", 3, 2, 1, 3, "maincpu", 0x20000)
 	MCFG_MSX_LAYOUT_ROM("firm", 3, 3, 0, 4, "maincpu", 0x80000)
 
 	MCFG_FRAGMENT_ADD( msx_ym2413 )
@@ -5797,7 +5798,7 @@ static MACHINE_CONFIG_DERIVED( fsa1st, msx2 )
 	MCFG_MSX_LAYOUT_RAM_MM("ram_mm", 3, 0, 0x20000)   /* 128KB?? Mapper RAM */
 	MCFG_MSX_LAYOUT_ROM("ext", 3, 1, 0, 1, "maincpu", 0x8000)
 	MCFG_MSX_LAYOUT_ROM("kdr", 3, 1, 1, 2, "maincpu", 0x30000)
-	MCFG_MSX_LAYOUT_ROM("dos", 3, 2, 1, 3, "maincpu", 0x20000)
+	MCFG_MSX_LAYOUT_DISK4("dos", 3, 2, 1, 3, "maincpu", 0x20000)
 	MCFG_MSX_LAYOUT_ROM("firm", 3, 3, 0, 4, "maincpu", 0x80000)
 
 	MCFG_FRAGMENT_ADD( msx_ym2413 )
@@ -5905,7 +5906,7 @@ COMP(1986, nms8250,   msx2,     0,      nms8250,  msx2, msx_state,     msx,     
 COMP(1986, nms8255,   msx2,     0,      nms8255,  msx2, msx_state,     msx,     "Philips", "NMS-8255", 0)
 COMP(1986, nms8280,   msx2,     0,      nms8280,  msx2, msx_state,     msx,     "Philips", "NMS-8280", 0)
 COMP(1986, nms8280g,  msx2,     0,      nms8280g, msx2, msx_state,     msx,     "Philips", "NMS-8280G", 0)
-COMP(19??, hbf5,      msx2,     0,      hbf5,     msx2, msx_state,     msx,     "Sony", "HB-F5", GAME_NOT_WORKING) // Will not go into basic
+COMP(19??, hbf5,      msx2,     0,      hbf5,     msx2, msx_state,     msx,     "Sony", "HB-F5", 0)
 COMP(1985, hbf9p,     msx2,     0,      hbf9p,    msx2, msx_state,     msx,     "Sony", "HB-F9P" , 0)
 COMP(19??, hbf9pr,    msx2,     0,      hbf9pr,   msx2, msx_state,     msx,     "Sony", "HB-F9P Russion", GAME_NOT_WORKING) // Keyboard responds differently
 COMP(1985, hbf9s,     msx2,     0,      hbf9s,    msx2, msx_state,     msx,     "Sony", "HB-F9S" , 0)
@@ -5967,7 +5968,7 @@ COMP(1989, hbf1xv,    msx2p,    0,      hbf1xv,   msx2jp, msx_state,   msx,     
 COMP(1988, phc70fd,   msx2p,    0,      phc70fd,  msx2jp, msx_state,   msx,     "Sanyo", "WAVY PHC-70FD (Japan)", 0 )
 COMP(1988, phc70fd2,  msx2p,    0,      phc70fd2, msx2jp, msx_state,   msx,     "Sanyo", "WAVY PHC-70FD2 (Japan)", 0 )
 COMP(1989, phc35j,    msx2p,    0,      phc35j,   msx2jp, msx_state,   msx,     "Sanyo", "WAVY PHC-35J (Japan)", 0)
-COMP(19??, hbf9sp,    msx2p,    0,      hbf9sp,   msx2jp, msx_state,   msx,     "Sony", "HB-F9S+", GAME_NOT_WORKING) // No MSX animation, screen switches between 2 single colors
+COMP(19??, hbf9sp,    msx2p,    0,      hbf9sp,   msx2jp, msx_state,   msx,     "Sony", "HB-F9S+", 0)
 
 /* Temporary placeholders */
 COMP(19??, fsa1gt,    msx2p,    0,      fsa1gt,   msx2jp, msx_state,   msx,     "Panasonic", "FS-A1GT", GAME_NOT_WORKING)

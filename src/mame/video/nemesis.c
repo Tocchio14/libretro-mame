@@ -168,9 +168,11 @@ WRITE16_MEMBER(nemesis_state::salamand_control_port_word_w)
 
 void nemesis_state::create_palette_lookups()
 {
+    // driver is 74LS09 (AND gates with open collector)
+
 	static const res_net_info nemesis_net_info =
 	{
-		RES_NET_VCC_5V | RES_NET_VBIAS_5V | RES_NET_VIN_TTL_OUT,
+		RES_NET_VCC_5V | RES_NET_VBIAS_5V | RES_NET_VIN_OPEN_COL,
 		{
 			{ RES_NET_AMP_EMITTER, 1000, 0, 5, { 4700, 2400, 1200, 620, 300 } },
 			{ RES_NET_AMP_EMITTER, 1000, 0, 5, { 4700, 2400, 1200, 620, 300 } },
@@ -181,10 +183,11 @@ void nemesis_state::create_palette_lookups()
 	for (int i = 0; i < 32; i++)
 		m_palette_lookup[i] = compute_res_net(i, 0, nemesis_net_info);
 
-#define BOOST_WHITE_LEVEL 0
-	if (BOOST_WHITE_LEVEL)
-		m_palette->palette()->set_contrast(255.0 / m_palette_lookup[31]);
-#undef BOOST_WHITE_LEVEL
+	// normalize black/white levels
+	double black = m_palette_lookup[0];
+	double white = 255.0 / (m_palette_lookup[31] - black);
+	for (int i = 0; i < 32; i++)
+		m_palette_lookup[i] = (m_palette_lookup[i] - black) * white + 0.5;
 }
 
 
@@ -197,15 +200,6 @@ WRITE16_MEMBER(nemesis_state::nemesis_palette_word_w)
 	int g = (data >> 5) & 0x1f;
 	int b = (data >> 10) & 0x1f;
 	m_palette->set_pen_color(offset, m_palette_lookup[r],m_palette_lookup[g],m_palette_lookup[b]);
-}
-
-WRITE16_MEMBER(nemesis_state::salamander_palette_word_w)
-{
-	COMBINE_DATA(m_paletteram + offset);
-	offset &= ~1;
-
-	data = ((m_paletteram[offset] << 8) & 0xff00) | (m_paletteram[offset + 1] & 0xff);
-	m_palette->set_pen_color(offset / 2, pal5bit(data >> 0), pal5bit(data >> 5), pal5bit(data >> 10));
 }
 
 
