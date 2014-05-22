@@ -153,7 +153,7 @@ SOUNDS += YM2612
 #SOUNDS += YM3438
 SOUNDS += YM3812
 SOUNDS += YM3526
-#SOUNDS += Y8950
+SOUNDS += Y8950
 SOUNDS += YMF262
 #SOUNDS += YMF271
 #SOUNDS += YMF278B
@@ -1005,6 +1005,7 @@ $(MESSOBJ)/ascii.a:             \
 	$(MESS_MACHINE)/msx_switched.o \
 	$(MESS_MACHINE)/msx_matsushita.o \
 	$(MESS_MACHINE)/msx_s1985.o \
+	$(MESS_MACHINE)/msx_systemflags.o \
 
 $(MESSOBJ)/at.a:                \
 	$(MESS_MACHINE)/at.o        \

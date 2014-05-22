@@ -409,8 +409,10 @@ public:
 	DECLARE_VIDEO_START( amiga_aga );
 	DECLARE_PALETTE_INIT( amiga );
 
+	void render_scanline(bitmap_ind16 &bitmap, int scanline);
 	UINT32 screen_update_amiga(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	UINT32 screen_update_amiga_aga(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
+	void update_screenmode();
 
 	TIMER_CALLBACK_MEMBER( scanline_callback );
 	TIMER_CALLBACK_MEMBER (amiga_irq_proc );
@@ -513,16 +515,8 @@ protected:
 
 	// interrupts
 	void set_interrupt(int interrupt);
-
-	virtual void update_irq2()
-	{
-		set_interrupt((m_cia_0_irq ? 0x8000 : 0x0000) | INTENA_PORTS);
-	}
-
-	virtual void update_irq6()
-	{
-		set_interrupt((m_cia_1_irq ? 0x8000 : 0x0000) | INTENA_EXTER);
-	}
+	virtual void update_int2();
+	virtual void update_int6();
 
 	virtual void vblank();
 
@@ -582,6 +576,8 @@ private:
 	emu_timer *m_irq_timer;
 
 	bool m_gayle_reset;
+
+	bitmap_ind16 m_flickerfixer;
 };
 
 
@@ -602,7 +598,6 @@ int amiga_copper_execute_next(running_machine &machine, int xpos);
 
 UINT32 amiga_gethvpos(screen_device &screen);
 void amiga_set_genlock_color(running_machine &machine, UINT16 color);
-void amiga_render_scanline(running_machine &machine, bitmap_ind16 &bitmap, int scanline);
 void amiga_sprite_dma_reset(running_machine &machine, int which);
 void amiga_sprite_enable_comparitor(running_machine &machine, int which, int enable);
 
@@ -611,5 +606,7 @@ void amiga_sprite_enable_comparitor(running_machine &machine, int which, int ena
 void amiga_aga_render_scanline(running_machine &machine, bitmap_rgb32 &bitmap, int scanline);
 void amiga_aga_palette_write(running_machine &machine, int color_reg, UINT16 data);
 void amiga_aga_diwhigh_written(running_machine &machine, int written);
+MACHINE_CONFIG_EXTERN( pal_video );
+MACHINE_CONFIG_EXTERN( ntsc_video );
 
 #endif /* __AMIGA_H__ */

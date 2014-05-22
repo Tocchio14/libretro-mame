@@ -338,7 +338,7 @@ TIMER_CALLBACK_MEMBER( amiga_state::scanline_callback )
 		else
 		{
 			bitmap_ind16 dummy_bitmap;
-			amiga_render_scanline(machine(), dummy_bitmap, scanline);
+			render_scanline(dummy_bitmap, scanline);
 		}
 	}
 
@@ -361,6 +361,16 @@ TIMER_CALLBACK_MEMBER( amiga_state::scanline_callback )
 void amiga_state::set_interrupt(int interrupt)
 {
 	custom_chip_w(m_maincpu->space(AS_PROGRAM), REG_INTREQ, interrupt, 0xffff);
+}
+
+void amiga_state::update_int2()
+{
+	set_interrupt((m_cia_0_irq ? INTENA_SETCLR : 0x0000) | INTENA_PORTS);
+}
+
+void amiga_state::update_int6()
+{
+	set_interrupt((m_cia_1_irq ? INTENA_SETCLR : 0x0000) | INTENA_EXTER);
 }
 
 void amiga_state::update_irqs()
@@ -1113,7 +1123,7 @@ WRITE_LINE_MEMBER( amiga_state::cia_0_irq )
 		logerror("%s: cia_0_irq: %d\n", machine().describe_context(), state);
 
 	m_cia_0_irq = state;
-	update_irq2();
+	update_int2();
 }
 
 READ8_MEMBER( amiga_state::cia_1_port_a_read )
@@ -1136,7 +1146,7 @@ WRITE_LINE_MEMBER( amiga_state::cia_1_irq )
 		logerror("%s: cia_1_irq: %d\n", machine().describe_context(), state);
 
 	m_cia_1_irq = state;
-	update_irq6();
+	update_int6();
 }
 
 
@@ -1174,10 +1184,8 @@ READ16_MEMBER( amiga_state::custom_chip_r )
 			return CUSTOM_REG(REG_DMACON);
 
 		case REG_VPOSR:
-			CUSTOM_REG(REG_VPOSR) &= 0x7f00;
+			CUSTOM_REG(REG_VPOSR) &= 0xff00;
 			CUSTOM_REG(REG_VPOSR) |= amiga_gethvpos(*m_screen) >> 16;
-			if(CUSTOM_REG(REG_BPLCON0) & BPLCON0_LACE && m_screen->frame_number() & 0x1)
-				CUSTOM_REG(REG_VPOSR) |= 0x8000; // LOF bit
 
 			return CUSTOM_REG(REG_VPOSR);
 
@@ -1454,6 +1462,8 @@ WRITE16_MEMBER( amiga_state::custom_chip_w )
 				logerror( "This game is doing funky planes stuff. (planes > 6)\n" );
 				data &= ~BPLCON0_BPU0;
 			}
+			CUSTOM_REG(offset) = data;
+			update_screenmode();
 			break;
 
 		case REG_COLOR00:   case REG_COLOR01:   case REG_COLOR02:   case REG_COLOR03:
@@ -1488,13 +1498,8 @@ WRITE16_MEMBER( amiga_state::custom_chip_w )
 			// only available on ecs agnus
 			if (m_agnus_id >= AGNUS_HR_PAL)
 			{
-				int height = BIT(data, 5) ? SCREEN_HEIGHT_PAL : SCREEN_HEIGHT_NTSC;
-				rectangle visarea = m_screen->visible_area();
-				visarea.sety(BIT(data, 5) ? VBLANK_PAL : VBLANK_NTSC, height - 1);
-				attoseconds_t period = HZ_TO_ATTOSECONDS(m_screen->clock()) * SCREEN_WIDTH * height;
-				m_screen->configure(SCREEN_WIDTH, height, visarea, period);
-
 				CUSTOM_REG(REG_BEAMCON0) = data;
+				update_screenmode();
 			}
 			break;
 

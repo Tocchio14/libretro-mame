@@ -321,6 +321,7 @@ omega           // bootleg
 ckongs          // bootleg
 froggers        // bootleg
 frogf           // bootleg
+quaak			// bootleg
 amidars         // GX337 (c) 1982 Konami
 triplep         // (c) 1982 KKI / made by Sanritsu?
 triplepa        // (c) 1982 KKI / made by Sanritsu?
@@ -696,6 +697,7 @@ pleiadsb2       // bootleg
 pleiadbl        // bootleg
 pleiadce        // (c) 1981 Centuri + Tehkan
 pleiadsi		// bootleg?
+pleiadss		// bootleg
 capitol         // bootleg?
 survival        // (c) 1982 Rock-ola
 naughtyb        // (c) 1982 Jaleco
@@ -5507,7 +5509,8 @@ airtrix         // 2001.02 Air Trix
 triforce        // 2002.?? Triforce BIOS
 vs2002j         // 2002.10 Virtua Striker 2002 (Japan)
 vs2002ex        // 2002.10 Virtua Striker 2002 (Export)
-				// 2003.06 F-Zero AX
+fzeroax			// 2003.06 F-Zero AX (Rev. E)
+fzeroaxc		// 2003.06 F-Zero AX (Rev. C)
 avalons         // 2003.07 The Key Of Avalon: The Wizard Master (server) (Rev C)
 				// 2003.10 The Key Of Avalon 1.01
 gekpurya        // 2003.10 Gekitou Pro Yakyuu Mizushima Shinji All Stars vs. Pro Yakyuu (Rev C)
@@ -10845,9 +10848,11 @@ pepp0023        // (c) 1987 IGT - International Game Technology
 pepp0040        // (c) 1987 IGT - International Game Technology
 pepp0041        // (c) 1987 IGT - International Game Technology
 pepp0043        // (c) 1987 IGT - International Game Technology
+pepp0043a       // (c) 1987 IGT - International Game Technology
 pepp0045        // (c) 1987 IGT - International Game Technology
 pepp0046        // (c) 1987 IGT - International Game Technology
 pepp0046a       // (c) 1987 IGT - International Game Technology
+pepp0046b       // (c) 1987 IGT - International Game Technology
 pepp0051        // (c) 1987 IGT - International Game Technology
 pepp0053        // (c) 1987 IGT - International Game Technology
 pepp0055        // (c) 1987 IGT - International Game Technology
@@ -10900,6 +10905,7 @@ pepp0249        // (c) 1987 IGT - International Game Technology
 pepp0250        // (c) 1987 IGT - International Game Technology
 pepp0265        // (c) 1987 IGT - International Game Technology
 pepp0265a       // (c) 1987 IGT - International Game Technology
+pepp0265b       // (c) 1987 IGT - International Game Technology
 pepp0274        // (c) 1987 IGT - International Game Technology
 pepp0288        // (c) 1987 IGT - International Game Technology
 pepp0290        // (c) 1987 IGT - International Game Technology
@@ -10951,6 +10957,7 @@ pepp0728        // (c) 1987 IGT - International Game Technology
 pepp0760        // (c) 1987 IGT - International Game Technology
 pepp0763        // (c) 1987 IGT - International Game Technology
 pepp0775        // (c) 1987 IGT - International Game Technology
+pepp0816        // (c) 1987 IGT - International Game Technology
 peip0028        // (c) 1987 IGT - International Game Technology
 peip0029        // (c) 1987 IGT - International Game Technology
 peip0031        // (c) 1987 IGT - International Game Technology
@@ -11087,6 +11094,7 @@ pex2250p        // (c) 1995 IGT - International Game Technology
 pex2251p        // (c) 1995 IGT - International Game Technology
 pex2272p        // (c) 1995 IGT - International Game Technology
 pex2275p        // (c) 1995 IGT - International Game Technology
+pex2276p        // (c) 1995 IGT - International Game Technology
 pex2283p        // (c) 1995 IGT - International Game Technology
 pex2284p        // (c) 1995 IGT - International Game Technology
 pex2302p        // (c) 1995 IGT - International Game Technology
@@ -11153,6 +11161,7 @@ butrfly         // (c) 1995 Bordun International
 mbutrfly        // (c) 1999 (Bordun International?)
 madzoo          // (c) 1995 Bordun International
 leader          // Bootleg?
+gallag50        // Bootleg?
 neraidou        // Bootleg?
 sstar97         // (c) 199? Bordun International
 livequiz        // (c) 1999 Andamiro
@@ -30365,19 +30374,26 @@ attack
 blkfever
 cerberup
 madrace
+zira
 
 
 // play_3.c
 megaaton
+megaatona
 
 
 // play_5.c
 spain82
+nautilus
+theraid
 ufo_x
 kz26
 rock2500
 starfirp
+starfirpa
 trailer
+fldragon
+sklflite
 
 // rowamet.c
 heavymtl
@@ -30574,6 +30590,206 @@ alcat_l7
 szone_l5
 szone_l2
 
+// sam.c
+
+24_130
+24_140
+24_144
+24_150
+bdk_130
+bdk_150
+bdk_160
+bdk_200
+bdk_210
+bdk_220
+bdk_290
+bdk_294
+bbh_140
+bbh_150
+bbh_160
+csi_102
+csi_103
+csi_104
+csi_200
+csi_210
+csi_230
+csi_240
+fg_1000af
+fg_1000ag
+fg_1000ai
+fg_1000al
+fg_110af
+fg_110ag
+fg_110ai
+fg_110al
+fg_120af
+fg_120ag
+fg_120ai
+fg_120al
+fg_300ai
+fg_400a
+fg_400ag
+fg_700af
+fg_700al
+fg_800al
+im2_100
+im2_110
+im2_120
+im2_140
+indy_113a
+indy_113f
+indy_113g
+indy_113i
+indy_113l
+indy_114a
+indy_114f
+indy_114g
+indy_114i
+indy_114l
+indy_116a
+indy_116f
+indy_116g
+indy_116i
+indy_116l
+indy_210
+indy_210f
+nba_500
+nba_600
+nba_700
+nba_801
+nba_802
+potc_110af
+potc_110ai
+potc_110gf
+potc_111as
+potc_113af
+potc_113ai
+potc_113as
+potc_113gf
+potc_115af
+potc_115ai
+potc_115as
+potc_115gf
+potc_300af
+potc_300ai
+potc_300as
+potc_300gf
+potc_400af
+potc_400ai
+potc_400as
+potc_400gf
+potc_600
+potc_600ai
+potc_600as
+potc_600gf
+sh_141
+skc_090
+skc_103
+skc_105
+sman_130ef
+sman_130ei
+sman_130es
+sman_130gf
+sman_140e
+sman_140ef
+sman_140ei
+sman_140es
+sman_140gf
+sman_142e
+sman_160e
+sman_160ef
+sman_160ei
+sman_160es
+sman_160gf
+sman_170e
+sman_170ef
+sman_170ei
+sman_170es
+sman_170gf
+sman_190e
+sman_190ef
+sman_190ei
+sman_190es
+sman_190gf
+sman_192e
+sman_192ef
+sman_192ei
+sman_192es
+sman_192gf
+sman_200e
+sman_210e
+sman_210f
+sman_210ei
+sman_210es
+sman_210gf
+sman_220e
+sman_230e
+sman_240
+wof_100a
+wof_200a
+wof_200f
+wof_200g
+wof_200i
+wof_300a
+wof_300f
+wof_300g
+wof_300i
+wof_300l
+wof_400a
+wof_400f
+wof_400g
+wof_400i
+wof_400l
+wof_500a
+wof_500f
+wof_500g
+wof_500i
+wof_500l
+wpt_103a
+wpt_105a
+wpt_106a
+wpt_106f
+wpt_106g
+wpt_106i
+wpt_106l
+wpt_108a
+wpt_108f
+wpt_108g
+wpt_108i
+wpt_108l
+wpt_109a
+wpt_109f
+wpt_109f2
+wpt_109g
+wpt_109i
+wpt_109l
+wpt_111a
+wpt_111af
+wpt_111ai
+wpt_111al
+wpt_111f
+wpt_111g
+wpt_111gf
+wpt_111i
+wpt_111l
+wpt_112a
+wpt_112af
+wpt_112ai
+wpt_112al
+wpt_112f
+wpt_112g
+wpt_112gf
+wpt_112i
+wpt_112l
+wpt_1400
+wpt_1400af
+wpt_1400ai
+wpt_1400al
+wpt_1400f
+wpt_1400g
+wpt_1400gf
+wpt_1400i
+wpt_1400l
 
 // sleic.c
 sleicpin
@@ -30694,6 +30910,7 @@ godzillp
 gldneye
 goldcue
 harl_a13
+harl_u13
 harl_a10
 harl_f13
 harl_g13
@@ -30808,31 +31025,40 @@ strxt_fr
 strxt_it
 strxt_sp
 term3
+term3_301
 term3_205
 t3new
 term3g
+term3g_301
 term3l
+term3l_301
 term3l_205
 term3f
+term3f_301
 term3f_205
 term3i
+term3i_301
 term3i_205
 jplstw22
 jplstw20
 simpprty
 simpprty_400
+simpprty_300
 simpprty_204
 simpnew
 simpprtg
 simpprtg_400
 simpprtl
 simpprtl_400
+simpprtl_300
 simpprtl_204
 simpprtf
 simpprtf_400
+simpprtf_300
 simpprtf_204
 simpprti
 simpprti_400
+simpprti_300
 simpprti_204
 xfilesp
 xfiles2

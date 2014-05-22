@@ -218,7 +218,7 @@ public:
 	static const UINT8 GAYLE_ID = 0xd0;
 
 protected:
-	virtual void update_irq2();
+	virtual void update_int2();
 
 private:
 	int m_gayle_int2;
@@ -240,7 +240,7 @@ public:
 	static const UINT8 GAYLE_ID = 0xd1;
 
 protected:
-	virtual void update_irq2();
+	virtual void update_int2();
 
 private:
 	int m_gayle_int2;
@@ -560,13 +560,13 @@ WRITE16_MEMBER( a1000_state::write_protect_w )
 WRITE_LINE_MEMBER( a2000_state::zorro2_int2_w )
 {
 	m_zorro2_int2 = state;
-	update_irq2();
+	update_int2();
 }
 
 WRITE_LINE_MEMBER( a2000_state::zorro2_int6_w )
 {
 	m_zorro2_int6 = state;
-	update_irq6();
+	update_int6();
 }
 
 void a2000_state::update_int2()
@@ -627,7 +627,7 @@ WRITE32_MEMBER( a3000_state::motherboard_w )
 	logerror("motherboard_w(%06x): %08x & %08x\n", offset, data, mem_mask);
 }
 
-void a600_state::update_irq2()
+void a600_state::update_int2()
 {
 	int state = (m_cia_0_irq || m_gayle_int2);
 	set_interrupt((state ? INTENA_SETCLR : 0x0000) | INTENA_PORTS);
@@ -636,10 +636,10 @@ void a600_state::update_irq2()
 WRITE_LINE_MEMBER( a600_state::gayle_int2_w )
 {
 	m_gayle_int2 = state;
-	update_irq2();
+	update_int2();
 }
 
-void a1200_state::update_irq2()
+void a1200_state::update_int2()
 {
 	int state = (m_cia_0_irq || m_gayle_int2);
 	set_interrupt((state ? INTENA_SETCLR : 0x0000) | INTENA_PORTS);
@@ -648,7 +648,7 @@ void a1200_state::update_irq2()
 WRITE_LINE_MEMBER( a1200_state::gayle_int2_w )
 {
 	m_gayle_int2 = state;
-	update_irq2();
+	update_int2();
 }
 
 READ32_MEMBER( a4000_state::scsi_r )
@@ -916,6 +916,13 @@ ADDRESS_MAP_END
 static ADDRESS_MAP_START( overlay_1mb_map32, AS_PROGRAM, 32, amiga_state )
 	ADDRESS_MAP_UNMAP_HIGH
 	AM_RANGE(0x000000, 0x0fffff) AM_MIRROR(0x100000) AM_RAM AM_SHARE("chip_ram")
+	AM_RANGE(0x200000, 0x27ffff) AM_ROM AM_REGION("kickstart", 0)
+ADDRESS_MAP_END
+
+// Gary/Super Gary/Gayle with 2MB chip RAM (32 bit system)
+static ADDRESS_MAP_START( overlay_2mb_map16, AS_PROGRAM, 16, amiga_state )
+	ADDRESS_MAP_UNMAP_HIGH
+	AM_RANGE(0x000000, 0x1fffff) AM_RAM AM_SHARE("chip_ram")
 	AM_RANGE(0x200000, 0x27ffff) AM_ROM AM_REGION("kickstart", 0)
 ADDRESS_MAP_END
 
@@ -1227,30 +1234,6 @@ static SLOT_INTERFACE_START( amiga_floppies )
 SLOT_INTERFACE_END
 
 // basic elements common to all amigas
-static MACHINE_CONFIG_FRAGMENT( pal_video )
-	MCFG_SCREEN_ADD("screen", RASTER)
-	MCFG_SCREEN_RAW_PARAMS
-	(
-		amiga_state::CLK_28M_PAL / 4 * 2,
-		amiga_state::SCREEN_WIDTH, amiga_state::HBLANK, amiga_state::SCREEN_WIDTH,
-		amiga_state::SCREEN_HEIGHT_PAL, amiga_state::VBLANK_PAL, amiga_state::SCREEN_HEIGHT_PAL
-	)
-	MCFG_SCREEN_UPDATE_DRIVER(amiga_state, screen_update_amiga)
-	MCFG_SCREEN_PALETTE("palette")
-MACHINE_CONFIG_END
-
-static MACHINE_CONFIG_FRAGMENT( ntsc_video )
-	MCFG_SCREEN_ADD("screen", RASTER)
-	MCFG_SCREEN_RAW_PARAMS
-	(
-		amiga_state::CLK_28M_NTSC / 4 * 2,
-		amiga_state::SCREEN_WIDTH, amiga_state::HBLANK, amiga_state::SCREEN_WIDTH,
-		amiga_state::SCREEN_HEIGHT_NTSC, amiga_state::VBLANK_NTSC, amiga_state::SCREEN_HEIGHT_NTSC
-	)
-	MCFG_SCREEN_UPDATE_DRIVER(amiga_state, screen_update_amiga)
-	MCFG_SCREEN_PALETTE("palette")
-MACHINE_CONFIG_END
-
 static MACHINE_CONFIG_START( amiga_base, amiga_state )
 	// video
 	MCFG_FRAGMENT_ADD(pal_video)
@@ -1558,7 +1541,7 @@ static MACHINE_CONFIG_DERIVED_CLASS( a600, amiga_base, a600_state )
 	MCFG_CPU_PROGRAM_MAP(a600_mem)
 
 	MCFG_DEVICE_ADD("overlay", ADDRESS_MAP_BANK, 0)
-	MCFG_DEVICE_PROGRAM_MAP(overlay_1mb_map)
+	MCFG_DEVICE_PROGRAM_MAP(overlay_2mb_map16)
 	MCFG_ADDRESS_MAP_BANK_ENDIANNESS(ENDIANNESS_BIG)
 	MCFG_ADDRESS_MAP_BANK_DATABUS_WIDTH(16)
 	MCFG_ADDRESS_MAP_BANK_ADDRBUS_WIDTH(22)

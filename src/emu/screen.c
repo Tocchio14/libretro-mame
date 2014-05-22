@@ -453,10 +453,10 @@ void screen_device::configure(int width, int height, const rectangle &visarea, a
 
 	// if there has been no VBLANK time specified in the MACHINE_DRIVER, compute it now
 	// from the visible area, otherwise just used the supplied value
-	if (m_vblank == 0 && !m_oldstyle_vblank_supplied)
-		m_vblank_period = m_scantime * (height - visarea.height());
-	else
+	if (m_oldstyle_vblank_supplied)
 		m_vblank_period = m_vblank;
+	else
+		m_vblank_period = m_scantime * (height - visarea.height());
 
 	// start the VBLANK timer
 	m_vblank_begin_timer->adjust(time_until_vblank_start());
@@ -565,48 +565,49 @@ bool screen_device::update_partial(int scanline)
 		}
 	}
 
-	// skip if less than the lowest so far
+	// skip if we already rendered this line
 	if (scanline < m_last_partial_scan)
 	{
-		LOG_PARTIAL_UPDATES(("skipped because less than previous\n"));
-		return FALSE;
+		LOG_PARTIAL_UPDATES(("skipped because line was already rendered\n"));
+		return false;
 	}
 
-	// set the start/end scanlines
+	// set the range of scanlines to render
 	rectangle clip = m_visarea;
 	if (m_last_partial_scan > clip.min_y)
 		clip.min_y = m_last_partial_scan;
 	if (scanline < clip.max_y)
 		clip.max_y = scanline;
 
-	// render if necessary
-	bool result = false;
-	if (clip.min_y <= clip.max_y)
+	// skip if entirely outside of visible area
+	if (clip.min_y > clip.max_y)
 	{
-		UINT32 flags = UPDATE_HAS_NOT_CHANGED;
-
-		g_profiler.start(PROFILER_VIDEO);
-		LOG_PARTIAL_UPDATES(("updating %d-%d\n", clip.min_y, clip.max_y));
-
-		screen_bitmap &curbitmap = m_bitmap[m_curbitmap];
-		switch (curbitmap.format())
-		{
-			default:
-			case BITMAP_FORMAT_IND16:   flags = m_screen_update_ind16(*this, curbitmap.as_ind16(), clip);   break;
-			case BITMAP_FORMAT_RGB32:   flags = m_screen_update_rgb32(*this, curbitmap.as_rgb32(), clip);   break;
-		}
-
-		m_partial_updates_this_frame++;
-		g_profiler.stop();
-
-		// if we modified the bitmap, we have to commit
-		m_changed |= ~flags & UPDATE_HAS_NOT_CHANGED;
-		result = true;
+		LOG_PARTIAL_UPDATES(("skipped because outside of visible area\n"));
+		return false;
 	}
+
+	// otherwise, render
+	LOG_PARTIAL_UPDATES(("updating %d-%d\n", clip.min_y, clip.max_y));
+	g_profiler.start(PROFILER_VIDEO);
+
+	UINT32 flags = UPDATE_HAS_NOT_CHANGED;
+	screen_bitmap &curbitmap = m_bitmap[m_curbitmap];
+	switch (curbitmap.format())
+	{
+		default:
+		case BITMAP_FORMAT_IND16:   flags = m_screen_update_ind16(*this, curbitmap.as_ind16(), clip);   break;
+		case BITMAP_FORMAT_RGB32:   flags = m_screen_update_rgb32(*this, curbitmap.as_rgb32(), clip);   break;
+	}
+
+	m_partial_updates_this_frame++;
+	g_profiler.stop();
+
+	// if we modified the bitmap, we have to commit
+	m_changed |= ~flags & UPDATE_HAS_NOT_CHANGED;
 
 	// remember where we left off
 	m_last_partial_scan = scanline + 1;
-	return result;
+	return true;
 }
 
 
@@ -802,7 +803,7 @@ void screen_device::vblank_begin()
 	// reset the VBLANK start timer for the next frame
 	m_vblank_begin_timer->adjust(time_until_vblank_start());
 
-	// if no VBLANK period, call the VBLANK end callback immedietely, otherwise reset the timer
+	// if no VBLANK period, call the VBLANK end callback immediately, otherwise reset the timer
 	if (m_vblank_period == 0)
 		vblank_end();
 	else
@@ -829,6 +830,8 @@ void screen_device::vblank_end()
 
 	// increment the frame number counter
 	m_frame_number++;
+
+	reset_partial_updates();
 }
 
 
