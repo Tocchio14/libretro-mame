@@ -1,4 +1,5 @@
 #include "video/tecmo_spr.h"
+#include "video/tecmo_mix.h"
 
 class tecmo16_state : public driver_device
 {
@@ -16,7 +17,8 @@ public:
 		m_gfxdecode(*this, "gfxdecode"),
 		m_screen(*this, "screen"),
 		m_palette(*this, "palette"),
-		m_sprgen(*this, "spritegen")
+		m_sprgen(*this, "spritegen"),
+		m_mixer(*this, "mixer")
 	{ }
 
 	required_shared_ptr<UINT16> m_videoram;
@@ -59,12 +61,12 @@ public:
 	DECLARE_VIDEO_START(ginkun);
 	DECLARE_VIDEO_START(riot);
 	UINT32 screen_update_tecmo16(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
-	void blendbitmaps(bitmap_rgb32 &dest, bitmap_ind16 &src1, bitmap_ind16 &src2, bitmap_ind16 &src3,
-		int sx, int sy, const rectangle &cliprect);
 	required_device<cpu_device> m_maincpu;
 	required_device<cpu_device> m_audiocpu;
 	required_device<gfxdecode_device> m_gfxdecode;
 	required_device<screen_device> m_screen;
 	required_device<palette_device> m_palette;
 	required_device<tecmo_spr_device> m_sprgen;
+	required_device<tecmo_mix_device> m_mixer;
+
 };

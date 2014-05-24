@@ -5,6 +5,7 @@
 ***************************************************************************/
 
 #include "video/tecmo_spr.h"
+#include "video/tecmo_mix.h"
 
 class gaiden_state : public driver_device
 {
@@ -20,7 +21,8 @@ public:
 		m_gfxdecode(*this, "gfxdecode"),
 		m_screen(*this, "screen"),
 		m_palette(*this, "palette"),
-		m_sprgen(*this, "spritegen")
+		m_sprgen(*this, "spritegen"),
+		m_mixer(*this, "mixer")
 		{ }
 
 	/* memory pointers */
@@ -99,12 +101,11 @@ public:
 	void drgnbowl_draw_sprites(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	void descramble_drgnbowl(int descramble_cpu);
 	void descramble_mastninj_gfx(UINT8* src);
-	void blendbitmaps(bitmap_rgb32 &dest,bitmap_ind16 &src1,bitmap_ind16 &src2,bitmap_ind16 &src3,
-		int sx,int sy,const rectangle &cliprect);
 	DECLARE_WRITE_LINE_MEMBER(irqhandler);
 	required_device<cpu_device> m_maincpu;
 	required_device<gfxdecode_device> m_gfxdecode;
 	required_device<screen_device> m_screen;
 	required_device<palette_device> m_palette;
 	optional_device<tecmo_spr_device> m_sprgen;
+	optional_device<tecmo_mix_device> m_mixer;
 };
