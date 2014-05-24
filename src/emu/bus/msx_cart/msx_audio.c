@@ -29,6 +29,15 @@ The keyboards:
 
 - Philips NMS-1160
 
+
+
+TODO:
+- Test MIDI in/out/through
+- Sample RAM
+- Implement NMS-1160 keyboard
+- HX-MU901: ENTER/SELECT keys and multi sensors
+- NMS1160: Test the keyboard
+
 **********************************************************************************/
 
 #include "emu.h"
@@ -103,13 +112,13 @@ msx_cart_msx_audio_nms1205::msx_cart_msx_audio_nms1205(const machine_config &mco
 	, msx_cart_interface(mconfig, *this)
 	, m_y8950(*this, "y8950")
 	, m_acia6850(*this, "acia6850")
+	, m_mdout(*this, "mdout")
+	, m_mdthru(*this, "mdthru")
 {
 }
 
 
 static MACHINE_CONFIG_FRAGMENT( msx_audio_nms1205 )
-	// There is a 2 MHz crystal on the PCB, where does it go?
-
 	// This is actually incorrect. The sound output is passed back into the MSX machine where it is mixed internally and output through the system 'speaker'.
 	MCFG_SPEAKER_STANDARD_MONO("mono")
 	MCFG_SOUND_ADD("y8950", Y8950, XTAL_3_579545MHz)
@@ -119,7 +128,16 @@ static MACHINE_CONFIG_FRAGMENT( msx_audio_nms1205 )
 
 	MCFG_MSX_AUDIO_KBDC_PORT_ADD("kbdc", msx_audio_keyboards, NULL)
 
+	// There is a 2 MHz crystal on the PCB, the 6850 TX and RX clocks are derived from it
 	MCFG_DEVICE_ADD("acia6850", ACIA6850, 0)
+	MCFG_ACIA6850_TXD_HANDLER(DEVWRITELINE("mdout", midi_port_device, write_txd))
+
+	MCFG_MIDI_PORT_ADD("mdin", midiin_slot, "midiin")
+	MCFG_MIDI_RX_HANDLER(WRITELINE(msx_cart_msx_audio_nms1205, midi_in))
+
+	MCFG_MIDI_PORT_ADD("mdthru", midiout_slot, "midiout")
+
+	MCFG_MIDI_PORT_ADD("mdout", midiout_slot, "midiout")
 MACHINE_CONFIG_END
 
 
@@ -129,12 +147,35 @@ machine_config_constructor msx_cart_msx_audio_nms1205::device_mconfig_additions(
 }
 
 
+ROM_START( msx_nms1205 )
+	ROM_REGION(0x8000, "y8950", ROMREGION_ERASE00)
+ROM_END
+
+
+const rom_entry *msx_cart_msx_audio_nms1205::device_rom_region() const
+{
+	return ROM_NAME( msx_nms1205 );
+}
+
+
+WRITE_LINE_MEMBER(msx_cart_msx_audio_nms1205::midi_in)
+{
+	// MIDI in signals is sent to both the 6850 and the MIDI thru output port
+	m_acia6850->write_rxd(state);
+	m_mdthru->write_txd(state);
+}
+
+
 void msx_cart_msx_audio_nms1205::device_start()
 {
 	// Install IO read/write handlers
 	address_space &space = machine().device<cpu_device>("maincpu")->space(AS_IO);
 	space.install_write_handler(0xc0, 0xc1, write8_delegate(FUNC(y8950_device::write), m_y8950.target()));
 	space.install_read_handler(0xc0, 0xc1, read8_delegate(FUNC(y8950_device::read), m_y8950.target()));
+	space.install_write_handler(0x00, 0x00, write8_delegate(FUNC(acia6850_device::control_w), m_acia6850.target()));
+	space.install_write_handler(0x01, 0x01, write8_delegate(FUNC(acia6850_device::data_w), m_acia6850.target()));
+	space.install_read_handler(0x04,0x04, read8_delegate(FUNC(acia6850_device::status_r), m_acia6850.target()));
+	space.install_read_handler(0x05,0x05, read8_delegate(FUNC(acia6850_device::data_r), m_acia6850.target()));
 }
 
 
