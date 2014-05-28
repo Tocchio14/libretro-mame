@@ -2,12 +2,17 @@ void retro_poll_mame_input();
 
 static int rtwi=320,rthe=240,topw=1600; // DEFAULT TEXW/TEXH/PITCH
 static float rtaspect=0;
+static int max_width=0;
+static int max_height=0;
+
 int SHIFTON=-1,NEWGAME_FROM_OSD=0;
 char RPATH[512];
 
 const char *retro_save_directory;
 const char *retro_system_directory;
 const char *retro_content_directory;
+
+retro_log_printf_t log_cb;
 
 extern "C" int mmain(int argc, const char *argv);
 extern bool draw_this_frame;
@@ -46,7 +51,7 @@ void retro_set_environment(retro_environment_t cb)
 
 	// ONLY FOR MESS/UME
 #if !defined(WANT_MAME)
-        { "core_softlist_enable", "Enable softlists; enabled|disabled" },
+    { "core_softlist_enable", "Enable softlists; enabled|disabled" },
 	{ "core_softlist_auto", "Softlist automatic media type; enabled|disabled" },
 	{ "core_media_type", "Media type; cart|flop|cdrm|cass|hard|serl|prin" },   	  
 	{ "core_boot_bios", "Boot to BIOS; disabled|enabled" },
@@ -72,7 +77,6 @@ static void check_variables(void)
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "enabled") == 0)
          experimental_cmdline = true;
       if (strcmp(var.value, "disabled") == 0)
@@ -84,7 +88,6 @@ static void check_variables(void)
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "disabled") == 0)
          mouse_enable = false;
       if (strcmp(var.value, "enabled") == 0)
@@ -96,7 +99,6 @@ static void check_variables(void)
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "disabled") == 0)
          nagscreenpatch_enable = false;
       if (strcmp(var.value, "enabled") == 0)
@@ -108,11 +110,18 @@ static void check_variables(void)
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "disabled") == 0)
+	  {
          videoapproach1_enable = false;
+		 max_width=rtwi;
+	     max_height=rthe;		 
+	  }
       if (strcmp(var.value, "enabled") == 0)
+	  {
          videoapproach1_enable = true;
+		 max_width=1600;
+	     max_height=1200;
+	  }
    }
 
    var.key = "core_boot_osd";
@@ -120,7 +129,6 @@ static void check_variables(void)
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "enabled") == 0)
          boot_to_osd_enabled = true;
       if (strcmp(var.value, "disabled") == 0)
@@ -134,9 +142,7 @@ static void check_variables(void)
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       sprintf(mediaType,"-%s",var.value);
-      fprintf(stderr, "value: %s\n", mediaType);
    }
    
    var.key = "core_softlist_enable";
@@ -144,7 +150,6 @@ static void check_variables(void)
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "enabled") == 0)
          softlist_enabled = true;
       if (strcmp(var.value, "disabled") == 0)
@@ -156,7 +161,6 @@ static void check_variables(void)
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "enabled") == 0)
          softlist_auto = true;
       if (strcmp(var.value, "disabled") == 0)
@@ -168,7 +172,6 @@ static void check_variables(void)
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "enabled") == 0)
          boot_to_bios_enabled = true;
       if (strcmp(var.value, "disabled") == 0)
@@ -180,7 +183,6 @@ static void check_variables(void)
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      fprintf(stderr, "value: %s\n", var.value);
       if (strcmp(var.value, "enabled") == 0)
          commandline_enabled = true;
       if (strcmp(var.value, "disabled") == 0)
@@ -218,15 +220,31 @@ void retro_get_system_info(struct retro_system_info *info)
 
 void retro_get_system_av_info(struct retro_system_av_info *info)
 {
+   check_variables();
+   
    info->geometry.base_width = rtwi;
-   info->geometry.base_height =rthe;
-
-   info->geometry.max_width = 1600;
-   info->geometry.max_height = 1200;
-
-   info->geometry.aspect_ratio =rtaspect;
+   info->geometry.base_height = rthe;
+   
+   if (log_cb)
+      log_cb(RETRO_LOG_INFO, "AV_INFO: width=%d height=%d\n",info->geometry.base_width,info->geometry.base_height);
+      
+   info->geometry.max_width = max_width;
+   info->geometry.max_height = max_height;
+   
+   if (log_cb)
+      log_cb(RETRO_LOG_INFO, "AV_INFO: max_width=%d max_height=%d\n",info->geometry.max_width,info->geometry.max_height);   
+	  
+   info->geometry.aspect_ratio = rtaspect;
+   
+   if (log_cb)
+      log_cb(RETRO_LOG_INFO, "AV_INFO: aspect_ratio=%f\n",info->geometry.aspect_ratio);	  
+   
    info->timing.fps = 60;
    info->timing.sample_rate = 48000.0;
+   
+   if (log_cb)
+      log_cb(RETRO_LOG_INFO, "AV_INFO: fps=%f sample_rate=%f\n",info->timing.fps,info->timing.sample_rate);	  
+   
 }
 
 static void retro_wrap_emulator()
@@ -249,6 +267,13 @@ static void retro_wrap_emulator()
 }
 
 void retro_init (void){ 
+		
+		// initialize logger interface
+		struct retro_log_callback log;
+		if (environ_cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &log))
+			log_cb = log.log;
+		else 
+		    log_cb = NULL;		
 
 #ifndef M16B
     	enum retro_pixel_format fmt =RETRO_PIXEL_FORMAT_XRGB8888;
@@ -261,8 +286,10 @@ void retro_init (void){
 		if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) && system_dir)
 		{
 			// if defined, use the system directory			
-			retro_system_directory=system_dir;		
+			retro_system_directory=system_dir;
 		}		   
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "SYSTEM_DIRECTORY: %s", retro_system_directory);			
 		
 		const char *content_dir = NULL;
    
@@ -271,6 +298,8 @@ void retro_init (void){
 			// if defined, use the system directory			
 			retro_content_directory=content_dir;		
 		}			
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "CONTENT_DIRECTORY: %s", retro_content_directory);						
 		
 		const char *save_dir = NULL;
    
@@ -284,15 +313,15 @@ void retro_init (void){
 			// make retro_save_directory the same in case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY is not implemented by the frontend
 			retro_save_directory=retro_system_directory;
 		}
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "SAVE_DIRECTORY: %s", retro_save_directory);								
 		
-		printf("Retro SYSTEM_DIRECTORY %s\n",retro_system_directory);
-		printf("Retro SAVE_DIRECTORY %s\n",retro_save_directory);
-		printf("Retro CONTENT_DIRECTORY %s\n",retro_content_directory);
-
-
+	
     	if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
     	{
-    		fprintf(stderr, "RGB pixel format is not supported.\n");
+    		if (log_cb)
+				log_cb(RETRO_LOG_ERROR, "pixel format not supported");			
+			
     		exit(0);
     	}
 

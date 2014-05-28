@@ -73,7 +73,7 @@ static int ui_ipt_pushchar=-1;
 
 static int mame_reset = -1;
 
-// Cores Options
+// cores options
 bool nagscreenpatch_enable = false;
 static bool mouse_enable = false;
 static bool videoapproach1_enable = false;
@@ -84,14 +84,14 @@ static bool boot_to_osd_enabled;
 static bool commandline_enabled;
 static bool experimental_cmdline;
 
-// Emu flags
+// emu flags
 static int tate = 0;
 static int screenRot = 0;
 int vertical,orient;
 static bool arcade=FALSE;
 static int FirstTimeUpdate = 1;
 
-// Rom file name and path
+// rom file name and path
 char g_rom_dir[1024];
 char mediaType[10];
 static char MgamePath[1024];
@@ -100,12 +100,12 @@ static char MgameName[512];
 static char MsystemName[512];
 static char gameName[1024];
 
-// Args for Core
+// args for cores
 static char XARGV[64][1024];
 static const char* xargv_cmd[64];
 int PARAMCOUNT=0;
 
-// Path configuration
+// path configuration
 #define NB_OPTPATH 11//12
 
 static const char *dir_name[NB_OPTPATH]={
@@ -214,7 +214,6 @@ static int parsePath(char* path, char* gamePath, char* gameName) {
 	strncpy(gameName, path + (slashIndex + 1), dotIndex - (slashIndex + 1));
 	gameName[dotIndex - (slashIndex + 1)] = 0;
 
-	//write_log("gamePath=%s gameName=%s\n", gamePath, gameName);
 	return 1;
 }
 
@@ -244,8 +243,6 @@ static int parseSystemName(char* path, char* systemName) {
 	}
 
 	strncpy(systemName, path + (slashIndex[1] +1), slashIndex[0]-slashIndex[1]-1);
-	
-	//write_log("systemName=%s\n", systemName);
 	return 1;
 }
 
@@ -275,8 +272,6 @@ static int parseParentPath(char* path, char* parentPath) {
 	}
 
 	strncpy(parentPath, path, slashIndex[1]);
-	
-	//write_log("parentPath=%s\n", parentPath);
 	return 1;
 }
 
@@ -284,20 +279,35 @@ static int getGameInfo(char* gameName, int* rotation, int* driverIndex,bool *Arc
 	
 	int gameFound = 0;
 	int num=driver_list::find(gameName);
-
-	if (num != -1){
-		fprintf(stderr, "%s | %s\n", driver_list::driver(num).name, driver_list::driver(num).description);
+	
+	if (num != -1){		
 		if(driver_list::driver(num).flags& GAME_TYPE_ARCADE)
 		{
-		   write_log("type: ARCADE system\n");
-		   *Arcade=TRUE;
+			*Arcade=TRUE;
+			if (log_cb)
+				log_cb(RETRO_LOG_DEBUG, "System type: ARCADE\n");
 		}
-		else if(driver_list::driver(num).flags& GAME_TYPE_CONSOLE)write_log("type: CONSOLE system\n");
-		else if(driver_list::driver(num).flags& GAME_TYPE_COMPUTER)write_log("type: COMPUTER system\n");
+		else if(driver_list::driver(num).flags& GAME_TYPE_CONSOLE)
+		{
+			if (log_cb)
+				log_cb(RETRO_LOG_DEBUG, "System type: CONSOLE\n");
+		}
+		else if(driver_list::driver(num).flags& GAME_TYPE_COMPUTER)
+		{
+			if (log_cb)
+				log_cb(RETRO_LOG_DEBUG, "System type: COMPUTER\n");		
+		}
 		gameFound = 1;
+		
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "Game name: %s, Game description: %s\n",driver_list::driver(num).name, driver_list::driver(num).description);
 	}
-	else	write_log("driver %s not found %i\n", gameName, num);
-
+	else
+	{
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Driver %s not found %i",gameName,num);	
+	}
+	
 	return gameFound;
 }
 
@@ -309,29 +319,37 @@ void Extract_AllPath(char *srcpath){
 	//split the path to directory and the name without the zip extension
 	result = parsePath(srcpath, MgamePath, MgameName);
 	if (result == 0) {
-		write_log("parse path failed! path=%s\n", srcpath);
 		strcpy(MgameName,srcpath);
 		result_value|=1;
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Error parsing game path: %s\n",srcpath);	
 	}
 	
 	//split the path to directory and the name without the zip extension
 	result = parseSystemName(srcpath, MsystemName);
 	if (result == 0) {
-		write_log("parse systemname failed! path=%s\n", srcpath);
 		strcpy(MsystemName,srcpath );
 		result_value|=2;
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Error parsing system name: %s\n",srcpath);	
 	}
 	//get the parent path
 	result = parseParentPath(srcpath, MparentPath);
 	if (result == 0) {
-		write_log("parse parentpath failed! path=%s\n", srcpath);
 		strcpy(MparentPath,srcpath );
 		result_value|=4;
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Error parsing parent path: %s\n",srcpath);
 	}
-
-	write_log("Extract path:%s res=%x\nGame=%s System=%s\nGamepath=%s\nParent=%s\n",\
-		srcpath,result_value,MgameName,MsystemName,MgamePath,MparentPath);
-
+	if (log_cb)
+	{
+		log_cb(RETRO_LOG_DEBUG, "Path extraction result: File name=%s\n",srcpath);
+		log_cb(RETRO_LOG_DEBUG, "Path extraction result: Game name=%s\n",MgameName);
+		log_cb(RETRO_LOG_DEBUG, "Path extraction result: System name=%s\n",MsystemName);
+		log_cb(RETRO_LOG_DEBUG, "Path extraction result: Game path=%s\n",MgamePath);
+		log_cb(RETRO_LOG_DEBUG, "Path extraction result: Parent path=%s\n",MparentPath);
+	}
+		
 }
 
 void Add_Option(const char* option){
@@ -404,24 +422,29 @@ int mmain(int argc, const char *argv)
 	if(experimental_cmdline){
   	
 		parse_cmdline(argv);
+			if (log_cb)
+				log_cb(RETRO_LOG_INFO, "Starting game from command line:%s\n",gameName);
 
-	        write_log("executing from experimental cmdline... %s\n", gameName);
 		result = executeGame_cmd(ARGUV[ARGUC-1]);
 	}
 	else
 	{
-		write_log("executing game... %s\n", gameName);
+		if (log_cb)
+			log_cb(RETRO_LOG_INFO, "Starting game:%s\n",gameName);
 		result = executeGame(gameName);
 	}
 
 	if(result<0)return result;
 	
-	write_log("frontend parameters:%i\n", PARAMCOUNT);
-
+	if (log_cb)
+		log_cb(RETRO_LOG_DEBUG, "Parameters:\n");
+	
 	for (int i = 0; i<PARAMCOUNT; i++){
 		xargv_cmd[i] = (char*)(XARGV[i]);
-		write_log("  %s\n",XARGV[i]);
+		if (log_cb)
+			log_cb(RETRO_LOG_DEBUG, " %s\n",XARGV[i]);		
 	}
+
 
 //	osd_init_midi();
 

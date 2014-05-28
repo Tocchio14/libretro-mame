@@ -30,7 +30,8 @@ retro_osd_interface::~retro_osd_interface()
 
 void retro_osd_interface::osd_exit()
 {	
-	write_log("osd_exit called \n");
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "OSD exit called\n");
 
 	osd_interface::osd_exit();
 	
@@ -53,18 +54,17 @@ void retro_osd_interface::init(running_machine &machine)
 
 	initInput(machine);
 
-	write_log("machine screen orientation: %s \n", (
-		machine.system().flags & ORIENTATION_SWAP_XY) ? "VERTICAL" : "HORIZONTAL"
-	);
-
-        orient  = (machine.system().flags & ORIENTATION_MASK);
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "Screen orientation: %s\n",(machine.system().flags & ORIENTATION_SWAP_XY) ? "VERTICAL" : "HORIZONTAL");
+	
+    orient  = (machine.system().flags & ORIENTATION_MASK);
 	vertical = (machine.system().flags & ORIENTATION_SWAP_XY);
         
-        gamRot = (ROT270 == orient) ? 1 : gamRot;
-        gamRot = (ROT180 == orient) ? 2 : gamRot;
-        gamRot = (ROT90  == orient) ? 3 : gamRot;
+    gamRot = (ROT270 == orient) ? 1 : gamRot;
+    gamRot = (ROT180 == orient) ? 2 : gamRot;
+    gamRot = (ROT90  == orient) ? 3 : gamRot;
 
-       	// initialize the subsystems
+    // initialize the subsystems
 	osd_interface::init_subsystems();
 
 	//prep_retro_rotation(gamRot);
@@ -74,9 +74,13 @@ void retro_osd_interface::init(running_machine &machine)
 	int width,height;
 	our_target->compute_visible_area(1000,1000,1,ROT0,width,height);
 	rtaspect=(float)width/(float)height;
-	write_log("W:%d H:%d , aspect ratio %d/%d=%f\n",rtwi,rthe,width,height,rtaspect);
+	
+	if (log_cb)
+		log_cb(RETRO_LOG_DEBUG, "Screen width=%d height=%d, aspect=%d/%d=%f\n",rtwi,rthe,width,height,rtaspect);
+	
 	NEWGAME_FROM_OSD=1;
-	write_log("osd init done\n");
+	if (log_cb)
+		log_cb(RETRO_LOG_INFO, "OSD initialization complete\n");
 	co_switch(mainThread);
 }
 
@@ -119,7 +123,7 @@ void retro_osd_interface::update(bool skip_redraw)
       if (FirstTimeUpdate == 1) {
 
          FirstTimeUpdate++;			
-         write_log("game screen w=%i h=%i  rowPixels=%i\n", minwidth, minheight,minwidth );
+         //write_log("game screen w=%i h=%i  rowPixels=%i\n", minwidth, minheight,minwidth );
 
          rtwi=minwidth;
          rthe=minheight;
@@ -138,7 +142,7 @@ void retro_osd_interface::update(bool skip_redraw)
       }
 
       if (minwidth != rtwi || minheight != rthe || minwidth != topw ){
-         write_log("Res change: old(%d,%d) new(%d,%d) %d\n",rtwi,rthe,minwidth,minheight,topw);
+         //write_log("Res change: old(%d,%d) new(%d,%d) %d\n",rtwi,rthe,minwidth,minheight,topw);
          rtwi=minwidth;
          rthe=minheight;
          topw=minwidth;

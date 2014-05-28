@@ -18,7 +18,8 @@ int executeGame(char* path) {
 #ifdef WANT_MAME	
 	//find if the driver exists for MgameName, if not, exit
 	if (getGameInfo(MgameName, &gameRot, &driverIndex,&arcade) == 0) {
-		write_log("driver not found: %s\n", MgameName);
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Driver not found: %s\n",MgameName);
 		return -2;
 	}	
 #else
@@ -26,9 +27,11 @@ int executeGame(char* path) {
 	{
 	   	//find if the driver exists for MgameName, if not, check if a driver exists for MsystemName, if not, exit
 	   	if (getGameInfo(MgameName, &gameRot, &driverIndex,&arcade) == 0) {
-			write_log("driver not found: %s\n", MgameName);
+			if (log_cb)
+				log_cb(RETRO_LOG_ERROR, "Driver not found %s\n",MgameName);
 		   	if (getGameInfo(MsystemName, &gameRot, &driverIndex,&arcade) == 0) {
-		      		write_log("driver not found: %s\n", MsystemName);
+		      		if (log_cb)
+						log_cb(RETRO_LOG_ERROR, "System not found: %s\n",MsystemName);
    		         	return -2;
 	       		}
 	   	}
@@ -37,10 +40,12 @@ int executeGame(char* path) {
 		if(arcade==true){
 			// test system
 		   	if (getGameInfo(MsystemName, &gameRot, &driverIndex,&arcade) == 0) {
-		      		write_log("System not found: %s\n", MsystemName);   		         	
+		      		if (log_cb)
+						log_cb(RETRO_LOG_ERROR, "System not found: %s\n",MsystemName);	         	
 	       		}
 			else {
-				write_log("System found: %s\n", MsystemName);   
+		      	if (log_cb)
+					log_cb(RETRO_LOG_ERROR, "System not found: %s\n",MsystemName);
 				arcade=false;
 			}
 		}  
@@ -54,7 +59,7 @@ int executeGame(char* path) {
 			screenRot = 1;
 		} else
 		if (gameRot &  ORIENTATION_FLIP_X) {
-			write_log("*********** flip X \n");
+			//write_log("*********** flip X \n");
 			screenRot = 3;
 		}
 
@@ -63,15 +68,18 @@ int executeGame(char* path) {
 		if (gameRot != ROT0) {
 			screenRot = 1;
 			if (gameRot &  ORIENTATION_FLIP_X) {
-				write_log("*********** flip X \n");
+				//write_log("*********** flip X \n");
 				screenRot = 2;
 			}
 		}
 	}
 	
-	write_log("creating frontend... game=%s\n", MgameName);
-	printf("using softlists: %d\n", softlist_enabled);
-
+		if (log_cb)
+	{
+		log_cb(RETRO_LOG_INFO, "Creating frontend for game: %s\n",MgameName);
+		log_cb(RETRO_LOG_INFO, "Softlists: %d\n",softlist_enabled);
+	}
+	
 	Set_Default_Option();
 
 	Set_Path_Option();
