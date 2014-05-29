@@ -12,6 +12,7 @@ Ernesto Corvi & Mariusz Wojcieszek
 
 #include "cpu/m68000/m68000.h"
 #include "machine/bankdev.h"
+#include "bus/rs232/rs232.h"
 #include "bus/centronics/ctronics.h"
 #include "machine/mos6526.h"
 #include "machine/amigafdc.h"
@@ -332,6 +333,7 @@ public:
 	m_maincpu(*this, "maincpu"),
 	m_cia_0(*this, "cia_0"),
 	m_cia_1(*this, "cia_1"),
+	m_rs232(*this, "rs232"),
 	m_centronics(*this, "centronics"),
 	m_sound(*this, "amiga"),
 	m_fdc(*this, "fdc"),
@@ -358,7 +360,13 @@ public:
 	m_centronics_busy(0),
 	m_centronics_perror(0),
 	m_centronics_select(0),
-	m_gayle_reset(false)
+	m_gayle_reset(false),
+	m_previous_lof(true),
+	m_rx_shift(0),
+	m_tx_shift(0),
+	m_rx_state(0),
+	m_tx_state(0),
+	m_rx_previous(1)
 	{ }
 
 
@@ -410,6 +418,7 @@ public:
 	DECLARE_PALETTE_INIT( amiga );
 
 	void render_scanline(bitmap_ind16 &bitmap, int scanline);
+	void aga_render_scanline(bitmap_rgb32 &bitmap, int scanline);
 	UINT32 screen_update_amiga(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	UINT32 screen_update_amiga_aga(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 	void update_screenmode();
@@ -417,12 +426,7 @@ public:
 	TIMER_CALLBACK_MEMBER( scanline_callback );
 	TIMER_CALLBACK_MEMBER (amiga_irq_proc );
 	TIMER_CALLBACK_MEMBER( amiga_blitter_proc );
-	TIMER_CALLBACK_MEMBER( finish_serial_write );
-
 	void update_irqs();
-
-	void serial_in_w(UINT16 data);
-	attotime serial_char_period();
 
 	DECLARE_CUSTOM_INPUT_MEMBER( amiga_joystick_convert );
 	DECLARE_CUSTOM_INPUT_MEMBER( floppy_drive_status );
@@ -435,8 +439,15 @@ public:
 	DECLARE_WRITE8_MEMBER( cia_0_port_a_write );
 	DECLARE_WRITE_LINE_MEMBER( cia_0_irq );
 	DECLARE_READ8_MEMBER( cia_1_port_a_read );
+	DECLARE_WRITE8_MEMBER( cia_1_port_a_write );
 	DECLARE_WRITE_LINE_MEMBER( cia_1_irq );
 	
+	DECLARE_WRITE_LINE_MEMBER( rs232_rx_w );
+	DECLARE_WRITE_LINE_MEMBER( rs232_dcd_w );
+	DECLARE_WRITE_LINE_MEMBER( rs232_dsr_w );
+	DECLARE_WRITE_LINE_MEMBER( rs232_ri_w );
+	DECLARE_WRITE_LINE_MEMBER( rs232_cts_w );
+
 	DECLARE_WRITE_LINE_MEMBER( centronics_ack_w );
 	DECLARE_WRITE_LINE_MEMBER( centronics_busy_w );
 	DECLARE_WRITE_LINE_MEMBER( centronics_perror_w );
@@ -463,10 +474,10 @@ public:
 	enum
 	{
 		SCREEN_WIDTH = 910,
-		SCREEN_HEIGHT_PAL = 312,
-		SCREEN_HEIGHT_NTSC = 262,
-		VBLANK_PAL = 29, // 26
-		VBLANK_NTSC = 21,
+		SCREEN_HEIGHT_PAL = 625,
+		SCREEN_HEIGHT_NTSC = 525,
+		VBLANK_PAL = 58, // 52
+		VBLANK_NTSC = 42,
 		HBLANK = 186
 	};
 
@@ -524,16 +535,19 @@ protected:
 	virtual void vblank();
 
 	virtual void potgo_w(UINT16 data) {};
-	virtual void serdat_w(UINT16 data) {};
 
 	// joystick/mouse
 	virtual UINT16 joy0dat_r();
 	virtual UINT16 joy1dat_r();
 
+	// serial
+	virtual void rs232_tx(int state);
+
 	// devices
 	required_device<m68000_base_device> m_maincpu;
 	required_device<mos8520_device> m_cia_0;
 	required_device<mos8520_device> m_cia_1;
+	optional_device<rs232_port_device> m_rs232;
 	optional_device<centronics_device> m_centronics;
 	required_device<amiga_sound_device> m_sound;
 	optional_device<amiga_fdc> m_fdc;
@@ -569,7 +583,32 @@ private:
 		TIMER_SCANLINE,
 		TIMER_AMIGA_IRQ,
 		TIMER_AMIGA_BLITTER,
-		TIMER_FINISH_SERIAL_WRITE
+		TIMER_SERIAL
+	};
+
+	enum
+	{
+		VPOSR_LOF = 0x8000	// long frame
+	};
+
+	enum
+	{
+		ADKCON_UARTBRK = 0x800	// send break
+	};
+
+	// serial port flags
+	enum
+	{
+		SERDATR_RXD   = 0x0800,	// serial data
+		SERDATR_TSRE  = 0x1000,	// transmit ready
+		SERDATR_TBE   = 0x2000,	// transmit buffer empty
+		SERDATR_RBF   = 0x4000,	// receive buffer full
+		SERDATR_OVRUN = 0x8000	// receive buffer overrun
+	};
+
+	enum
+	{
+		SERPER_LONG = 0x8000	// 9-bit mode
 	};
 
 	int m_centronics_busy;
@@ -577,10 +616,29 @@ private:
 	int m_centronics_select;
 
 	emu_timer *m_irq_timer;
+	emu_timer *m_serial_timer;
 
 	bool m_gayle_reset;
 
+	bool m_previous_lof;
 	bitmap_ind16 m_flickerfixer;
+	bitmap_ind32 m_flickerfixer32;
+
+	UINT16 m_rx_shift;
+	UINT16 m_tx_shift;
+
+	int m_rx_state;
+	int m_tx_state;
+	int m_rx_previous;
+
+	int m_rs232_dcd;
+	int m_rs232_dsr;
+	int m_rs232_ri;
+	int m_rs232_cts;
+
+	void serial_adjust();
+	void serial_shift();
+	void rx_write(amiga_state *state, int level);
 };
 
 
@@ -589,7 +647,6 @@ private:
 extern const char *const amiga_custom_names[0x100];
 
 void amiga_chip_ram_w8(amiga_state *state, offs_t offset, UINT8 data);
-
 
 
 /*----------- defined in video/amiga.c -----------*/
@@ -604,12 +661,12 @@ void amiga_set_genlock_color(running_machine &machine, UINT16 color);
 void amiga_sprite_dma_reset(running_machine &machine, int which);
 void amiga_sprite_enable_comparitor(running_machine &machine, int which, int enable);
 
-/*----------- defined in video/amigaaga.c -----------*/
-
-void amiga_aga_render_scanline(running_machine &machine, bitmap_rgb32 &bitmap, int scanline);
-void amiga_aga_palette_write(running_machine &machine, int color_reg, UINT16 data);
-void amiga_aga_diwhigh_written(running_machine &machine, int written);
 MACHINE_CONFIG_EXTERN( pal_video );
 MACHINE_CONFIG_EXTERN( ntsc_video );
+
+/*----------- defined in video/amigaaga.c -----------*/
+
+void amiga_aga_palette_write(running_machine &machine, int color_reg, UINT16 data);
+void amiga_aga_diwhigh_written(running_machine &machine, int written);
 
 #endif /* __AMIGA_H__ */

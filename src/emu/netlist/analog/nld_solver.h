@@ -46,15 +46,12 @@ public:
 	ATTR_COLD netlist_matrix_solver_t();
 	ATTR_COLD virtual ~netlist_matrix_solver_t();
 
-    ATTR_COLD virtual void vsetup(netlist_analog_net_t::list_t &nets,
-            NETLIB_NAME(solver) &owner) = 0;
+    ATTR_COLD virtual void vsetup(netlist_analog_net_t::list_t &nets) = 0;
 
 	ATTR_HOT double solve();
 
 	ATTR_HOT inline bool is_dynamic() { return m_dynamic.count() > 0; }
 	ATTR_HOT inline bool is_timestep() { return m_steps.count() > 0; }
-
-	ATTR_HOT inline const NETLIB_NAME(solver) &owner() const;
 
     ATTR_HOT void update_forced();
 
@@ -65,39 +62,52 @@ public:
 
 	netlist_solver_parameters_t m_params;
 
+    ATTR_COLD int get_net_idx(netlist_net_t *net);
 	ATTR_COLD virtual void log_stats() {};
 
 protected:
 
 	class net_entry
 	{
-	    NETLIST_PREVENT_COPYING(net_entry)
-
 	public:
 	    net_entry(netlist_analog_net_t *net) : m_net(net) {}
         net_entry() : m_net(NULL) {}
+
+        net_entry(const net_entry &rhs)
+        {
+            m_net = rhs.m_net;
+            m_terms = rhs.m_terms;
+            m_rails = rhs.m_rails;
+        }
+
+        net_entry &operator=(const net_entry &rhs)
+        {
+            m_net = rhs.m_net;
+            m_terms = rhs.m_terms;
+            m_rails = rhs.m_rails;
+            return *this;
+        }
 
 	    netlist_analog_net_t * RESTRICT m_net;
 	    netlist_terminal_t::list_t m_terms;
 	    netlist_terminal_t::list_t m_rails;
 	};
 
-    ATTR_COLD virtual void setup(netlist_analog_net_t::list_t &nets,
-            NETLIB_NAME(solver) &owner, net_entry *list);
-
-	NETLIB_NAME(solver) *m_owner;
+    ATTR_COLD void setup(netlist_analog_net_t::list_t &nets);
 
     // return true if a reschedule is needed ...
     ATTR_HOT virtual int vsolve_non_dynamic() = 0;
 
     int m_calculations;
 
+    plinearlist_t<net_entry> m_nets;
+    plinearlist_t<netlist_analog_output_t *> m_inps;
+
 private:
 
     netlist_time m_last_step;
     dev_list_t m_steps;
     dev_list_t m_dynamic;
-    plinearlist_t<netlist_analog_output_t *> m_inps;
 
     netlist_ttl_input_t m_fb_sync;
     netlist_ttl_output_t m_Q_sync;
@@ -108,7 +118,7 @@ private:
      * Don't schedule a new calculation time. The recalculation has to be
      * triggered by the caller after the netlist element was changed.
      */
-    ATTR_HOT double compute_next_timestep(const double hn);
+    ATTR_HOT virtual double compute_next_timestep(const double) = 0;
 
     ATTR_HOT void update_inputs();
     ATTR_HOT void update_dynamic();
@@ -128,7 +138,7 @@ public:
 
 	virtual ~netlist_matrix_solver_direct_t() {}
 
-	ATTR_COLD virtual void vsetup(netlist_analog_net_t::list_t &nets, NETLIB_NAME(solver) &owner);
+	ATTR_COLD virtual void vsetup(netlist_analog_net_t::list_t &nets);
 	ATTR_COLD virtual void reset() { netlist_matrix_solver_t::reset(); }
 
 	ATTR_HOT inline const int N() const { if (m_N == 0) return m_dim; else return m_N; }
@@ -140,16 +150,13 @@ protected:
 	ATTR_HOT inline void gauss_LE(double (* RESTRICT x));
 	ATTR_HOT inline double delta(
 			const double (* RESTRICT V));
-	ATTR_HOT inline void store(const double (* RESTRICT V), bool store_RHS);
+	ATTR_HOT inline void store(const double (* RESTRICT V), const bool store_RHS);
 
-    net_entry m_nets[_storage_N];
+    ATTR_HOT virtual double compute_next_timestep(const double);
 
     double m_A[_storage_N][_storage_N];
     double m_RHS[_storage_N];
     double m_last_RHS[_storage_N]; // right hand side - contains currents
-
-private:
-	ATTR_COLD int get_net_idx(netlist_net_t *net);
 
 	struct terms_t{
 
@@ -160,7 +167,7 @@ private:
         : m_term(NULL), m_net_this(-1), m_net_other(-1)
         {}
 
-        netlist_terminal_t *m_term;
+        netlist_terminal_t * RESTRICT m_term;
 		int m_net_this;
 		int m_net_other;
 	};
@@ -238,11 +245,6 @@ public:
 private:
 	    netlist_solver_parameters_t m_params;
 );
-
-ATTR_HOT inline const NETLIB_NAME(solver) &netlist_matrix_solver_t::owner() const
-{
-	return *m_owner;
-}
 
 
 #endif /* NLD_SOLVER_H_ */

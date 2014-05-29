@@ -315,6 +315,7 @@ public:
 
 	/* video-related */
 	int m_crt_access;
+	bool m_back_color;
 
 	/* memory */
 	UINT8    m_dw_ram[0x1000];
@@ -574,6 +575,8 @@ I8275_DRAW_CHARACTER_MEMBER(dwarfd_state::display_pixels)
 	int bank = ((gpa & 2) ? 0 : 4) + (gpa & 1) + ((m_dsw2->read() & 4) >> 1);
 	const rgb_t *palette = m_palette->palette()->entry_list_raw();
 	UINT16 pixels = m_charmap->u16((linecount & 7) + ((charcode + (bank * 128)) << 3));
+	if(!x)
+		m_back_color = false;
 
 	//if(!linecount)
 	//	logerror("%d %d %02x %02x %02x %02x %02x %02x %02x\n", x/8, y/8, charcode, lineattr, lten, rvv, vsp, gpa, hlgt);
@@ -581,8 +584,12 @@ I8275_DRAW_CHARACTER_MEMBER(dwarfd_state::display_pixels)
 	for(i=0;i<8;i+=2)
 	{
 		UINT8 pixel = (pixels >> (i * 2)) & 0xf;
-		bitmap.pix32(y, x + i) = palette[pixel & 0xe];
-		bitmap.pix32(y, x + i + 1) = palette[(pixel & 1) ? 0 : (pixel & 0xe)];
+		UINT8 value = (pixel >> 1) | (rvv << 4) | (vsp << 3);
+		bitmap.pix32(y, x + i) = palette[value];
+		bitmap.pix32(y, x + i + 1) = palette[(pixel & 1) ? 0 : value];
+		if(m_back_color)
+			bitmap.pix32(y, x + i - 1) = palette[value];
+		m_back_color = pixel & 1;
 	}
 }
 
@@ -592,18 +599,21 @@ I8275_DRAW_CHARACTER_MEMBER(dwarfd_state::qc_display_pixels)
 	int bank = gpa;
 	const rgb_t *palette = m_palette->palette()->entry_list_raw();
 	UINT16 pixels = m_charmap->u16((linecount & 7) + ((charcode + (bank * 128)) << 3));
+	if(!x)
+		m_back_color = false;
 
 	//if(!linecount)
 	//	logerror("%d %d %02x %02x %02x %02x %02x %02x %02x\n", x/8, y/8, charcode, lineattr, lten, rvv, vsp, gpa, hlgt);
 
-	if(vsp)
-		pixels ^= 0xeeee; // FIXME: What is this really supposed to do?
-
 	for(i=0;i<8;i+=2)
 	{
 		UINT8 pixel = (pixels >> (i * 2)) & 0xf;
-		bitmap.pix32(y, x + i) = palette[pixel & 0xe];
-		bitmap.pix32(y, x + i + 1) = palette[(pixel & 1) ? 0 : (pixel & 0xe)];
+		UINT8 value = (pixel >> 1) | (rvv << 4) | (vsp << 3);
+		bitmap.pix32(y, x + i) = palette[value];
+		bitmap.pix32(y, x + i + 1) = palette[(pixel & 1) ? 0 : value];
+		if(m_back_color)
+			bitmap.pix32(y, x + i - 1) = palette[value];
+		m_back_color = pixel & 1;
 	}
 }
 
@@ -720,21 +730,21 @@ GFXDECODE_END
 
 PALETTE_INIT_MEMBER(dwarfd_state, dwarfd)
 {
-	int i;
+	UINT8 rgb[3];
+	int i,j;
+	UINT8 *prom = memregion("proms")->base();
 
-	for (i = 0; i < 256; i++)
+	for (i = 0; i < 32; i++)
 	{
-		int r = machine().rand()|0x80;
-		int g = machine().rand()|0x80;
-		int b = machine().rand()|0x80;
-		if (i == 0) r = g = b = 0;
+		// what are the top 2 bits?
+		rgb[0] = ((prom[i] & 0x08) >> 2) | (prom[i] & 1);
+		rgb[1] = ((prom[i] & 0x10) >> 3) | ((prom[i] & 2) >> 1);
+		rgb[2] = ((prom[i] & 0x20) >> 4) | ((prom[i] & 4) >> 2);
+		for(j = 0; j < 3; j++)
+			rgb[j] |= (rgb[j] << 6) | (rgb[j] << 4) | (rgb[j] << 2);
 
-		palette.set_pen_color(i,rgb_t(r,g,b));
+		palette.set_pen_color(i,rgb_t(rgb[0], rgb[1], rgb[2]));
 	}
-	palette.set_pen_color(8, rgb_t(255, 255, 0));
-	palette.set_pen_color(12, rgb_t(127, 127, 255));
-	palette.set_pen_color(4, rgb_t(0, 255, 0));
-	palette.set_pen_color(6, rgb_t(255, 0, 0));
 }
 
 void dwarfd_state::machine_start()
@@ -745,6 +755,7 @@ void dwarfd_state::machine_start()
 void dwarfd_state::machine_reset()
 {
 	m_crt_access = 0;
+	m_back_color = false;
 }
 
 static MACHINE_CONFIG_START( dwarfd, dwarfd_state )
@@ -770,7 +781,7 @@ static MACHINE_CONFIG_START( dwarfd, dwarfd_state )
 	MCFG_I8275_DRQ_CALLBACK(WRITELINE(dwarfd_state, drq_w))
 
 	MCFG_GFXDECODE_ADD("gfxdecode", "palette", dwarfd)
-	MCFG_PALETTE_ADD("palette", 0x100)
+	MCFG_PALETTE_ADD("palette", 32)
 	MCFG_PALETTE_INIT_OWNER(dwarfd_state, dwarfd)
 
 	MCFG_SPEAKER_STANDARD_MONO("mono")
@@ -972,6 +983,9 @@ ROM_START( qc )
 	ROM_REGION( 0x4000*2, "gfx2", 0 )
 	ROM_FILL(0,  0x4000*2, 0)
 
+	// borrowed from above and slightly edited
+	ROM_REGION( 0x40, "proms", 0 )
+	ROM_LOAD( "colors.bin",0x00, 0x20, BAD_DUMP CRC(3adeee7c) SHA1(f118ee62f84b0384316c12fc22356d43b2cfd876) )
 ROM_END
 
 DRIVER_INIT_MEMBER(dwarfd_state,dwarfd)
@@ -999,13 +1013,13 @@ DRIVER_INIT_MEMBER(dwarfd_state,dwarfd)
 	{
 		if (src[i] & 0x10)
 		{
-			src[i] = src[i] & 0xe0;
+			src[i] = (src[i] & 0xe0) >> 1;
 	//      src[i] |= ((src[(i + 1) & 0x7fff] & 0xe0) >> 4);
 
 		}
 		else
 		{
-			src[i] = src[i] & 0xe0;
+			src[i] = (src[i] & 0xe0) >> 1;
 			src[i] |= (src[i] >> 4);
 
 		}
