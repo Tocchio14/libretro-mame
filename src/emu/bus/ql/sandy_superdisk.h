@@ -16,6 +16,7 @@
 
 #include "exp.h"
 #include "bus/centronics/ctronics.h"
+#include "formats/ql_dsk.h"
 #include "machine/wd_fdc.h"
 
 
@@ -37,16 +38,31 @@ public:
 	virtual const rom_entry *device_rom_region() const;
 	virtual machine_config_constructor device_mconfig_additions() const;
 
+	WRITE_LINE_MEMBER( busy_w );
+
+	DECLARE_FLOPPY_FORMATS( floppy_formats );
+
 protected:
 	// device-level overrides
 	virtual void device_start();
 	virtual void device_reset();
 
 	// device_ql_expansion_card_interface overrides
+	virtual UINT8 read(address_space &space, offs_t offset, UINT8 data);
+	virtual void write(address_space &space, offs_t offset, UINT8 data);
 
 private:
+	void check_interrupt();
+
+	required_device<wd1772_t> m_fdc;
+	required_device<floppy_connector> m_floppy0;
+	required_device<floppy_connector> m_floppy1;
+	required_device<centronics_device> m_centronics;
+	required_device<output_latch_device> m_latch;
 	required_memory_region m_rom;
-	optional_shared_ptr<UINT8> m_ram;
+
+	int m_busy;
+	int m_fd6;
 };
 
 

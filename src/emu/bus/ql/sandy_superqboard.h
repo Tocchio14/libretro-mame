@@ -16,6 +16,7 @@
 
 #include "exp.h"
 #include "bus/centronics/ctronics.h"
+#include "formats/ql_dsk.h"
 #include "machine/wd_fdc.h"
 
 
@@ -24,7 +25,7 @@
 //  TYPE DEFINITIONS
 //**************************************************************************
 
-// ======================> sandy_superqboard_device
+// ======================> sandy_superqboard_t
 
 class sandy_superqboard_t : public device_t,
 			   				public device_ql_expansion_card_interface
@@ -32,6 +33,7 @@ class sandy_superqboard_t : public device_t,
 public:
 	// construction/destruction
 	sandy_superqboard_t(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	sandy_superqboard_t(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source, int ram_size);
 
 	// optional information overrides
 	virtual const rom_entry *device_rom_region() const;
@@ -39,14 +41,16 @@ public:
 
 	WRITE_LINE_MEMBER( busy_w );
 
+	DECLARE_FLOPPY_FORMATS( floppy_formats );
+
 protected:
 	// device-level overrides
 	virtual void device_start();
 	virtual void device_reset();
 
 	// device_ql_expansion_card_interface overrides
-    virtual UINT8 read(address_space &space, offs_t offset, UINT8 data);
-    virtual void write(address_space &space, offs_t offset, UINT8 data);
+	virtual UINT8 read(address_space &space, offs_t offset, UINT8 data);
+	virtual void write(address_space &space, offs_t offset, UINT8 data);
 
 private:
 	void check_interrupt();
@@ -59,6 +63,7 @@ private:
 	required_memory_region m_rom;
 	optional_shared_ptr<UINT8> m_ram;
 
+	int m_ram_size;
 	int m_busy;
 	int m_int2;
 	int m_int3;
@@ -67,8 +72,19 @@ private:
 };
 
 
+// ======================> sandy_superqboard_512k_t
+
+class sandy_superqboard_512k_t :  public sandy_superqboard_t
+{
+public:
+	// construction/destruction
+	sandy_superqboard_512k_t(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+};
+
+
 // device type definition
 extern const device_type SANDY_SUPERQBOARD;
+extern const device_type SANDY_SUPERQBOARD_512K;
 
 
 #endif

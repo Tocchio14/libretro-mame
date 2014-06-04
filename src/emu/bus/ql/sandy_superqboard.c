@@ -9,6 +9,14 @@
 
 **********************************************************************/
 
+/*
+
+	TODO:
+
+	- mouse
+
+*/
+
 #include "sandy_superqboard.h"
 
 
@@ -28,6 +36,7 @@
 //**************************************************************************
 
 const device_type SANDY_SUPERQBOARD = &device_creator<sandy_superqboard_t>;
+const device_type SANDY_SUPERQBOARD_512K = &device_creator<sandy_superqboard_512k_t>;
 
 
 //-------------------------------------------------
@@ -36,10 +45,16 @@ const device_type SANDY_SUPERQBOARD = &device_creator<sandy_superqboard_t>;
 
 ROM_START( sandy_superqboard )
 	ROM_REGION( 0x8000, "rom", 0 )
-	ROM_LOAD( "sandy_disk_controller_v1.18y_1984.ic2", 0x0000, 0x8000, CRC(d02425be) SHA1(e730576e3e0c6a1acad042c09e15fc62a32d8fbd) )
+	ROM_DEFAULT_BIOS("v121n")
+	ROM_SYSTEM_BIOS( 0, "v118y", "v1.18" )
+	ROMX_LOAD( "sandy_disk_controller_v1.18y_1984.ic2", 0x0000, 0x8000, CRC(d02425be) SHA1(e730576e3e0c6a1acad042c09e15fc62a32d8fbd), ROM_BIOS(1) )
+	ROM_SYSTEM_BIOS( 1, "v119", "v1.19N" )
+	ROMX_LOAD( "sandysuperqboard_119n.ic2", 0x0000, 0x8000, CRC(5df04059) SHA1(51403f82a2eed3ef689e880936d1613e2b29c218), ROM_BIOS(2) )
+	ROM_SYSTEM_BIOS( 2, "v121n", "v1.21N" )
+	ROMX_LOAD( "sandy_disk_controller_v1.21n_1984_tk2.ic2", 0x0000, 0x8000, CRC(6a7a6a12) SHA1(a3a233e4f6c8450055fa537601a2a2eef143edca), ROM_BIOS(3) )
 
 	ROM_REGION( 0x100, "plds", 0 )
-	ROM_LOAD( "gal16v8.ic5", 0x000, 0x000, NO_DUMP )
+	ROM_LOAD( "gal16v8.ic5", 0x000, 0x100, NO_DUMP )
 ROM_END
 
 
@@ -64,6 +79,15 @@ SLOT_INTERFACE_END
 
 
 //-------------------------------------------------
+//  FLOPPY_FORMATS( floppy_formats )
+//-------------------------------------------------
+
+FLOPPY_FORMATS_MEMBER( sandy_superqboard_t::floppy_formats )
+	FLOPPY_QL_FORMAT
+FLOPPY_FORMATS_END
+
+
+//-------------------------------------------------
 //  centronics
 //-------------------------------------------------
 
@@ -80,8 +104,8 @@ WRITE_LINE_MEMBER( sandy_superqboard_t::busy_w )
 
 static MACHINE_CONFIG_FRAGMENT( sandy_superqboard )
 	MCFG_DEVICE_ADD(WD1772_TAG, WD1772x, XTAL_16MHz/2)
-	MCFG_FLOPPY_DRIVE_ADD(WD1772_TAG":0", sandy_superqboard_floppies, "35hd", floppy_image_device::default_floppy_formats)
-	MCFG_FLOPPY_DRIVE_ADD(WD1772_TAG":1", sandy_superqboard_floppies, NULL, floppy_image_device::default_floppy_formats)
+	MCFG_FLOPPY_DRIVE_ADD(WD1772_TAG":0", sandy_superqboard_floppies, "35hd", sandy_superqboard_t::floppy_formats)
+	MCFG_FLOPPY_DRIVE_ADD(WD1772_TAG":1", sandy_superqboard_floppies, NULL, sandy_superqboard_t::floppy_formats)
 
 	MCFG_CENTRONICS_ADD(CENTRONICS_TAG, centronics_printers, "printer")
 	MCFG_CENTRONICS_BUSY_HANDLER(WRITELINE(sandy_superqboard_t, busy_w))
@@ -110,7 +134,7 @@ machine_config_constructor sandy_superqboard_t::device_mconfig_additions() const
 //-------------------------------------------------
 
 sandy_superqboard_t::sandy_superqboard_t(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock) :
-	device_t(mconfig, SANDY_SUPERQBOARD, "Sandy SuperQBoard", tag, owner, clock, "sandy_superqboard", __FILE__),
+	device_t(mconfig, SANDY_SUPERQBOARD, "Sandy SuperQBoard 256K", tag, owner, clock, "ql_sqboard", __FILE__),
 	device_ql_expansion_card_interface(mconfig, *this),
 	m_fdc(*this, WD1772_TAG),
 	m_floppy0(*this, WD1772_TAG":0"),
@@ -119,6 +143,7 @@ sandy_superqboard_t::sandy_superqboard_t(const machine_config &mconfig, const ch
 	m_latch(*this, TTL74273_TAG),
 	m_rom(*this, "rom"),
 	m_ram(*this, "ram"),
+	m_ram_size(256*1024),
 	m_busy(1),
 	m_int2(0),
 	m_int3(0),
@@ -127,6 +152,28 @@ sandy_superqboard_t::sandy_superqboard_t(const machine_config &mconfig, const ch
 {
 }
 
+sandy_superqboard_t::sandy_superqboard_t(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source, int ram_size) :
+	device_t(mconfig, type, name, tag, owner, clock, shortname, __FILE__),
+	device_ql_expansion_card_interface(mconfig, *this),
+	m_fdc(*this, WD1772_TAG),
+	m_floppy0(*this, WD1772_TAG":0"),
+	m_floppy1(*this, WD1772_TAG":1"),
+	m_centronics(*this, CENTRONICS_TAG),
+	m_latch(*this, TTL74273_TAG),
+	m_rom(*this, "rom"),
+	m_ram(*this, "ram"),
+	m_ram_size(ram_size),
+	m_busy(1),
+	m_int2(0),
+	m_int3(0),
+	m_fd6(0),
+	m_fd7(0)
+{
+}
+
+sandy_superqboard_512k_t::sandy_superqboard_512k_t(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+	: sandy_superqboard_t(mconfig, SANDY_SUPERQBOARD_512K, "Sandy SuperQBoard 512K", tag, owner, clock, "ql_sqboard", __FILE__, 512*1024) { }
+
 
 //-------------------------------------------------
 //  device_start - device-specific startup
@@ -134,6 +181,15 @@ sandy_superqboard_t::sandy_superqboard_t(const machine_config &mconfig, const ch
 
 void sandy_superqboard_t::device_start()
 {
+	// allocate memory
+	m_ram.allocate(m_ram_size);
+
+	// state saving
+	save_item(NAME(m_busy));
+	save_item(NAME(m_int2));
+	save_item(NAME(m_int3));
+	save_item(NAME(m_fd6));
+	save_item(NAME(m_fd7));
 }
 
 
@@ -195,9 +251,17 @@ UINT8 sandy_superqboard_t::read(address_space &space, offs_t offset, UINT8 data)
 				break;
 			}
 		}
-		else
+		else if (offset < 0xc8000)
 		{
 			data = m_rom->base()[offset & 0x7fff];
+		}
+	}
+
+	if (offset >= 0x60000 && offset < 0xc0000)
+	{
+		if ((offset - 0x60000) < m_ram_size)
+		{
+			data = m_ram[offset - 0x60000];
 		}
 	}
 
@@ -254,7 +318,7 @@ void sandy_superqboard_t::write(address_space &space, offs_t offset, UINT8 data)
 				if (floppy)
 				{
 					floppy->ss_w(BIT(data, 0));
-					floppy->mon_w(BIT(data, 3));
+					floppy->mon_w(!BIT(data, 3));
 				}
 
 				m_fdc->dden_w(BIT(data, 4));
@@ -281,6 +345,14 @@ void sandy_superqboard_t::write(address_space &space, offs_t offset, UINT8 data)
 				m_fdc->set_unscaled_clock(XTAL_16MHz >> !BIT(data, 0));
 				break;
 			}
+		}
+	}
+
+	if (offset >= 0x60000 && offset < 0xc0000)
+	{
+		if ((offset - 0x60000) < m_ram_size)
+		{
+			m_ram[offset - 0x60000] = data;
 		}
 	}
 }

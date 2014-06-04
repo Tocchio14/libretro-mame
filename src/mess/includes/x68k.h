@@ -53,12 +53,14 @@ public:
 			m_hd63450(*this, "hd63450"),
 			m_ram(*this, RAM_TAG),
 			m_gfxdecode(*this, "gfxdecode"),
-			m_palette(*this, "palette"),
+			m_gfxpalette(*this, "gfxpalette"),
+			m_pcgpalette(*this, "pcgpalette"),
 			m_mfpdev(*this, MC68901_TAG),
 			m_rtc(*this, RP5C15_TAG),
 			m_scc(*this, "scc"),
 			m_ym2151(*this, "ym2151"),
 			m_ppi(*this, "ppi8255"),
+			m_screen(*this, "screen"),
 			m_options(*this, "options"),
 			m_mouse1(*this, "mouse1"), 
 			m_mouse2(*this, "mouse2"), 
@@ -81,12 +83,14 @@ public:
 	required_device<hd63450_device> m_hd63450;
 	required_device<ram_device> m_ram;
 	required_device<gfxdecode_device> m_gfxdecode;
-	required_device<palette_device> m_palette;
+	required_device<palette_device> m_gfxpalette;
+	required_device<palette_device> m_pcgpalette;
 	required_device<mc68901_device> m_mfpdev;
 	required_device<rp5c15_device> m_rtc;
 	required_device<scc8530_t> m_scc;
 	required_device<ym2151_device> m_ym2151;
 	required_device<i8255_device> m_ppi;
+	required_device<screen_device> m_screen;
 
 	required_ioport m_options;
 	required_ioport m_mouse1;
@@ -104,6 +108,9 @@ public:
 	dynamic_array<UINT16> m_tvram;
 	dynamic_array<UINT16> m_gvram;
 	dynamic_array<UINT16> m_spritereg;
+
+	bitmap_ind16 *m_pcgbitmap;
+	bitmap_ind16 *m_gfxbitmap;
 
 	void floppy_load_unload();
 	int floppy_load(floppy_image_device *dev);
@@ -176,8 +183,6 @@ public:
 	} m_crtc;  // CRTC
 	struct
 	{   // video controller at 0xe82000
-		unsigned short text_pal[0x100];
-		unsigned short gfx_pal[0x100];
 		unsigned short reg[3];
 		int text_pri;
 		int sprite_pri;
@@ -250,7 +255,7 @@ public:
 	DECLARE_MACHINE_START(x68000);
 	DECLARE_VIDEO_START(x68000);
 	DECLARE_PALETTE_INIT(x68000);
-	UINT32 screen_update_x68000(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
+	UINT32 screen_update_x68000(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect);
 	TIMER_CALLBACK_MEMBER(x68k_led_callback);
 	TIMER_CALLBACK_MEMBER(x68k_scc_ack);
 	TIMER_CALLBACK_MEMBER(md_6button_port1_timeout);
@@ -330,20 +335,21 @@ public:
 	IRQ_CALLBACK_MEMBER(x68k_int_ack);
 
 private:
-	inline void x68k_plot_pixel(bitmap_ind16 &bitmap, int x, int y, UINT32 color);
+	inline void x68k_plot_pixel(bitmap_rgb32 &bitmap, int x, int y, UINT32 color);
 	void x68k_crtc_text_copy(int src, int dest);
 	void x68k_crtc_refresh_mode();
-	void x68k_draw_text(bitmap_ind16 &bitmap, int xscr, int yscr, rectangle rect);
-	void x68k_draw_gfx_scanline(bitmap_ind16 &bitmap, rectangle cliprect, UINT8 priority);
-	void x68k_draw_gfx(bitmap_ind16 &bitmap,rectangle cliprect);
+	void x68k_draw_text(bitmap_rgb32 &bitmap, int xscr, int yscr, rectangle rect);
+	bool x68k_draw_gfx_scanline(bitmap_ind16 &bitmap, rectangle cliprect, UINT8 priority);
+	void x68k_draw_gfx(bitmap_rgb32 &bitmap,rectangle cliprect);
 	void x68k_draw_sprites(bitmap_ind16 &bitmap, int priority, rectangle cliprect);
 
 public:
-	bitmap_ind16* x68k_get_gfx_page(int pri,int type);
+	bitmap_rgb32* x68k_get_gfx_page(int pri,int type);
 	attotime prescale(int val);
 	void mfp_trigger_irq(int irq);
 	void mfp_set_timer(int timer, unsigned char data);
 	void mfp_recv_data(int data);
+	DECLARE_PALETTE_DECODER(GGGGGRRRRRBBBBBI);
 
 protected:
 	virtual void device_timer(emu_timer &timer, device_timer_id id, int param, void *ptr);

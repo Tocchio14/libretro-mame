@@ -100,6 +100,7 @@ mspacmnf        // hack
 mspacmat        // hack
 msheartb        // hack
 mspacmanbg      // bootleg
+mspacmanbgd		// bootleg
 woodpeck        // (c) 1981 Amenip (Palcom Queen River)
 woodpeca        // (c) 1981 Amenip Nova Games Ltd.
 mspacmab        // bootleg
@@ -174,6 +175,7 @@ galap4          // hack
 galturbo        // hack
 swarm           // hack
 zerotime        // hack
+zerotimed		// hack
 starfght        // hack
 galaxbsf        // hack
 galaxianbl      // bootleg
@@ -278,6 +280,7 @@ bongo           // (c) 1983 Jetsoft
 hunchbkg        // (c) 1983 Century
 harem           // [1983] I.G.R.
 tazzmang        // bootleg
+tazzmang2       // bootleg
 racknrol        // (c) 1986 Status (Shinkia license) (Senko Kit)
 hexpool         // (c) 1986 Shinkia (Senko Kit)
 hexpoola        // (c) 1986 Shinkia (Senko Kit)
@@ -2895,6 +2898,7 @@ mysticmp        // (c) 1983 Prototype
 tshoot          // (c) 1984
 inferno         // (c) 1984
 joust2          // (c) 1986
+joust2r1        // (c) 1986
 lottofun        // (c) 1987 H.A.R. Management
 wmg             // Williams 6in1 Multigame, Clay Cowgill
 
@@ -3196,7 +3200,7 @@ slampic         // bootleg
 mbomberj        // 13/07/1993 (c) 1993 (Japan) (CPS1 + QSound)
 mbombrd         // 06/12/1993 (c) 1993 (World) (CPS1 + QSound)
 mbombrdj        // 06/12/1993 (c) 1993 (Japan) (CPS1 + QSound)
-				// 1994 Ken Sei Mogura (not listed on Capcom's site)
+kenseim			// 1994 Ken Sei Mogura (not listed on Capcom's site)
 pnickj          // 08/06/1994 (c) 1994 Compile + Capcom license (Japan) not listed on Capcom's site
 qtono2j         // 23/01/1995 (c) 1995 (Japan)
 pang3           // 01/06/1995 (c) 1995 Mitchell (Euro) not listed on Capcom's site
@@ -3209,6 +3213,7 @@ rockmanj        // 22/09/1995 (c) 1995 (Japan)
 fcrash          // bootleg of Final Fight
 ffightbl        // bootleg
 ganbare         // 11/04/2000 (c) 2000 (Japan)
+
 
 // Capcom CPS2 games
 // list completed by CPS2Shock
@@ -5866,6 +5871,7 @@ cbuster         // MAB (c) 1990 Data East Corporation (World)
 cbusterw        // MAB (c) 1990 Data East Corporation (World)
 cbusterj        // MAB (c) 1990 Data East Corporation (Japan)
 twocrude        // MAB (c) 1990 Data East USA (US)
+twocrudea		// MAB (c) 1990 Data East USA (US)
 darkseal        // MAC (c) 1990 Data East Corporation (World)
 darkseal1       // MAC (c) 1990 Data East Corporation (World)
 darksealj       // MAC (c) 1990 Data East Corporation (Japan)
@@ -6630,7 +6636,8 @@ racjamdx        // G?676 (c)1997 Japan JAA
 thrilld         // GX713 (c)1998 Japan JAE
 thrilldb        // GX713 (c)1998 Japan JAB
 thrilldae       // GX713 (c)1998 Europe EAA
-midnrun         // GX476 (c)1995
+midnrun         // GX476 (c)1995 Europe EAA
+midnruna        // GX477 (c)1995 Asia AAA
 windheat        // GX677 (c)1996 Europe EAA
 windheatu       // GX677 (c)1996 USA UBC
 windheatj       // GX677 (c)1996 Japan JAA
@@ -11067,6 +11074,7 @@ pex2018p        // (c) 1995 IGT - International Game Technology
 pex2025p        // (c) 1995 IGT - International Game Technology
 pex2026p        // (c) 1995 IGT - International Game Technology
 pex2027p        // (c) 1995 IGT - International Game Technology
+pex2029p        // (c) 1995 IGT - International Game Technology
 pex2031p        // (c) 1995 IGT - International Game Technology
 pex2035p        // (c) 1995 IGT - International Game Technology
 pex2036p        // (c) 1995 IGT - International Game Technology
@@ -11386,6 +11394,9 @@ pkrmasta        // (c) 199? unknown
 
 cb2001          // (c) 2001 Dyna Electronics
 scherrym        // (c) 2001? Dyna Electronics
+
+star100         // (c) 199? Sang Ho
+crazybon        // (c) 199? Sang Ho
 
 // STG?
 queen
@@ -12101,7 +12112,9 @@ sweetl2_2d      // bootleg
 fcockt2a        // bootleg - Fruit Cocktail 2
 fcockt2_4a      // bootleg
 fcockt2_4b      // bootleg
+fcockt2_4c      // bootleg
 fcockt2_4d      // bootleg
+fcockt2_4e      // bootleg
 fcockt2_4f      // bootleg
 
 igromult        // Multigame bootleg
@@ -30580,6 +30593,7 @@ hypbl_l4
 hypbl_l2
 jst_l2
 jst_l1
+jngld_l1
 jngld_l2
 lsrcu_l2
 pharo_l2

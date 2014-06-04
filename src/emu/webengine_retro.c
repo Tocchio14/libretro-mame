@@ -18,19 +18,6 @@
 //  WEB ENGINE
 //**************************************************************************
 
-void web_engine::websocket_ready_handler(struct mg_connection *conn) {
-}
-
-// Arguments:
-//   flags: first byte of websocket frame, see websocket RFC,
-//          http://tools.ietf.org/html/rfc6455, section 5.2
-//   data, data_len: payload data. Mask, if any, is already applied.
-int web_engine::websocket_data_handler(struct mg_connection *conn, int flags,
-									char *data, size_t data_len)
-{
-   return 0;
-}
-
 char* websanitize_statefilename ( char* unsanitized )
 {
    return unsanitized;
@@ -52,11 +39,6 @@ int web_engine::begin_request_handler(struct mg_connection *conn)
 	return 0;
 }
 
-void *web_engine::websocket_keepalive()
-{
-	return NULL;
-}
-
 //-------------------------------------------------
 //  web_engine - constructor
 //-------------------------------------------------
@@ -64,8 +46,8 @@ void *web_engine::websocket_keepalive()
 web_engine::web_engine(emu_options &options)
 	: m_options(options),
 		m_machine(NULL),
-		m_ctx(NULL),
-		m_lastupdatetime(0),
+		m_server(NULL),
+		//m_lastupdatetime(0),
 		m_exiting_core(false)
 
 {

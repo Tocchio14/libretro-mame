@@ -411,6 +411,7 @@ BUSOBJS += $(BUSOBJ)/msx_cart/ascii.o
 BUSOBJS += $(BUSOBJ)/msx_cart/cartridge.o
 BUSOBJS += $(BUSOBJ)/msx_cart/crossblaim.o
 BUSOBJS += $(BUSOBJ)/msx_cart/fmpac.o
+BUSOBJS += $(BUSOBJ)/msx_cart/hfox.o
 BUSOBJS += $(BUSOBJ)/msx_cart/konami.o
 BUSOBJS += $(BUSOBJ)/msx_cart/korean.o
 BUSOBJS += $(BUSOBJ)/msx_cart/majutsushi.o
@@ -420,6 +421,8 @@ BUSOBJS += $(BUSOBJ)/msx_cart/msxdos2.o
 BUSOBJS += $(BUSOBJ)/msx_cart/nomapper.o
 BUSOBJS += $(BUSOBJ)/msx_cart/rtype.o
 BUSOBJS += $(BUSOBJ)/msx_cart/superloderunner.o
+BUSOBJS += $(BUSOBJ)/msx_cart/super_swangi.o
+BUSOBJS += $(BUSOBJ)/msx_cart/yamaha.o
 endif
 
 
@@ -1142,7 +1145,19 @@ endif
 ifneq ($(filter QL,$(BUSES)),)
 OBJDIRS += $(BUSOBJ)/ql
 BUSOBJS += $(BUSOBJ)/ql/exp.o
+BUSOBJS += $(BUSOBJ)/ql/cst_qdisc.o
+BUSOBJS += $(BUSOBJ)/ql/cst_q_plus4.o
+BUSOBJS += $(BUSOBJ)/ql/cumana_fdi.o
+BUSOBJS += $(BUSOBJ)/ql/kempston_di.o
+BUSOBJS += $(BUSOBJ)/ql/miracle_gold_card.o
+BUSOBJS += $(BUSOBJ)/ql/mp_fdi.o
+BUSOBJS += $(BUSOBJ)/ql/opd_basic_master.o
+BUSOBJS += $(BUSOBJ)/ql/pcml_qdisk.o
+BUSOBJS += $(BUSOBJ)/ql/qubide.o
 BUSOBJS += $(BUSOBJ)/ql/sandy_superdisk.o
 BUSOBJS += $(BUSOBJ)/ql/sandy_superqboard.o
 BUSOBJS += $(BUSOBJ)/ql/trumpcard.o
+BUSOBJS += $(BUSOBJ)/ql/rom.o
+BUSOBJS += $(BUSOBJ)/ql/miracle_hd.o
+BUSOBJS += $(BUSOBJ)/ql/std.o
 endif

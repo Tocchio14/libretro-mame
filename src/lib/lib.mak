@@ -27,7 +27,9 @@ OBJDIRS += \
 	$(LIBOBJ)/web \
 	$(LIBOBJ)/web/json \
 
-
+ifdef USE_SQLITE
+OBJDIRS += $(LIBOBJ)/sqlite3
+endif
 #-------------------------------------------------
 # utility library objects
 #-------------------------------------------------
@@ -182,6 +184,7 @@ FORMATSOBJS = \
 	$(LIBOBJ)/formats/pmd_cas.o     \
 	$(LIBOBJ)/formats/primoptp.o    \
 	$(LIBOBJ)/formats/pyldin_dsk.o  \
+	$(LIBOBJ)/formats/ql_dsk.o      \
 	$(LIBOBJ)/formats/rk_cas.o      \
 	$(LIBOBJ)/formats/sc3000_bit.o  \
 	$(LIBOBJ)/formats/sf7000_dsk.o  \
@@ -527,8 +530,23 @@ $(LIBOBJ)/lua/%.o: $(LIBSRC)/lua/%.c | $(OSPREBUILD)
 #	$(LIBOBJ)/web/json/json_value.o \
 #	$(LIBOBJ)/web/json/json_writer.o \
 
-#$(OBJ)/libweb.a: $(WEBOBJS)
-#
 #$(LIBOBJ)/web/%.o: $(LIBSRC)/web/%.cpp | $(OSPREBUILD)
-#	@echo Compiling $<...
-#	$(CC) $(CDEFS) $(CFLAGS) -I$(LIBSRC)/web -c $< -o $@
+	#@echo Compiling $<...
+	#$(CC) $(CDEFS) $(CFLAGS) -I$(LIBSRC)/web -c $< -o $@
+
+#$(LIBOBJ)/web/%.o: $(LIBSRC)/web/%.c | $(OSPREBUILD)
+	#@echo Compiling $<...
+	#$(CC) $(CDEFS) $(CFLAGS) -I$(LIBSRC)/web -DNS_STACK_SIZE=0 -c $< -o $@
+
+#-------------------------------------------------
+# SQLite3 library objects
+#-------------------------------------------------
+
+#SQLITEOBJS = \
+	$(LIBOBJ)/sqlite3/sqlite3.o \
+
+#$(OBJ)/libsqlite3.a: $(SQLITEOBJS)
+
+#$(LIBOBJ)/sqlite3/sqlite3.o: $(LIBSRC)/sqlite3/sqlite3.c | $(OSPREBUILD)
+	#@echo Compiling $<...
+	#$(CC) $(CDEFS) $(CONLYFLAGS) -Wno-bad-function-cast -I$(LIBSRC)/sqlite3 -c $< -o $@

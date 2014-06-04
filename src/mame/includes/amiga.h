@@ -357,10 +357,15 @@ public:
 	m_chip_ram_mirror(0),
 	m_cia_0_irq(0),
 	m_cia_1_irq(0),
+	m_pot0x(0), m_pot1x(0), m_pot0y(0), m_pot1y(0),
+	m_pot0dat(0x0000),
+	m_pot1dat(0x0000),
 	m_centronics_busy(0),
 	m_centronics_perror(0),
 	m_centronics_select(0),
 	m_gayle_reset(false),
+	m_diw(),
+	m_diwhigh_valid(false),
 	m_previous_lof(true),
 	m_rx_shift(0),
 	m_tx_shift(0),
@@ -611,6 +616,12 @@ private:
 		SERPER_LONG = 0x8000	// 9-bit mode
 	};
 
+	// pot counters
+	int m_pot0x, m_pot1x, m_pot0y, m_pot1y;
+
+	UINT16 m_pot0dat;
+	UINT16 m_pot1dat;
+
 	int m_centronics_busy;
 	int m_centronics_perror;
 	int m_centronics_select;
@@ -619,6 +630,11 @@ private:
 	emu_timer *m_serial_timer;
 
 	bool m_gayle_reset;
+
+	// display window
+	rectangle m_diw;
+	bool m_diwhigh_valid;
+	void update_display_window();
 
 	bool m_previous_lof;
 	bitmap_ind16 m_flickerfixer;
@@ -667,6 +683,5 @@ MACHINE_CONFIG_EXTERN( ntsc_video );
 /*----------- defined in video/amigaaga.c -----------*/
 
 void amiga_aga_palette_write(running_machine &machine, int color_reg, UINT16 data);
-void amiga_aga_diwhigh_written(running_machine &machine, int written);
 
 #endif /* __AMIGA_H__ */

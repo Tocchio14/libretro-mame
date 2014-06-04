@@ -4,6 +4,7 @@
 #include "ascii.h"
 #include "crossblaim.h"
 #include "fmpac.h"
+#include "hfox.h"
 #include "konami.h"
 #include "korean.h"
 #include "majutsushi.h"
@@ -12,6 +13,8 @@
 #include "nomapper.h"
 #include "rtype.h"
 #include "superloderunner.h"
+#include "super_swangi.h"
+#include "yamaha.h"
 
 
 SLOT_INTERFACE_START(msx_cart)
@@ -39,17 +42,26 @@ SLOT_INTERFACE_START(msx_cart)
 	SLOT_INTERFACE_INTERNAL("msxaud_hxmu900", MSX_CART_MSX_AUDIO_HXMU900)
 	SLOT_INTERFACE_INTERNAL("msxaud_fsca1", MSX_CART_MSX_AUDIO_FSCA1)
 	SLOT_INTERFACE_INTERNAL("msxaud_nms1205", MSX_CART_MSX_AUDIO_NMS1205)
+	SLOT_INTERFACE_INTERNAL("super_swangi", MSX_CART_SUPER_SWANGI)
+	SLOT_INTERFACE_INTERNAL("hfox", MSX_CART_HFOX)
+	SLOT_INTERFACE_INTERNAL("keyboard_master", MSX_CART_KEYBOARD_MASTER)
 SLOT_INTERFACE_END
 
 
 msx_cart_interface::msx_cart_interface(const machine_config &mconfig, device_t &device)
 	: device_slot_card_interface(mconfig, device)
+	, m_out_irq_cb(*this)
 {
 }
 
 void msx_cart_interface::rom_alloc(UINT32 size)
 {
 	m_rom.resize(size);
+}
+
+void msx_cart_interface::rom_vlm5030_alloc(UINT32 size)
+{
+	m_rom_vlm5030.resize(size);
 }
 
 void msx_cart_interface::ram_alloc(UINT32 size)
@@ -61,3 +73,12 @@ void msx_cart_interface::sram_alloc(UINT32 size)
 {
 	m_sram.resize(size);
 }
+
+
+// Several yamaha machines had 60 pin expansion slots. The pinouts of these slots was
+// exactly the same as the regular 50 pin cartridge slots. The lowest 10 pins are simply
+// not connected.
+SLOT_INTERFACE_START(msx_yamaha_60pin)
+	SLOT_INTERFACE("sfg01", MSX_CART_SFG01)
+SLOT_INTERFACE_END
+

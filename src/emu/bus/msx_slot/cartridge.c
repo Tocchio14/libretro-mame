@@ -28,6 +28,7 @@ enum
 
 
 const device_type MSX_SLOT_CARTRIDGE = &device_creator<msx_slot_cartridge_device>;
+const device_type MSX_SLOT_YAMAHA_EXPANSION = &device_creator<msx_slot_yamaha_expansion_device>;
 
 
 msx_slot_cartridge_device::msx_slot_cartridge_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
@@ -35,6 +36,19 @@ msx_slot_cartridge_device::msx_slot_cartridge_device(const machine_config &mconf
 	, device_image_interface(mconfig, *this)
 	, device_slot_interface(mconfig, *this)
 	, msx_internal_slot_interface()
+	, m_irq_handler(*this)
+	, m_cartridge(NULL)
+{
+}
+
+
+msx_slot_cartridge_device::msx_slot_cartridge_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
+	: device_t(mconfig, type, name, tag, owner, clock, shortname, source)
+	, device_image_interface(mconfig, *this)
+	, device_slot_interface(mconfig, *this)
+	, msx_internal_slot_interface()
+	, m_irq_handler(*this)
+	, m_cartridge(NULL)
 {
 }
 
@@ -81,6 +95,7 @@ static const char *msx_cart_get_slot_option(int type)
 
 void msx_slot_cartridge_device::device_start()
 {
+	m_irq_handler.resolve_safe();
 	m_cartridge = dynamic_cast<msx_cart_interface *>(get_card_device());
 }
 
@@ -91,12 +106,25 @@ bool msx_slot_cartridge_device::call_load()
 	{
 		if ( software_entry() )
 		{
-			// Allocate and copy rom contents
-			UINT32 length = get_software_region_length("rom");
+			UINT32 length;
 
+			// Allocate and copy rom contents
+			length = get_software_region_length("rom");
 			m_cartridge->rom_alloc( length );
-			UINT8 *rom_base = m_cartridge->get_rom_base();
-			memcpy(rom_base, get_software_region("rom"), length);
+			if (length > 0)
+			{
+				UINT8 *rom_base = m_cartridge->get_rom_base();
+				memcpy(rom_base, get_software_region("rom"), length);
+			}
+
+			// Allocate and copy vlm5030 rom contents
+			length = get_software_region_length("vlm5030");
+			m_cartridge->rom_vlm5030_alloc(length);
+			if (length > 0)
+			{
+				UINT8 *rom_base = m_cartridge->get_rom_vlm5030_base();
+				memcpy(rom_base, get_software_region("vlm5030"), length);
+			}
 
 			// Allocate ram
 			length = get_software_region_length("ram");
@@ -133,6 +161,7 @@ bool msx_slot_cartridge_device::call_load()
 			}
 		}
 
+		m_cartridge->set_out_irq_cb(DEVCB_WRITELINE(msx_slot_cartridge_device, irq_out));
 		m_cartridge->initialize_cartridge();
 
 		if (m_cartridge->get_sram_size() > 0)
@@ -160,6 +189,12 @@ bool msx_slot_cartridge_device::call_softlist_load(software_list_device &swlist,
 {
 	load_software_part_region(*this, swlist, swname, start_entry);
 	return true;
+}
+
+
+WRITE_LINE_MEMBER(msx_slot_cartridge_device::irq_out)
+{
+	m_irq_handler(state);
 }
 
 
@@ -314,4 +349,24 @@ WRITE8_MEMBER(msx_slot_cartridge_device::write)
 		m_cartridge->write_cart(space, offset, data);
 	}
 }
+
+
+
+
+msx_slot_yamaha_expansion_device::msx_slot_yamaha_expansion_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+    : msx_slot_cartridge_device(mconfig, MSX_SLOT_YAMAHA_EXPANSION, "MSX Yamaha Expansion slot", tag, owner, clock, "msx_slot_yamaha_expansion", __FILE__)
+{
+}
+
+
+void msx_slot_yamaha_expansion_device::device_start()
+{
+	m_irq_handler.resolve_safe();
+	m_cartridge = dynamic_cast<msx_cart_interface *>(get_card_device());
+	if (m_cartridge)
+	{
+		m_cartridge->set_out_irq_cb(DEVCB_WRITELINE(msx_slot_cartridge_device, irq_out));
+	}
+}
+
 

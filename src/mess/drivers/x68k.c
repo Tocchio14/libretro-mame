@@ -101,13 +101,13 @@
       Keyboard doesn't work properly (MFP USART).
       Supervisor area set isn't implemented.
 
-    Some minor game-specific issues (at 28/12/08):
-      Pacmania:      Black squares on the maze (transparency?).
+    Some minor game-specific issues:
       Salamander:    System error when using keys in-game.  No error if a joystick is used.
                      Some text is drawn incorrectly.
       Dragon Buster: Text is black and unreadable. (Text layer actually covers it)
       Tetris:        Black dots over screen (text layer).
       Parodius Da!:  Black squares in areas.
+      Akumajo Drac:  no sfx starting on second stage (m68000 only, 030 is fine), simon sprite flickers
 
 
     More detailed documentation at http://x68kdev.emuvibes.com/iomap.html - if you can stand broken english :)
@@ -857,7 +857,7 @@ WRITE16_MEMBER(x68k_state::x68k_sysport_w)
 		m_sysport.keyctrl = data & 0x08;  // bit 3 = enable keyboard data transmission
 		break;
 	case 0x06:
-		m_sysport.sram_writeprotect = data;
+		COMBINE_DATA(&m_sysport.sram_writeprotect);
 		break;
 	default:
 //      logerror("SYS: [%08x] Wrote %04x to invalid or unimplemented system port %04x\n",space.device().safe_pc(),data,offset);
@@ -916,29 +916,12 @@ READ16_MEMBER(x68k_state::x68k_sram_r)
 
 WRITE16_MEMBER(x68k_state::x68k_vid_w)
 {
-	int val;
-	if(offset < 0x100)  // Graphic layer palette
-	{
-		COMBINE_DATA(m_video.gfx_pal+offset);
-		val = m_video.gfx_pal[offset];
-		m_palette->set_pen_color(offset,(val & 0x07c0) >> 3,(val & 0xf800) >> 8,(val & 0x003e) << 2);
-		return;
-	}
-
-	if(offset >= 0x100 && offset < 0x200)  // Text / Sprites / Tilemap palette
-	{
-		COMBINE_DATA(m_video.text_pal+(offset-0x100));
-		val = m_video.text_pal[offset-0x100];
-		m_palette->set_pen_color(offset,(val & 0x07c0) >> 3,(val & 0xf800) >> 8,(val & 0x003e) << 2);
-		return;
-	}
-
 	switch(offset)
 	{
-	case 0x200:
+	case 0x000:
 		COMBINE_DATA(m_video.reg);
 		break;
-	case 0x280:  // priority levels
+	case 0x080:  // priority levels
 		COMBINE_DATA(m_video.reg+1);
 		if(ACCESSING_BITS_0_7)
 		{
@@ -960,7 +943,7 @@ WRITE16_MEMBER(x68k_state::x68k_vid_w)
 				m_video.sprite_pri--;
 		}
 		break;
-	case 0x300:
+	case 0x100:
 		COMBINE_DATA(m_video.reg+2);
 		break;
 	default:
@@ -970,19 +953,13 @@ WRITE16_MEMBER(x68k_state::x68k_vid_w)
 
 READ16_MEMBER(x68k_state::x68k_vid_r)
 {
-	if(offset < 0x100)
-		return m_video.gfx_pal[offset];
-
-	if(offset >= 0x100 && offset < 0x200)
-		return m_video.text_pal[offset-0x100];
-
 	switch(offset)
 	{
-	case 0x200:
+	case 0x000:
 		return m_video.reg[0];
-	case 0x280:
+	case 0x080:
 		return m_video.reg[1];
-	case 0x300:
+	case 0x100:
 		return m_video.reg[2];
 	default:
 		logerror("VC: Invalid video controller read (offset = 0x%04x)\n",offset);
@@ -1195,7 +1172,9 @@ static ADDRESS_MAP_START(x68k_map, AS_PROGRAM, 16, x68k_state )
 	AM_RANGE(0xc00000, 0xdfffff) AM_READWRITE(x68k_gvram_r, x68k_gvram_w)
 	AM_RANGE(0xe00000, 0xe7ffff) AM_READWRITE(x68k_tvram_r, x68k_tvram_w)
 	AM_RANGE(0xe80000, 0xe81fff) AM_READWRITE(x68k_crtc_r, x68k_crtc_w)
-	AM_RANGE(0xe82000, 0xe83fff) AM_READWRITE(x68k_vid_r, x68k_vid_w)
+	AM_RANGE(0xe82000, 0xe821ff) AM_DEVREADWRITE("gfxpalette", palette_device, read, write) AM_SHARE("gfxpalette")
+	AM_RANGE(0xe82200, 0xe823ff) AM_DEVREADWRITE("pcgpalette", palette_device, read, write) AM_SHARE("pcgpalette")
+	AM_RANGE(0xe82400, 0xe83fff) AM_READWRITE(x68k_vid_r, x68k_vid_w)
 	AM_RANGE(0xe84000, 0xe85fff) AM_DEVREADWRITE("hd63450", hd63450_device, read, write)
 	AM_RANGE(0xe86000, 0xe87fff) AM_READWRITE(x68k_areaset_r, x68k_areaset_w)
 	AM_RANGE(0xe88000, 0xe89fff) AM_DEVREADWRITE8(MC68901_TAG, mc68901_device, read, write, 0x00ff)
@@ -1230,7 +1209,9 @@ static ADDRESS_MAP_START(x68kxvi_map, AS_PROGRAM, 16, x68k_state )
 	AM_RANGE(0xc00000, 0xdfffff) AM_READWRITE(x68k_gvram_r, x68k_gvram_w)
 	AM_RANGE(0xe00000, 0xe7ffff) AM_READWRITE(x68k_tvram_r, x68k_tvram_w)
 	AM_RANGE(0xe80000, 0xe81fff) AM_READWRITE(x68k_crtc_r, x68k_crtc_w)
-	AM_RANGE(0xe82000, 0xe83fff) AM_READWRITE(x68k_vid_r, x68k_vid_w)
+	AM_RANGE(0xe82000, 0xe821ff) AM_DEVREADWRITE("gfxpalette", palette_device, read, write) AM_SHARE("gfxpalette")
+	AM_RANGE(0xe82200, 0xe823ff) AM_DEVREADWRITE("pcgpalette", palette_device, read, write) AM_SHARE("pcgpalette")
+	AM_RANGE(0xe82400, 0xe83fff) AM_READWRITE(x68k_vid_r, x68k_vid_w)
 	AM_RANGE(0xe84000, 0xe85fff) AM_DEVREADWRITE("hd63450", hd63450_device, read, write)
 	AM_RANGE(0xe86000, 0xe87fff) AM_READWRITE(x68k_areaset_r, x68k_areaset_w)
 	AM_RANGE(0xe88000, 0xe89fff) AM_DEVREADWRITE8(MC68901_TAG, mc68901_device, read, write, 0x00ff)
@@ -1267,7 +1248,9 @@ static ADDRESS_MAP_START(x68030_map, AS_PROGRAM, 32, x68k_state )
 	AM_RANGE(0xc00000, 0xdfffff) AM_READWRITE16(x68k_gvram_r, x68k_gvram_w, 0xffffffff)
 	AM_RANGE(0xe00000, 0xe7ffff) AM_READWRITE16(x68k_tvram_r, x68k_tvram_w, 0xffffffff)
 	AM_RANGE(0xe80000, 0xe81fff) AM_READWRITE16(x68k_crtc_r, x68k_crtc_w,0xffffffff)
-	AM_RANGE(0xe82000, 0xe83fff) AM_READWRITE16(x68k_vid_r, x68k_vid_w,0xffffffff)
+	AM_RANGE(0xe82000, 0xe821ff) AM_DEVREADWRITE("gfxpalette", palette_device, read, write) AM_SHARE("gfxpalette")
+	AM_RANGE(0xe82200, 0xe823ff) AM_DEVREADWRITE("pcgpalette", palette_device, read, write) AM_SHARE("pcgpalette")
+	AM_RANGE(0xe82400, 0xe83fff) AM_READWRITE16(x68k_vid_r, x68k_vid_w,0xffffffff)
 	AM_RANGE(0xe84000, 0xe85fff) AM_DEVREADWRITE16("hd63450", hd63450_device, read, write, 0xffffffff)
 	AM_RANGE(0xe86000, 0xe87fff) AM_READWRITE16(x68k_areaset_r, x68k_areaset_w,0xffffffff)
 	AM_RANGE(0xe88000, 0xe89fff) AM_DEVREADWRITE8(MC68901_TAG, mc68901_device, read, write, 0x00ff00ff)
@@ -1551,11 +1534,11 @@ MACHINE_RESET_MEMBER(x68k_state,x68000)
 
 	// start VBlank timer
 	m_crtc.vblank = 1;
-	irq_time = machine().first_screen()->time_until_pos(m_crtc.reg[6],2);
+	irq_time = m_screen->time_until_pos(m_crtc.reg[6],2);
 	m_vblank_irq->adjust(irq_time);
 
 	// start HBlank timer
-	m_scanline_timer->adjust(machine().first_screen()->scan_period(), 1);
+	m_scanline_timer->adjust(m_screen->scan_period(), 1);
 
 	/// TODO: get callbacks to trigger these
 	m_mfpdev->i0_w(1); // alarm
@@ -1649,6 +1632,10 @@ DRIVER_INIT_MEMBER(x68k_state,x68000)
 
 	m_sysport.cputype = 0xff;  // 68000, 10MHz
 	m_is_32bit = false;
+
+	save_item(NAME(m_tvram));
+	save_item(NAME(m_gvram));
+	save_item(NAME(m_spritereg));
 }
 
 DRIVER_INIT_MEMBER(x68k_state,x68kxvi)
@@ -1724,17 +1711,16 @@ static MACHINE_CONFIG_START( x68000, x68k_state )
 	/* video hardware */
 	MCFG_SCREEN_ADD("screen", RASTER)
 	MCFG_SCREEN_REFRESH_RATE(55.45)
-	MCFG_SCREEN_VBLANK_TIME(ATTOSECONDS_IN_USEC(2500)) /* not accurate */
-//  MCFG_GFXDECODE_ADD("gfxdecode", "palette", x68k)
 	MCFG_SCREEN_SIZE(1096, 568)  // inital setting
 	MCFG_SCREEN_VISIBLE_AREA(0, 767, 0, 511)
 	MCFG_SCREEN_UPDATE_DRIVER(x68k_state, screen_update_x68000)
-	MCFG_SCREEN_PALETTE("palette")
 
-	MCFG_GFXDECODE_ADD("gfxdecode", "palette", empty)
+	MCFG_GFXDECODE_ADD("gfxdecode", "pcgpalette", empty)
 
-	MCFG_PALETTE_ADD("palette", 65536)
-	MCFG_PALETTE_INIT_OWNER(x68k_state, x68000 )
+	MCFG_PALETTE_ADD("gfxpalette", 256)
+	MCFG_PALETTE_FORMAT_CLASS(2, x68k_state, GGGGGRRRRRBBBBBI)
+	MCFG_PALETTE_ADD("pcgpalette", 256)
+	MCFG_PALETTE_FORMAT_CLASS(2, x68k_state, GGGGGRRRRRBBBBBI)
 
 	MCFG_VIDEO_START_OVERRIDE(x68k_state, x68000 )
 

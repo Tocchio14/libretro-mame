@@ -1379,7 +1379,7 @@ public:
 		m_generic_paletteram_32(*this, "paletteram")
 	{ }
 
-	required_device<cpu_device> m_maincpu;
+	required_device<mips3_device> m_maincpu;
 	required_device<h83002_device> m_subcpu;
 	required_device<h8_adc_device> m_adc;
 	optional_device<h83334_device> m_iocpu;
@@ -3222,7 +3222,7 @@ void namcos23_state::machine_start()
 	m_c361.timer = machine().scheduler().timer_alloc(timer_expired_delegate(FUNC(namcos23_state::c361_timer_cb),this));
 	m_c361.timer->adjust(attotime::never);
 
-	mips3drc_add_fastram(m_maincpu, 0, m_mainram.bytes()-1, FALSE, reinterpret_cast<UINT32 *>(memshare("mainram")->ptr()));
+	m_maincpu->mips3drc_add_fastram(0, m_mainram.bytes()-1, FALSE, reinterpret_cast<UINT32 *>(memshare("mainram")->ptr()));
 }
 
 
@@ -3315,19 +3315,12 @@ static GFXDECODE_START( namcos23 )
 GFXDECODE_END
 
 
-static const mips3_config r4650_config =
-{
-	8192,               /* code cache size - VERIFIED */
-	8192                /* data cache size - VERIFIED */
-};
-
-
-
 static MACHINE_CONFIG_START( gorgon, namcos23_state )
 
 	/* basic machine hardware */
 	MCFG_CPU_ADD("maincpu", R4650BE, BUSCLOCK*4)
-	MCFG_CPU_CONFIG(r4650_config)
+	MCFG_MIPS3_ICACHE_SIZE(8192)   // VERIFIED
+	MCFG_MIPS3_DCACHE_SIZE(8192)   // VERIFIED
 	MCFG_CPU_PROGRAM_MAP(gorgon_map)
 	MCFG_CPU_VBLANK_INT_DRIVER("screen", namcos23_state, interrupt)
 
@@ -3395,7 +3388,8 @@ static MACHINE_CONFIG_START( s23, namcos23_state )
 
 	/* basic machine hardware */
 	MCFG_CPU_ADD("maincpu", R4650BE, BUSCLOCK*4)
-	MCFG_CPU_CONFIG(r4650_config)
+	MCFG_MIPS3_ICACHE_SIZE(8192)   // VERIFIED
+	MCFG_MIPS3_DCACHE_SIZE(8192)   // VERIFIED
 	MCFG_CPU_PROGRAM_MAP(s23_map)
 	MCFG_CPU_VBLANK_INT_DRIVER("screen", namcos23_state, interrupt)
 
@@ -3483,7 +3477,8 @@ static MACHINE_CONFIG_START( ss23, namcos23_state )
 
 	/* basic machine hardware */
 	MCFG_CPU_ADD("maincpu", R4650BE, BUSCLOCK*5)
-	MCFG_CPU_CONFIG(r4650_config)
+	MCFG_MIPS3_ICACHE_SIZE(8192)   // VERIFIED
+	MCFG_MIPS3_DCACHE_SIZE(8192)   // VERIFIED
 	MCFG_CPU_PROGRAM_MAP(s23_map)
 	MCFG_CPU_VBLANK_INT_DRIVER("screen", namcos23_state, interrupt)
 
@@ -4756,7 +4751,7 @@ ROM_END
 
 ROM_START( crszonev3b2 )
 	ROM_REGION32_BE( 0x800000, "user1", 0 ) /* 4 megs for main R4650 code */
-	ROM_LOAD16_WORD_SWAP( "cszo3verb.ic4", 0x400000, 0x400000, CRC(3755b402) SHA1(e169fded9d136af7ce6997868629eed5196b8cdd) )
+	ROM_LOAD16_WORD_SWAP( "cszo3verb(__crszonev3b2).ic4", 0x400000, 0x400000, CRC(3755b402) SHA1(e169fded9d136af7ce6997868629eed5196b8cdd) )  // cszo3verb.ic4
 	ROM_CONTINUE( 0x000000, 0x400000 )
 
 	ROM_REGION( 0x80000, "subcpu", 0 )  /* Hitachi H8/3002 MCU code */
