@@ -15242,18 +15242,17 @@ legacy FM implementations cannot find it.
 		</part>
 	</software>
 
-<!-- FIXME: proper HOLYQURAN mapper needs to be implemented! -->
-	<software name="quran" supported="no">
+	<software name="quran">
 		<description>The Holy Quran</description>
 		<year>1987</year>
 		<publisher>Al Alamiah</publisher>
 		<info name="serial" value="R052" />
 		<info name="usage" value="Requires an Arabic MSX" />
 		<part name="cart" interface="msx_cart">
-			<feature name="slot" value="ascii16" />
-			<feature name="mapper" value="M60002-0125SP-16" />  <!-- WRONG MAPPER (but in this way no crash of the emulator) -->
+			<feature name="slot" value="holy_quran" />
 			<dataarea name="rom" size="1048576">
-				<rom name="holyquran.rom" size="1048576" crc="83f28ad3" sha1="0dbc7defd96b71c1fe2d63cbc725f5e58aea2db0" offset="0x0000" />
+				<!-- there are 2 ROMs on the cartridge -->
+				<rom name="holyquran.rom" size="1048576" crc="3b003e5c" sha1="7d439080b43d94385fd4c426d4f6fee884bc2926" status="baddump" offset="0x0000" />
 			</dataarea>
 		</part>
 	</software>
@@ -17087,7 +17086,7 @@ legacy FM implementations cannot find it.
 	<!-- Devices -->
 
 	<!-- mounting this should add the floppy drive, rather than it always being there? -->
-	<software name="diskbas">
+	<software name="diskbas" supported="no">
 	<description>Disk BASIC v1.0 for FS-FD1 (Japan)</description>
 	<year>1987</year>
 	<publisher>Matsushita</publisher>
@@ -17102,6 +17101,17 @@ legacy FM implementations cannot find it.
 
 	<!-- SORT -->
 
+	<software name="dooly">
+		<description>Baby Dinosaur Dooly</description>
+		<year>1991</year>
+		<publisher>Daou</publisher>
+		<part name="cart" interface="msx_cart">
+			<feature name="slot" value="dooly" />
+			<dataarea name="rom" size="32768">
+				<rom name="dooly.rom" size="32768" crc="71a1b1ec" sha1="dbac346f03950fbef81a003b4a42b2898a4e54c1" offset="0" />
+			</dataarea>
+		</part>
+	</software>
 
 
 </softwarelist>
