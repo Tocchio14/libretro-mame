@@ -303,12 +303,17 @@ UINT32 ui_manager::set_handler(ui_callback callback, UINT32 param)
 //  various startup screens
 //-------------------------------------------------
 
+#ifdef __LIBRETRO__
+extern bool hide_nagscreen;
+extern bool hide_warnings;
+#endif
+
 void ui_manager::display_startup_screens(bool first_time, bool show_disclaimer)
 {
 	const int maxstate = 3;
 	int str = machine().options().seconds_to_run();
 	bool show_gameinfo = !machine().options().skip_gameinfo();
-	bool show_warnings = true;
+	bool show_warnings = true;	
 	int state;
 
 	// disable everything if we are using -str for 300 or fewer seconds, or if we're the empty driver,
@@ -320,7 +325,17 @@ void ui_manager::display_startup_screens(bool first_time, bool show_disclaimer)
 	// also disable for the JavaScript port since the startup screens do not run asynchronously
 	show_gameinfo = show_warnings = show_disclaimer = FALSE;
 	#endif
+	
+	#ifdef __LIBRETRO__
+		if(hide_nagscreen)
+			show_disclaimer = FALSE;
+		if(hide_warnings)
+			show_warnings = FALSE;
+	#endif
+	
 
+	
+	
 	// loop over states
 	set_handler(handler_ingame, 0);
 	for (state = 0; state < maxstate && !machine().scheduled_event_pending() && !ui_menu::stack_has_special_main_menu(); state++)

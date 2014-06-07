@@ -73,16 +73,25 @@ static int ui_ipt_pushchar=-1;
 
 static int mame_reset = -1;
 
+// remove this after fixing retroexec.c
+static bool commandline_enabled=false;
+
 // cores options
-bool nagscreenpatch_enable = false;
+bool hide_nagscreen = false;
+bool hide_warnings = false;
+
+static bool hide_gameinfo = false;
 static bool mouse_enable = false;
-static bool videoapproach1_enable = false;
-static bool softlist_enabled;
-static bool softlist_auto;
-static bool boot_to_bios_enabled;
-static bool boot_to_osd_enabled;
-static bool commandline_enabled;
-static bool experimental_cmdline;
+static bool cheats_enable = false;
+static bool alternate_renderer = false;
+static bool boot_to_osd_enabled = false;
+static bool boot_to_bios_enabled = false;
+static bool experimental_cmdline = false;
+static bool softlist_enabled = false;
+static bool softlist_auto = false;
+
+
+
 
 // emu flags
 static int tate = 0;
@@ -369,13 +378,23 @@ void Set_Default_Option(){
 	//some hardcoded default Options
 
 	Add_Option(core);
+	Add_Option("-nothrottle");
 	Add_Option("-joystick");
 	Add_Option("-samplerate");
 	Add_Option("48000");
-	Add_Option("-sound");
-	Add_Option("-cheat");
-	Add_Option("-nothrottle");
-
+	Add_Option("-sound");		
+	if(cheats_enable)
+	   Add_Option("-cheat");
+	else
+	   Add_Option("-nocheat");
+	if(mouse_enable)
+	   Add_Option("-mouse");
+	else
+	   Add_Option("-nomouse");
+	if(hide_gameinfo)
+	   Add_Option("-skip_gameinfo");
+	else
+	   Add_Option("-noskip_gameinfo");
 }
 
 void Set_Path_Option(){

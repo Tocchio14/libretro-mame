@@ -113,7 +113,7 @@ void retro_osd_interface::update(bool skip_redraw)
       // get the minimum width/height for the current layout
       int minwidth, minheight;
 
-	if(videoapproach1_enable==false){	     
+	if(alternate_renderer==false){	     
 		our_target->compute_minimum_size(minwidth, minheight);
 	}
 	else{
@@ -148,7 +148,7 @@ void retro_osd_interface::update(bool skip_redraw)
          topw=minwidth;
       }
 
-      if(videoapproach1_enable){
+      if(alternate_renderer){
 		rtwi=topw=1600;
 		rthe=1200;
       }

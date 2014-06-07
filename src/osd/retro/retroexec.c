@@ -88,14 +88,10 @@ int executeGame(char* path) {
 	if (tate) {
 		if (screenRot == 3) {
 			Add_Option((char*) "-rol");
-		} else {
-			Add_Option((char*)(screenRot ? "-mouse" : "-ror"));
 		}
 	} else {
 		if (screenRot == 2) {
 			Add_Option((char*)"-rol");
-		} else {
-			Add_Option((char*)(screenRot ? "-ror" : "-mouse"));
 		}
 	}
 

@@ -5,6 +5,19 @@ static float rtaspect=0;
 static int max_width=0;
 static int max_height=0;
 
+static char option_mouse[50];     
+static char option_cheats[50];
+static char option_nag[50];
+static char option_info[50];
+static char option_renderer[50];
+static char option_warnings[50];
+static char option_osd[50];
+static char option_cli[50];
+static char option_bios[50];
+static char option_softlist[50];
+static char option_softlist_media[50];
+static char option_media[50];
+
 int SHIFTON=-1,NEWGAME_FROM_OSD=0;
 char RPATH[512];
 
@@ -42,23 +55,41 @@ void retro_set_audio_sample(retro_audio_sample_t cb) { }
 
 void retro_set_environment(retro_environment_t cb)
 {
+
+ 
+   sprintf(option_mouse,"%s_%s",core,"mouse_enable");
+   sprintf(option_cheats,"%s_%s",core,"cheats_enable");
+   sprintf(option_nag,"%s_%s",core,"hide_nagscreen");
+   sprintf(option_info,"%s_%s",core,"hide_infoscreen");
+   sprintf(option_warnings,"%s_%s",core,"hide_warnings");
+   sprintf(option_renderer,"%s_%s",core,"alternate_renderer");
+   sprintf(option_osd,"%s_%s",core,"boot_to_osd");
+   sprintf(option_bios,"%s_%s",core,"boot_to_bios");
+   sprintf(option_cli,"%s_%s",core,"boot_from_cli");
+   sprintf(option_softlist,"%s_%s",core,"softlists_enable");
+   sprintf(option_softlist_media,"%s_%s",core,"softlists_auto_media");
+   sprintf(option_media,"%s_%s",core,"media_type");
+   
+     
    static const struct retro_variable vars[] = {
 	
 	//common for MAME/MESS/UME
-	{ "core_current_mouse_enable", "Enable mouse; disabled|enabled" },
-	{ "core_current_nagscreenpatch_enable", "Enable nagscreen patch; disabled|enabled" },      
-	{ "core_current_videoapproach1_enable", "Enable video approach 1; disabled|enabled" },
+	{ option_mouse, "Enable in-game mouse; disabled|enabled" },
+	{ option_cheats, "Enable cheats; disabled|enabled" },
+	{ option_nag, "Hide nag screen; disabled|enabled" },
+	{ option_info, "Hide gameinfo screen; disabled|enabled" },
+	{ option_warnings, "Hide warnings screen; disabled|enabled" },
+	{ option_renderer, "Alternate render method; disabled|enabled" },
 
 	// ONLY FOR MESS/UME
 #if !defined(WANT_MAME)
-    { "core_softlist_enable", "Enable softlists; enabled|disabled" },
-	{ "core_softlist_auto", "Softlist automatic media type; enabled|disabled" },
-	{ "core_media_type", "Media type; cart|flop|cdrm|cass|hard|serl|prin" },   	  
-	{ "core_boot_bios", "Boot to BIOS; disabled|enabled" },
-	{ "core_commandline", "Boot from CLI; disabled|enabled" },
+    { option_softlist, "Enable softlists; enabled|disabled" },
+	{ option_softlist_media, "Softlist automatic media type; enabled|disabled" },
+	{ option_media, "Media type; cart|flop|cdrm|cass|hard|serl|prin" },   	  	
+	{ option_bios, "Boot to BIOS; disabled|enabled" },
 #endif
-	{ "core_boot_osd", "Boot to OSD; disabled|enabled" },
-	{ "core_exp_commandline", "Experimental CLI; disabled|enabled" },
+	{ option_osd, "Boot to OSD; disabled|enabled" },
+	{ option_cli, "Boot from CLI; disabled|enabled" },
 	{ NULL, NULL },
 
    };
@@ -72,7 +103,7 @@ static void check_variables(void)
 {
    struct retro_variable var = {0};
 
-   var.key = "core_exp_commandline";
+   var.key = option_cli;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
@@ -82,8 +113,8 @@ static void check_variables(void)
       if (strcmp(var.value, "disabled") == 0)
          experimental_cmdline = false;       
    }  
- 
-   var.key = "core_current_mouse_enable";
+   
+   var.key = option_mouse;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
@@ -93,38 +124,71 @@ static void check_variables(void)
       if (strcmp(var.value, "enabled") == 0)
          mouse_enable = true;
    }
-
-   var.key = "core_current_nagscreenpatch_enable";
+   
+   var.key = option_cheats;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
       if (strcmp(var.value, "disabled") == 0)
-         nagscreenpatch_enable = false;
+         cheats_enable = false;
       if (strcmp(var.value, "enabled") == 0)
-         nagscreenpatch_enable = true;
+         cheats_enable = true;
+   }   
+
+   var.key = option_nag;
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "disabled") == 0)
+         hide_nagscreen = false;
+      if (strcmp(var.value, "enabled") == 0)
+         hide_nagscreen = true;
    }
 
-   var.key = "core_current_videoapproach1_enable";
+   var.key = option_info;
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "disabled") == 0)
+         hide_gameinfo = false;
+      if (strcmp(var.value, "enabled") == 0)
+         hide_gameinfo = true;
+   }   
+   
+   var.key = option_warnings;
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "disabled") == 0)
+         hide_warnings = false;
+      if (strcmp(var.value, "enabled") == 0)
+         hide_warnings = true;
+   }      
+   
+   var.key = option_renderer;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
       if (strcmp(var.value, "disabled") == 0)
 	  {
-         videoapproach1_enable = false;
+         alternate_renderer = false;
 		 max_width=rtwi;
 	     max_height=rthe;		 
 	  }
       if (strcmp(var.value, "enabled") == 0)
 	  {
-         videoapproach1_enable = true;
+         alternate_renderer = true;
 		 max_width=1600;
 	     max_height=1200;
 	  }
    }
 
-   var.key = "core_boot_osd";
+   var.key = option_osd;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
@@ -137,7 +201,7 @@ static void check_variables(void)
 
 #if !defined(WANT_MAME)
 
-   var.key = "core_media_type";
+   var.key = option_media;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
@@ -145,7 +209,7 @@ static void check_variables(void)
       sprintf(mediaType,"-%s",var.value);
    }
    
-   var.key = "core_softlist_enable";
+   var.key = option_softlist;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
@@ -156,7 +220,7 @@ static void check_variables(void)
          softlist_enabled = false;       
    }      
    
-   var.key = "core_softlist_auto";
+   var.key = option_softlist_media;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
@@ -167,7 +231,7 @@ static void check_variables(void)
          softlist_auto = false;       
    }       
 
-   var.key = "core_boot_bios";
+   var.key = option_bios;
    var.value = NULL;
 
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
@@ -177,18 +241,7 @@ static void check_variables(void)
       if (strcmp(var.value, "disabled") == 0)
          boot_to_bios_enabled = false;       
    } 
- 
-   var.key = "core_commandline";
-   var.value = NULL;
-
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
-   {
-      if (strcmp(var.value, "enabled") == 0)
-         commandline_enabled = true;
-      if (strcmp(var.value, "disabled") == 0)
-         commandline_enabled = false;       
-   }   
-    
+     
 #endif   
   
 }

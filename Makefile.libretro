@@ -319,7 +319,7 @@ else
 	CC_AS = gcc
 	SHARED := -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=src/osd/retro/link.T
    	#CFLAGS += -D__WIN32__ -D__WIN32_LIBRETRO__
-   	CCOMFLAGS += -D__WIN32__ -D__WIN32_LIBRETRO__
+   	CCOMFLAGS += -D__WIN32__ -D__WIN32_LIBRETRO__ -D__LIBRETRO__
 	LDFLAGS +=   $(SHARED)
 	EXE = .exe
 	LIBS += -lws2_32
@@ -331,6 +331,7 @@ endif
 endif
 
 PLATCFLAGS += -D__LIBRETRO__
+
 
 ###########################################################################
 #################   BEGIN USER-CONFIGURABLE OPTIONS   #####################
@@ -739,6 +740,7 @@ clean: $(OSDCLEAN)
 ifeq ($(PARTIAL),1)	
 		@echo Deleting object tree $(OBJ)...
 		$(RM) -r obj/osd/*
+		$(RM) -r obj/emu/ui/*
 		@echo Deleting $(EMULATOR)...
 		$(RM) $(EMULATOR)
 		@echo Deleting $(TOOLS)...
