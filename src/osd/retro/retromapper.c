@@ -102,7 +102,7 @@ void retro_set_environment(retro_environment_t cb)
 static void check_variables(void)
 {
    struct retro_variable var = {0};
-
+ 
    var.key = option_cli;
    var.value = NULL;
 
@@ -243,7 +243,6 @@ static void check_variables(void)
    } 
      
 #endif   
-  
 }
 
 unsigned retro_api_version(void)
