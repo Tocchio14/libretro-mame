@@ -24,12 +24,11 @@ OBJDIRS += \
 	$(LIBOBJ)/lib7z \
 	$(LIBOBJ)/portmidi \
 	$(LIBOBJ)/lua \
+	$(LIBOBJ)/lua/lib \
 	$(LIBOBJ)/web \
 	$(LIBOBJ)/web/json \
+	$(LIBOBJ)/sqlite3 \
 
-ifdef USE_SQLITE
-OBJDIRS += $(LIBOBJ)/sqlite3
-endif
 #-------------------------------------------------
 # utility library objects
 #-------------------------------------------------
@@ -504,6 +503,7 @@ LUAOBJS = \
 	$(LIBOBJ)/lua/ltablib.o \
 	$(LIBOBJ)/lua/loadlib.o \
 	$(LIBOBJ)/lua/linit.o \
+	$(LIBOBJ)/lua/lib/lsqlite3.o \
 
 $(OBJ)/liblua.a: $(LUAOBJS)
 
@@ -546,6 +546,10 @@ $(LIBOBJ)/lua/%.o: $(LIBSRC)/lua/%.c | $(OSPREBUILD)
 	$(LIBOBJ)/sqlite3/sqlite3.o \
 
 #$(OBJ)/libsqlite3.a: $(SQLITEOBJS)
+
+#ifeq ($(TARGETOS),linux)
+#LIBS += -ldl
+#endif
 
 #$(LIBOBJ)/sqlite3/sqlite3.o: $(LIBSRC)/sqlite3/sqlite3.c | $(OSPREBUILD)
 	#@echo Compiling $<...

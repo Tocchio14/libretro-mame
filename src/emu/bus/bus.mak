@@ -409,6 +409,7 @@ BUSOBJS += $(BUSOBJ)/msx_slot/sony08.o
 OBJDIRS += $(BUSOBJ)/msx_cart
 BUSOBJS += $(BUSOBJ)/msx_cart/arc.o
 BUSOBJS += $(BUSOBJ)/msx_cart/ascii.o
+BUSOBJS += $(BUSOBJ)/msx_cart/bm_012.o
 BUSOBJS += $(BUSOBJ)/msx_cart/cartridge.o
 BUSOBJS += $(BUSOBJ)/msx_cart/crossblaim.o
 BUSOBJS += $(BUSOBJ)/msx_cart/dooly.o
@@ -1164,4 +1165,32 @@ BUSOBJS += $(BUSOBJ)/ql/trumpcard.o
 BUSOBJS += $(BUSOBJ)/ql/rom.o
 BUSOBJS += $(BUSOBJ)/ql/miracle_hd.o
 BUSOBJS += $(BUSOBJ)/ql/std.o
+endif
+
+#-------------------------------------------------
+#
+#@src/emu/bus/vtech/memexp/memexp.h,BUSES += VTECH_MEMEXP
+#-------------------------------------------------
+
+ifneq ($(filter VTECH_MEMEXP,$(BUSES)),)
+OBJDIRS += $(BUSOBJ)/vtech/memexp
+BUSOBJS += $(BUSOBJ)/vtech/memexp/memexp.o
+BUSOBJS += $(BUSOBJ)/vtech/memexp/carts.o
+BUSOBJS += $(BUSOBJ)/vtech/memexp/floppy.o
+BUSOBJS += $(BUSOBJ)/vtech/memexp/memory.o
+BUSOBJS += $(BUSOBJ)/vtech/memexp/rs232.o
+BUSOBJS += $(BUSOBJ)/vtech/memexp/wordpro.o
+endif
+
+#-------------------------------------------------
+#
+#@src/emu/bus/vtech/ioexp/ioexp.h,BUSES += VTECH_IOEXP
+#-------------------------------------------------
+
+ifneq ($(filter VTECH_IOEXP,$(BUSES)),)
+OBJDIRS += $(BUSOBJ)/vtech/ioexp
+BUSOBJS += $(BUSOBJ)/vtech/ioexp/ioexp.o
+BUSOBJS += $(BUSOBJ)/vtech/ioexp/carts.o
+BUSOBJS += $(BUSOBJ)/vtech/ioexp/joystick.o
+BUSOBJS += $(BUSOBJ)/vtech/ioexp/printer.o
 endif
