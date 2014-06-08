@@ -542,11 +542,22 @@ static void Input_Binding(running_machine &machine){
          (core_stricmp(machine.system().parent, "aof") == 0) ||
          (core_stricmp(machine.system().parent, "aof2") == 0) ||
          (core_stricmp(machine.system().parent, "aof3") == 0) ||
+         (core_stricmp(machine.system().parent, "breakers") == 0) ||
+         (core_stricmp(machine.system().parent, "breakrev") == 0) ||
+         (core_stricmp(machine.system().parent, "doubledr") == 0) ||
          (core_stricmp(machine.system().parent, "fatfury1") == 0) ||
          (core_stricmp(machine.system().parent, "fatfury2") == 0) ||
          (core_stricmp(machine.system().parent, "fatfury3") == 0) ||
+         (core_stricmp(machine.system().parent, "fatfursp") == 0) ||
+         (core_stricmp(machine.system().parent, "fightfev") == 0) ||
+         (core_stricmp(machine.system().parent, "galaxyfg") == 0) ||
          (core_stricmp(machine.system().parent, "garou") == 0) ||
+         (core_stricmp(machine.system().parent, "gowcaizr") == 0) ||  
          (core_stricmp(machine.system().parent, "neogeo") == 0) ||
+         (core_stricmp(machine.system().parent, "karnovr") == 0) ||
+         (core_stricmp(machine.system().parent, "kizuna") == 0) ||
+         (core_stricmp(machine.system().parent, "kabukikl") == 0) ||
+         (core_stricmp(machine.system().parent, "matrim") == 0) ||
          (core_stricmp(machine.system().parent, "mslug") == 0) ||
          (core_stricmp(machine.system().parent, "mslug2") == 0) ||
          (core_stricmp(machine.system().parent, "mslugx") == 0) ||
@@ -566,15 +577,26 @@ static void Input_Binding(running_machine &machine){
          (core_stricmp(machine.system().parent, "lresort") == 0) ||
          (core_stricmp(machine.system().parent, "lastblad") == 0) ||
          (core_stricmp(machine.system().parent, "lastbld2") == 0) ||
+         (core_stricmp(machine.system().parent, "ninjamas") == 0) ||
+         (core_stricmp(machine.system().parent, "rotd") == 0) ||        
+         (core_stricmp(machine.system().parent, "rbff1") == 0) ||
+         (core_stricmp(machine.system().parent, "rbff2") == 0) ||
+         (core_stricmp(machine.system().parent, "rbffspec") == 0) ||
+         (core_stricmp(machine.system().parent, "savagere") == 0) ||      
          (core_stricmp(machine.system().parent, "sengoku3") == 0) ||
          (core_stricmp(machine.system().parent, "samsho") == 0) ||
          (core_stricmp(machine.system().parent, "samsho2") == 0) ||
          (core_stricmp(machine.system().parent, "samsho3") == 0) ||
          (core_stricmp(machine.system().parent, "samsho4") == 0) ||
          (core_stricmp(machine.system().parent, "samsho5") == 0) ||
-         (core_stricmp(machine.system().parent, "matrim") == 0) ||
+         (core_stricmp(machine.system().parent, "samsh5sp") == 0) ||
+         (core_stricmp(machine.system().parent, "svc") == 0) ||  
          (core_stricmp(machine.system().parent, "viewpoin") == 0) ||
-         (core_stricmp(machine.system().parent, "wakuwak7") == 0)
+         (core_stricmp(machine.system().parent, "wakuwak7") == 0) ||
+         (core_stricmp(machine.system().parent, "wh1") == 0) ||
+         (core_stricmp(machine.system().parent, "wh2") == 0) ||  
+         (core_stricmp(machine.system().parent, "wh2j") == 0) ||
+         (core_stricmp(machine.system().parent, "whp") == 0)
       )
    {
       /* Neo Geo */
@@ -642,8 +664,10 @@ static void Input_Binding(running_machine &machine){
          (core_stricmp(machine.system().name, "mk2") == 0) ||
          (core_stricmp(machine.system().parent, "mk2") == 0) ||
          (core_stricmp(machine.system().name, "mk3") == 0) ||
+         (core_stricmp(machine.system().parent, "mk3") == 0) ||
          (core_stricmp(machine.system().name, "umk3") == 0) ||
          (core_stricmp(machine.system().parent, "umk3") == 0) ||
+         (core_stricmp(machine.system().name, "wwfmania") == 0) ||
          (core_stricmp(machine.system().parent, "wwfmania") == 0)
       )
    {
