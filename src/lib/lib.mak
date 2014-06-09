@@ -543,15 +543,15 @@ $(LIBOBJ)/lua/%.o: $(LIBSRC)/lua/%.c | $(OSPREBUILD)
 # SQLite3 library objects
 #-------------------------------------------------
 
-#SQLITEOBJS = \
+SQLITEOBJS = \
 	$(LIBOBJ)/sqlite3/sqlite3.o \
 
-#$(OBJ)/libsqlite3.a: $(SQLITEOBJS)
+$(OBJ)/libsqlite3.a: $(SQLITEOBJS)
 
 #ifeq ($(TARGETOS),linux)
 #LIBS += -ldl
 #endif
 
-#$(LIBOBJ)/sqlite3/sqlite3.o: $(LIBSRC)/sqlite3/sqlite3.c | $(OSPREBUILD)
-	#@echo Compiling $<...
-	#$(CC) $(CDEFS) $(CONLYFLAGS) -Wno-bad-function-cast -I$(LIBSRC)/sqlite3 -c $< -o $@
+$(LIBOBJ)/sqlite3/sqlite3.o: $(LIBSRC)/sqlite3/sqlite3.c | $(OSPREBUILD)
+	@echo Compiling $<...
+	$(CC_AS) $(CDEFS) $(CONLYFLAGS) -Wno-bad-function-cast -I$(LIBSRC)/sqlite3 -c $< -o $@
