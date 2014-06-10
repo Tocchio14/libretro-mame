@@ -176,15 +176,11 @@ static void check_variables(void)
    {
       if (strcmp(var.value, "disabled") == 0)
 	  {
-         alternate_renderer = false;
-		 max_width=rtwi;
-	     max_height=rthe;		 
+         alternate_renderer = false;	 
 	  }
       if (strcmp(var.value, "enabled") == 0)
 	  {
          alternate_renderer = true;
-		 max_width=1600;
-	     max_height=1200;
 	  }
    }
 
@@ -280,8 +276,8 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
    if (log_cb)
       log_cb(RETRO_LOG_INFO, "AV_INFO: width=%d height=%d\n",info->geometry.base_width,info->geometry.base_height);
       
-   info->geometry.max_width = max_width;
-   info->geometry.max_height = max_height;
+   info->geometry.max_width = 1600;
+   info->geometry.max_height = 1200;
    
    if (log_cb)
       log_cb(RETRO_LOG_INFO, "AV_INFO: max_width=%d max_height=%d\n",info->geometry.max_width,info->geometry.max_height);   
