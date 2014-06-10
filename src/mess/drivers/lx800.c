@@ -13,6 +13,20 @@
       input buttons and switches.
     - CPU disassembly doesn't seem to indicate conditional JR or RET.
 
+
+    2014-06-10 Added LX810L, gets caught in a loop almost immediately.
+               IC list:
+               * uPD7810HG (cpu)
+               * E05A30 (gate array)
+               * 2064C (8k RAM)
+               * ER59256 (EEP-ROM - serial nvram)
+               * SLA7020M (step motor driver)
+               * uPC494C (pulse width modulation control)
+               May need to be split off to another driver.
+
+    2014-06-10 Added AP2000, gets caught in the same place as LX810L.
+
+
 ***************************************************************************/
 
 #include "emu.h"
@@ -313,7 +327,17 @@ MACHINE_CONFIG_END
 
 ROM_START( lx800 )
 	ROM_REGION(0x8000, "maincpu", 0)
-	ROM_LOAD("lx800.ic3c", 0x0000, 0x8000, CRC(da06c45b) SHA1(9618c940dd10d5b43cd1edd5763b90e6447de667))
+	ROM_LOAD("lx800.ic3c", 0x0000, 0x8000, CRC(da06c45b) SHA1(9618c940dd10d5b43cd1edd5763b90e6447de667) )
+ROM_END
+
+ROM_START( lx810l )
+	ROM_REGION(0x8000, "maincpu", 0)
+	ROM_LOAD("lx810l.ic3c", 0x0000, 0x8000, CRC(a66454e1) SHA1(8e6f2f98abcbd8af6e34b9ba746edf0d18aef843) )
+ROM_END
+
+ROM_START( ap2000 )
+	ROM_REGION(0x8000, "maincpu", 0)
+	ROM_LOAD("ap2k.ic3c", 0x0000, 0x8000, CRC(ee7294b7) SHA1(219ffa6ff661ce95d5772c9fc1967093718f04e9) )
 ROM_END
 
 
@@ -323,3 +347,5 @@ ROM_END
 
 /*    YEAR  NAME   PARENT  COMPAT  MACHINE  INPUT  INIT  COMPANY  FULLNAME  FLAGS */
 COMP( 1987, lx800, 0,      0,      lx800,   lx800, driver_device, 0,    "Epson", "LX-800 Printer", GAME_NOT_WORKING )
+COMP( 19??, lx810l,lx800,  0,      lx800,   lx800, driver_device, 0,    "Epson", "LX-810L Printer", GAME_NOT_WORKING )
+COMP( 19??, ap2000,lx800,  0,      lx800,   lx800, driver_device, 0,    "Epson", "Action Printer 2000", GAME_NOT_WORKING )
