@@ -2230,6 +2230,7 @@ $(CPUOBJ)/tlcs900/dasm900.o:    $(CPUSRC)/tlcs900/dasm900.c
 ifneq ($(filter Z80,$(CPUS)),)
 OBJDIRS += $(CPUOBJ)/z80
 CPUOBJS += $(CPUOBJ)/z80/z80.o $(CPUOBJ)/z80/tlcs_z80.o $(CPUOBJ)/z80/z80daisy.o
+CPUOBJS += $(CPUOBJ)/z80/tmpz84c011.o
 DASMOBJS += $(CPUOBJ)/z80/z80dasm.o
 endif
 
