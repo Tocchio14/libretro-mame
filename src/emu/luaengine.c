@@ -573,6 +573,7 @@ void lua_engine::load_script(const char *filename)
 {
 	int s = luaL_loadfile(m_lua_state, filename);
 	report(s);	
+	update_machine();
 	start();
 }
 
@@ -584,6 +585,7 @@ void lua_engine::load_string(const char *value)
 {
 	int s = luaL_loadstring(m_lua_state, value);
 	report(s);	
+	update_machine();
 	start();
 }
 
