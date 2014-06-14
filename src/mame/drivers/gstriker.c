@@ -28,7 +28,6 @@ Finish hooking up the inputs
 Tilemap scrolling/rotation/zooming or whatever effect it needs
 Priorities are wrong. I suspect they need sprite orthogonality
 Missing mixer registers (mainly layer enable/disable)
-Merge with other Video System games ?
 
 ******************************************************************************/
 
@@ -273,15 +272,15 @@ WRITE_LINE_MEMBER(gstriker_state::gs_ym2610_irq)
 
 static ADDRESS_MAP_START( gstriker_map, AS_PROGRAM, 16, gstriker_state )
 	AM_RANGE(0x000000, 0x0fffff) AM_ROM
-	AM_RANGE(0x100000, 0x103fff) AM_RAM_WRITE(MB60553_0_vram_w) AM_SHARE("mb60553_vram")
-	AM_RANGE(0x140000, 0x141fff) AM_RAM AM_SHARE("cg10103_vram")
-	AM_RANGE(0x180000, 0x180fff) AM_RAM_WRITE(VS920A_0_vram_w) AM_SHARE("vs920a_vram")
-	AM_RANGE(0x181000, 0x181fff) AM_RAM AM_SHARE("lineram")
+	AM_RANGE(0x100000, 0x103fff) AM_DEVREADWRITE("zoomtilemap", mb60553_zooming_tilemap_device,  vram_r, vram_w ) 
+	AM_RANGE(0x140000, 0x141fff) AM_RAM AM_SHARE("cg10103_m_vram")
+	AM_RANGE(0x180000, 0x180fff) AM_DEVREADWRITE("texttilemap", vs920a_text_tilemap_device,  vram_r, vram_w ) 
+	AM_RANGE(0x181000, 0x181fff) AM_DEVREADWRITE("zoomtilemap", mb60553_zooming_tilemap_device,  line_r, line_w ) 
 	AM_RANGE(0x1c0000, 0x1c0fff) AM_RAM_DEVWRITE("palette", palette_device, write) AM_SHARE("palette")
 
-	AM_RANGE(0x200000, 0x20000f) AM_RAM_WRITE(MB60553_0_regs_w)
-	AM_RANGE(0x200040, 0x20005f) AM_RAM
-	AM_RANGE(0x200060, 0x20007f) AM_RAM
+	AM_RANGE(0x200000, 0x20000f) AM_DEVREADWRITE("zoomtilemap", mb60553_zooming_tilemap_device,  regs_r, regs_w ) 
+	AM_RANGE(0x200040, 0x20005f) AM_RAM AM_SHARE("mixerregs1")
+	AM_RANGE(0x200060, 0x20007f) AM_RAM AM_SHARE("mixerregs2")
 	AM_RANGE(0x200080, 0x200081) AM_READ_PORT("P1")
 	AM_RANGE(0x200082, 0x200083) AM_READ_PORT("P2")
 	AM_RANGE(0x200084, 0x200085) AM_READ_PORT("SYSTEM")
@@ -310,13 +309,14 @@ ADDRESS_MAP_END
 
 static ADDRESS_MAP_START( vgoal_map, AS_PROGRAM, 16, gstriker_state )
 	AM_RANGE(0x000000, 0x0fffff) AM_ROM
-	AM_RANGE(0x100000, 0x103fff) AM_RAM_WRITE(MB60553_0_vram_w) AM_SHARE("mb60553_vram")
-	AM_RANGE(0x140000, 0x141fff) AM_RAM AM_SHARE("cg10103_vram")
-	AM_RANGE(0x180000, 0x180fff) AM_RAM_WRITE(VS920A_0_vram_w) AM_SHARE("vs920a_vram")
-	AM_RANGE(0x181000, 0x181fff) AM_RAM AM_SHARE("lineram")
+	AM_RANGE(0x100000, 0x103fff) AM_DEVREADWRITE("zoomtilemap", mb60553_zooming_tilemap_device,  vram_r, vram_w ) 
+	AM_RANGE(0x140000, 0x141fff) AM_RAM AM_SHARE("cg10103_m_vram")
+	AM_RANGE(0x180000, 0x180fff) AM_DEVREADWRITE("texttilemap", vs920a_text_tilemap_device,  vram_r, vram_w ) 
+	AM_RANGE(0x181000, 0x181fff) AM_DEVREADWRITE("zoomtilemap", mb60553_zooming_tilemap_device,  line_r, line_w ) 
 	AM_RANGE(0x1c0000, 0x1c4fff) AM_RAM_DEVWRITE("palette", palette_device, write) AM_SHARE("palette")
-	AM_RANGE(0x200000, 0x20000f) AM_RAM_WRITE(MB60553_0_regs_w)
-	AM_RANGE(0x200040, 0x20005f) AM_RAM
+	AM_RANGE(0x200000, 0x20000f) AM_DEVREADWRITE("zoomtilemap", mb60553_zooming_tilemap_device,  regs_r, regs_w ) 
+	AM_RANGE(0x200040, 0x20005f) AM_RAM AM_SHARE("mixerregs1")
+	AM_RANGE(0x200060, 0x20007f) AM_RAM AM_SHARE("mixerregs2")
 
 	AM_RANGE(0x200080, 0x200081) AM_READ_PORT("P1")
 	AM_RANGE(0x200082, 0x200083) AM_READ_PORT("P2")
@@ -556,9 +556,16 @@ static MACHINE_CONFIG_START( gstriker, gstriker_state )
 	MCFG_PALETTE_ADD("palette", 0x800)
 	MCFG_PALETTE_FORMAT(xRRRRRGGGGGBBBBB)
 
+
+	MCFG_DEVICE_ADD("zoomtilemap", MB60553, 0)
+	MCFG_MB60553_GFXDECODE("gfxdecode")
+
+	MCFG_DEVICE_ADD("texttilemap", VS920A, 0)
+	MCFG_VS920A_GFXDECODE("gfxdecode")
+
+
 	MCFG_DEVICE_ADD("vsystem_spr", VSYSTEM_SPR, 0)
 	MCFG_VSYSTEM_SPR_SET_GFXREGION(2)
-	MCFG_VSYSTEM_SPR_SET_PALBASE(0x10)
 	MCFG_VSYSTEM_SPR_SET_PALMASK(0x1f)
 	MCFG_VSYSTEM_SPR_SET_TRANSPEN(0)
 	MCFG_VSYSTEM_SPR_GFXDECODE("gfxdecode")
@@ -574,14 +581,6 @@ static MACHINE_CONFIG_START( gstriker, gstriker_state )
 	MCFG_SOUND_ROUTE(0, "rspeaker", 0.25)
 	MCFG_SOUND_ROUTE(1, "lspeaker",  1.0)
 	MCFG_SOUND_ROUTE(2, "rspeaker", 1.0)
-MACHINE_CONFIG_END
-
-static MACHINE_CONFIG_DERIVED( twrldc94, gstriker )
-	MCFG_VIDEO_START_OVERRIDE(gstriker_state, twrldc94 )
-
-	MCFG_DEVICE_MODIFY("vsystem_spr")
-	MCFG_VSYSTEM_SPR_SET_PALBASE(0x60)
-
 MACHINE_CONFIG_END
 
 
@@ -607,13 +606,18 @@ static MACHINE_CONFIG_START( vgoal, gstriker_state )
 	MCFG_PALETTE_ADD("palette", 0x2000)
 	MCFG_PALETTE_FORMAT(xRRRRRGGGGGBBBBB)
 
+	MCFG_DEVICE_ADD("zoomtilemap", MB60553, 0)
+	MCFG_MB60553_GFXDECODE("gfxdecode")
+
+	MCFG_DEVICE_ADD("texttilemap", VS920A, 0)
+	MCFG_VS920A_GFXDECODE("gfxdecode")
+
 	MCFG_DEVICE_ADD("vsystem_spr", VSYSTEM_SPR, 0)
 	MCFG_VSYSTEM_SPR_SET_GFXREGION(2)
-	MCFG_VSYSTEM_SPR_SET_PALBASE(0x00)
 	MCFG_VSYSTEM_SPR_GFXDECODE("gfxdecode")
 	MCFG_VSYSTEM_SPR_PALETTE("palette")
 
-	MCFG_VIDEO_START_OVERRIDE(gstriker_state,vgoalsoc)
+	MCFG_VIDEO_START_OVERRIDE(gstriker_state,gstriker)
 
 	MCFG_SPEAKER_STANDARD_STEREO("lspeaker", "rspeaker")
 
@@ -783,7 +787,8 @@ ROM_START( vgoalsca )
 	ROM_LOAD( "vgoalc16.u17", 0x000000, 0x200000, CRC(2b211fb2) SHA1(4e04e099a1dae7abdb0732808a5d74fdc7afcf45) ) // same content, dif pos on board
 
 	ROM_REGION( 0x400000, "gfx3", 0 )
-	ROM_LOAD( "vgoalc16.u11", 0x000000, 0x200000, CRC(5bc3146c) SHA1(ede4def1ddc4390fed8fd89643900967faff3640) )
+	//ROM_LOAD( "vgoalc16.u11", 0x000000, 0x200000, CRC(5bc3146c) SHA1(ede4def1ddc4390fed8fd89643900967faff3640) ) // this is just a bad dump, are the above roms too?
+	ROM_LOAD( "c13_u11.u11",  0x000000, 0x200000, CRC(76d09f27) SHA1(ffef83954426f9e56bbe2d98b32cea675c063fab) )
 	ROM_LOAD( "c13_u12.u12",  0x200000, 0x200000, CRC(a3874419) SHA1(c9fa283106ada3419e311f400fcf4251b32318c4) )
 
 	ROM_REGION( 0x40000, "ymsnd.deltat", 0 )
@@ -1095,5 +1100,5 @@ GAME( 1993, gstrikerj, gstriker, gstriker, gstriker, driver_device, 0,        RO
 /* Similar, but not identical hardware, appear to be protected by an MCU :-( */
 GAME( 1994, vgoalsoc, 0,        vgoal,    vgoalsoc, gstriker_state, vgoalsoc,   ROT0, "Tecmo", "V Goal Soccer (set 1)", GAME_NOT_WORKING )
 GAME( 1994, vgoalsca, vgoalsoc, vgoal,    vgoalsoc, gstriker_state, vgoalsoc,   ROT0, "Tecmo", "V Goal Soccer (set 2)", GAME_NOT_WORKING )
-GAME( 1994, twrldc94, 0,        twrldc94, twrldc94, gstriker_state, twrldc94,   ROT0, "Tecmo", "Tecmo World Cup '94 (set 1)", GAME_NOT_WORKING | GAME_UNEMULATED_PROTECTION | GAME_IMPERFECT_GRAPHICS )
-GAME( 1994, twrldc94a,twrldc94, twrldc94, twrldc94, gstriker_state, twrldc94a,  ROT0, "Tecmo", "Tecmo World Cup '94 (set 2)", GAME_NOT_WORKING | GAME_UNEMULATED_PROTECTION | GAME_IMPERFECT_GRAPHICS )
+GAME( 1994, twrldc94, 0,        gstriker, twrldc94, gstriker_state, twrldc94,   ROT0, "Tecmo", "Tecmo World Cup '94 (set 1)", GAME_NOT_WORKING | GAME_UNEMULATED_PROTECTION | GAME_IMPERFECT_GRAPHICS )
+GAME( 1994, twrldc94a,twrldc94, gstriker, twrldc94, gstriker_state, twrldc94a,  ROT0, "Tecmo", "Tecmo World Cup '94 (set 2)", GAME_NOT_WORKING | GAME_UNEMULATED_PROTECTION | GAME_IMPERFECT_GRAPHICS )

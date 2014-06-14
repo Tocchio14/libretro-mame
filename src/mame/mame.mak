@@ -395,6 +395,7 @@ MACHINES += DS2404
 MACHINES += DS75160A
 MACHINES += DS75161A
 MACHINES += E0516
+MACHINES += E05A03
 MACHINES += EEPROMDEV
 MACHINES += ER2055
 MACHINES += ER59256
@@ -2059,6 +2060,7 @@ $(MAMEOBJ)/vsystem.a: \
 	$(DRIVERS)/fromance.o $(VIDEO)/fromance.o \
 	$(DRIVERS)/fromanc2.o $(VIDEO)/fromanc2.o \
 	$(DRIVERS)/gstriker.o $(VIDEO)/gstriker.o \
+	$(VIDEO)/mb60553.o $(VIDEO)/vs920a.o \
 	$(DRIVERS)/inufuku.o $(VIDEO)/inufuku.o \
 	$(DRIVERS)/ojankohs.o $(VIDEO)/ojankohs.o \
 	$(DRIVERS)/pipedrm.o \
