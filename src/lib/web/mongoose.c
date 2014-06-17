@@ -147,6 +147,8 @@ union socket_address {
   struct sockaddr_in sin;
 #ifdef NS_ENABLE_IPV6
   struct sockaddr_in6 sin6;
+#else
+  struct sockaddr sin6;
 #endif
 };
 
@@ -338,7 +340,7 @@ void *ns_start_thread(void *(*f)(void *), void *p) {
   (void) pthread_attr_init(&attr);
   (void) pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
-#if NS_STACK_SIZE > 1
+#if defined(NS_STACK_SIZE) && NS_STACK_SIZE > 1
   (void) pthread_attr_setstacksize(&attr, NS_STACK_SIZE);
 #endif
 
@@ -548,10 +550,16 @@ static sock_t ns_open_listening_socket(union socket_address *sa) {
 
   if ((sock = socket(sa->sa.sa_family, SOCK_STREAM, 6)) != INVALID_SOCKET &&
 #ifndef _WIN32
+      // SO_RESUSEADDR is not enabled on Windows because the semantics of
+      // SO_REUSEADDR on UNIX and Windows is different. On Windows,
+      // SO_REUSEADDR allows to bind a socket to a port without error even if
+      // the port is already open by another program. This is not the behavior
+      // SO_REUSEADDR was designed for, and leads to hard-to-track failure
+      // scenarios. Therefore, SO_REUSEADDR was disabled on Windows.
       !setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (void *) &on, sizeof(on)) &&
 #endif
       !bind(sock, &sa->sa, sa->sa.sa_family == AF_INET ?
-            sizeof(sa->sin) : sizeof(sa->sa)) &&
+            sizeof(sa->sin) : sizeof(sa->sin6)) &&
       !listen(sock, SOMAXCONN)) {
     ns_set_non_blocking_mode(sock);
     // In case port was set to 0, get the real port number
@@ -4931,7 +4939,10 @@ static void mg_ev_handler(struct ns_connection *nc, enum ns_event ev, void *p) {
 
     case NS_POLL:
       if (call_user(conn, MG_POLL) == MG_TRUE) {
-        nc->flags |= NSF_FINISHED_SENDING_DATA;
+        if (conn->ns_conn->flags & MG_HEADERS_SENT) {
+          write_terminating_chunk(conn);
+        }
+        close_local_endpoint(conn);
       }
 
       if (conn != NULL && conn->endpoint_type == EP_FILE) {

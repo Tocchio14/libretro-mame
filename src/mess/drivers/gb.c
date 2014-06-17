@@ -12,6 +12,8 @@
   TODO list:
   - Do correct lcd stat timing
   - Add Game Boy Light (Japan, 1997) - does it differ from gbpocket?
+  - SGB should be moved to SNES driver
+  - Emulate OAM corruption bug on 16bit inc/dec in $fe** region
 
 
 Timers
@@ -425,10 +427,6 @@ space. This mapper uses 32KB sized banks.
 #include "bus/gameboy/mbc.h"
 
 
-/* Initial value of the cpu registers (hacks until we get bios dumps) */
-static const UINT16 megaduck_cpu_regs[6] = { 0x0000, 0x0000, 0x0000, 0x0000, 0xFFFE, 0x0000 };  /* Megaduck */
-
-
 READ8_MEMBER(gb_state::gb_cart_r)
 {
 	if (m_bios_disable && m_cartslot)
@@ -757,11 +755,11 @@ MACHINE_CONFIG_END
 static MACHINE_CONFIG_DERIVED( supergb, gameboy )
 
 	/* basic machine hardware */
-	MCFG_CPU_REPLACE("maincpu", LR35902, 4295454) /* 4.295454 MHz */
+	MCFG_CPU_REPLACE("maincpu", LR35902, 4295454) /* 4.295454 MHz, derived from SNES xtal */
 	MCFG_CPU_PROGRAM_MAP(sgb_map)
 
 	MCFG_CPU_MODIFY("maincpu")
-	MCFG_LR35902_TIMER_CB( WRITE8( gb_state, gb_timer_callback ) )
+	MCFG_LR35902_TIMER_CB( WRITE8(gb_state, gb_timer_callback ) )
 	MCFG_LR35902_HALT_BUG
 
 	MCFG_MACHINE_START_OVERRIDE(gb_state, sgb)
@@ -795,9 +793,9 @@ MACHINE_CONFIG_END
 static MACHINE_CONFIG_DERIVED( gbcolor, gameboy )
 
 	/* basic machine hardware */
-	MCFG_CPU_MODIFY("maincpu")
-	MCFG_CPU_PROGRAM_MAP( gbc_map)
-	MCFG_LR35902_TIMER_CB( WRITE8( gb_state, gb_timer_callback ) )
+	MCFG_CPU_MODIFY("maincpu") // todo XTAL_8_388MHz
+	MCFG_CPU_PROGRAM_MAP(gbc_map)
+	MCFG_LR35902_TIMER_CB( WRITE8(gb_state, gb_timer_callback ) )
 
 	MCFG_MACHINE_START_OVERRIDE(gb_state,gbc)
 	MCFG_MACHINE_RESET_OVERRIDE(gb_state,gbc)
@@ -824,10 +822,9 @@ static MACHINE_CONFIG_START( megaduck, megaduck_state )
 
 	/* basic machine hardware */
 	MCFG_CPU_ADD("maincpu", LR35902, 4194304) /* 4.194304 MHz */
-	MCFG_CPU_PROGRAM_MAP( megaduck_map)
-	MCFG_LR35902_TIMER_CB( WRITE8( gb_state, gb_timer_callback ) )
+	MCFG_CPU_PROGRAM_MAP(megaduck_map)
+	MCFG_LR35902_TIMER_CB( WRITE8(gb_state, gb_timer_callback ) )
 	MCFG_LR35902_HALT_BUG
-	MCFG_LR35902_RESET_VALUES(megaduck_cpu_regs)
 
 	/* video hardware */
 	MCFG_SCREEN_ADD("screen", LCD)
@@ -897,9 +894,7 @@ ROM_END
 CONS( 1990, gameboy,  0,       0,       gameboy,  gameboy, driver_device, 0,    "Nintendo", "Game Boy", GAME_SUPPORTS_SAVE )
 CONS( 1994, supergb,  gameboy, 0,       supergb,  gameboy, driver_device, 0,    "Nintendo", "Super Game Boy", GAME_SUPPORTS_SAVE )
 CONS( 1996, gbpocket, gameboy, 0,       gbpocket, gameboy, driver_device, 0,    "Nintendo", "Game Boy Pocket", GAME_SUPPORTS_SAVE )
-CONS( 1998, gbcolor,  gameboy, 0,       gbcolor,  gameboy, driver_device, 0,    "Nintendo", "Game Boy Color", GAME_IMPERFECT_GRAPHICS | GAME_SUPPORTS_SAVE )
+CONS( 1998, gbcolor,  0,       0,       gbcolor,  gameboy, driver_device, 0,    "Nintendo", "Game Boy Color", GAME_IMPERFECT_GRAPHICS | GAME_SUPPORTS_SAVE )
 
-/* Sound is not 100% yet, it generates some sounds which could be ok. Since we're lacking a real
-   system there's no way to verify. Same goes for the colors of the LCD. We are no using the default
-   Game Boy green colors */
-CONS( 1993, megaduck, 0,       0,       megaduck, gameboy, driver_device, 0,    "Creatronic/Videojet/Timlex/Cougar",  "MegaDuck/Cougar Boy" , GAME_SUPPORTS_SAVE )
+// Sound is not 100% yet, it generates some sounds which could be ok. Since we're lacking a real system there's no way to verify.
+CONS( 1993, megaduck, 0,       0,       megaduck, gameboy, driver_device, 0,    "Welback Holdings (Timlex International) / Creatronic / Videojet / Cougar USA", "Mega Duck / Cougar Boy", GAME_IMPERFECT_SOUND | GAME_SUPPORTS_SAVE )
