@@ -547,15 +547,8 @@ COBJFLAGS += \
 CPPONLYFLAGS += \
 	-Woverloaded-virtual
 
-ifneq (,$(findstring clang,$(CC)))
-CCOMFLAGS += \
-	-Wno-cast-align \
-	-Wno-tautological-compare \
-	-Wno-constant-logical-operand \
-	-Wno-format-security \
-	-Wno-shift-count-overflow \
-	-Wno-self-assign-field
-endif
+# This should silence some warnings on GCC/Clang
+include $(SRC)/build/cc_detection.mak
 
 #-------------------------------------------------
 # include paths
