@@ -20,16 +20,17 @@
  *  | rail net                                  |
  *  +-------------------------------------------+
  *
- *  A rail net is a net which is driven by exactly one output with an (idealized) internal resistance
- *  of zero. Ideally, it can deliver infinite current.
+ *  A rail net is a net which is driven by exactly one output with an
+ *  (idealized) internal resistance of zero.
+ *  Ideally, it can deliver infinite current.
  *
  *  A infinite resistance input does not source or sink current.
  *
  *  Terminals source or sink finite (but never zero) current.
  *
- *  The system differentiates between analog and logic input and outputs and analog terminals.
- *  Analog and logic devices can not be connected to the same net. Instead, proxy devices
- *  are inserted automatically:
+ *  The system differentiates between analog and logic input and outputs and
+ *  analog terminals. Analog and logic devices can not be connected to the
+ *  same net. Instead, proxy devices are inserted automatically:
  *
  *  +---+     +---+
  *  |   |     |   |
@@ -57,13 +58,15 @@
  *  This works both analog to logic as well as logic to analog.
  *
  *  The above is an advanced implementation of the existing discrete
- *  subsystem in MAME. Instead of relying on a fixed time-step, analog devices could
- *  either connect to fixed time-step clock or use an internal clock to update them.
- *  This would however introduce macro devices for RC, diodes and transistors again.
+ *  subsystem in MAME. Instead of relying on a fixed time-step, analog devices
+ *  could either connect to fixed time-step clock or use an internal clock
+ *  to update them. This would however introduce macro devices for RC, diodes
+ *  and transistors again.
  *
- *  ====================================================================================
+ *  ============================================================================
  *
- *  Instead, the following approach in case of a pure terminal/input network is taken:
+ *  Instead, the following approach in case of a pure terminal/input network
+ *  is taken:
  *
  *  +---+     +---+     +---+     +---+     +---+
  *  |   |     |   |     |   |     |   |     |   |
@@ -96,9 +99,9 @@
  *  +-----T-----+
  *       (l)
  *
- *  This is a resistance in series to a voltage source and paralleled by a current source.
- *  This is suitable to model voltage sources, current sources, resistors, capacitors,
- *  inductances and diodes.
+ *  This is a resistance in series to a voltage source and paralleled by a
+ *  current source. This is suitable to model voltage sources, current sources,
+ *  resistors, capacitors, inductances and diodes.
  *
  *  I(n,l) = - I(n,k) = ( V(k) - V - V(l) ) * (1/R(n)) + I(n)
  *
@@ -120,8 +123,9 @@
  *
  *  (G - D) * V = I
  *
- *  with G being the conductance matrix, D a diagonal matrix with the total conductance
- *  on the diagonal elements, V the net voltage vector and I the current vector.
+ *  with G being the conductance matrix, D a diagonal matrix with the total
+ *  conductance on the diagonal elements, V the net voltage vector and I the
+ *  current vector.
  *
  *  By using solely two terminal devices, we can simplify the whole calculation
  *  significantly. A BJT now is a four terminal device with two terminals being
@@ -141,7 +145,8 @@
  *  b) Voltage source
  *  c) Current source/sink
  *
- *  Going forward, the approach can be extended e.g. to use a linear equation solver
+ *  Going forward, the approach can be extended e.g. to use a linear
+ *  equation solver.
  *
  *  The formal representation of the circuit will stay the same, thus scales.
  *
@@ -197,54 +202,62 @@ typedef void (*net_update_delegate)(netlist_core_device_t *);
 #define NETLIB_UPDATE_TERMINALS() ATTR_HOT ATTR_ALIGN inline void update_terminals(void)
 #define NETLIB_UPDATEI() ATTR_HOT ATTR_ALIGN inline void update(void)
 
-#define NETLIB_DEVICE_BASE(_name, _pclass, _extra, _priv)                           \
-	class _name : public _pclass                                                    \
-	{                                                                               \
-	public:                                                                         \
-		_name()                                                                     \
-		: _pclass()    { }                                                          \
-	protected:                                                                      \
-		_extra                                                                      \
-		ATTR_HOT void update();                                                     \
-		ATTR_HOT void start();                                                      \
-		ATTR_HOT void reset();                                                      \
-		_priv                                                                       \
+#define NETLIB_DEVICE_BASE(_name, _pclass, _extra, _priv)                       \
+	class _name : public _pclass                                                \
+	{                                                                           \
+	public:                                                                     \
+		_name()                                                                 \
+		: _pclass()    { }                                                      \
+	protected:                                                                  \
+		_extra                                                                  \
+		ATTR_HOT void update();                                                 \
+		ATTR_HOT void start();                                                  \
+		ATTR_HOT void reset();                                                  \
+		_priv                                                                   \
 	}
 
-#define NETLIB_DEVICE_DERIVED(_name, _pclass, _priv)                                \
+#define NETLIB_DEVICE_DERIVED(_name, _pclass, _priv)                            \
 		NETLIB_DEVICE_BASE(NETLIB_NAME(_name), NETLIB_NAME(_pclass), , _priv)
 
-#define NETLIB_DEVICE(_name, _priv)                                                 \
+#define NETLIB_DEVICE(_name, _priv)                                             \
 		NETLIB_DEVICE_BASE(NETLIB_NAME(_name), netlist_device_t, , _priv)
 
-#define NETLIB_SUBDEVICE(_name, _priv)                                             \
-	class NETLIB_NAME(_name) : public netlist_device_t                              \
-	{                                                                               \
-	public:                                                                         \
-		NETLIB_NAME(_name) ()                                                       \
-		: netlist_device_t()                                                        \
-			{ }                                                                     \
-	/*protected:*/                                                                  \
-		ATTR_HOT void update();                                                     \
-		ATTR_HOT void start();                                                      \
-		ATTR_HOT void reset();                                                      \
-	public:                                                                         \
-		_priv                                                                       \
+#define NETLIB_SUBDEVICE(_name, _priv)                                          \
+	class NETLIB_NAME(_name) : public netlist_device_t                          \
+	{                                                                           \
+	public:                                                                     \
+		NETLIB_NAME(_name) ()                                                   \
+		: netlist_device_t()                                                    \
+			{ }                                                                 \
+	/*protected:*/                                                              \
+		ATTR_HOT void update();                                                 \
+		ATTR_HOT void start();                                                  \
+		ATTR_HOT void reset();                                                  \
+	public:                                                                     \
+		_priv                                                                   \
 	}
 
-#define NETLIB_DEVICE_WITH_PARAMS(_name, _priv)                                     \
-		NETLIB_DEVICE_BASE(NETLIB_NAME(_name), netlist_device_t,                    \
-			ATTR_HOT void update_param();                                           \
+#define NETLIB_DEVICE_WITH_PARAMS(_name, _priv)                                 \
+		NETLIB_DEVICE_BASE(NETLIB_NAME(_name), netlist_device_t,                \
+			ATTR_HOT void update_param();                                       \
 		, _priv)
 
-#define NETLIB_DEVICE_WITH_PARAMS_DERIVED(_name, _pclass, _priv)                    \
-		NETLIB_DEVICE_BASE(NETLIB_NAME(_name), NETLIB_NAME(_pclass),                \
-			ATTR_HOT void update_param();                                           \
+#define NETLIB_DEVICE_WITH_PARAMS_DERIVED(_name, _pclass, _priv)                \
+		NETLIB_DEVICE_BASE(NETLIB_NAME(_name), NETLIB_NAME(_pclass),            \
+			ATTR_HOT void update_param();                                       \
 		, _priv)
 
-// ----------------------------------------------------------------------------------------
+#define NETLIB_LOGIC_FAMILY(_fam)                                               \
+ATTR_COLD virtual const netlist_logic_family_desc_t *logic_family()             \
+{                                                                               \
+    return &netlist_family_ ## _fam;                                            \
+}
+
+
+
+// -----------------------------------------------------------------------------
 // forward definitions
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 class netlist_net_t;
 class netlist_analog_net_t;
@@ -259,9 +272,9 @@ class NETLIB_NAME(solver);
 class NETLIB_NAME(mainclock);
 class NETLIB_NAME(base_d_to_a_proxy);
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // netlist_output_family_t
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 struct netlist_logic_family_desc_t
 {
@@ -280,12 +293,13 @@ struct netlist_logic_family_desc_t
  * Only devices of type GENERIC should have a family description entry
  */
 
-extern netlist_logic_family_desc_t netlist_family_ttl;
+extern netlist_logic_family_desc_t netlist_family_TTL;
+extern netlist_logic_family_desc_t netlist_family_CD4000;
 
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // netlist_state_t
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 template< typename X>
 class netlist_state_t {
@@ -300,9 +314,9 @@ private:
   X m_x;
 };
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // netlist_object_t
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 class netlist_object_t
 {
@@ -345,7 +359,8 @@ public:
 	ATTR_COLD const pstring &name() const;
 
 	PSTATE_INTERFACE_DECL()
-	template<typename C> ATTR_COLD void save(netlist_state_t<C> &state, const pstring &stname)
+	template<typename C> ATTR_COLD void save(netlist_state_t<C> &state,
+	        const pstring &stname)
 	{
 	    save(state.ref(), stname);
 	}
@@ -377,9 +392,9 @@ private:
 	netlist_base_t * RESTRICT m_netlist;
 };
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // netlist_owned_object_t
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 class netlist_owned_object_t : public netlist_object_t
 {
@@ -394,9 +409,9 @@ private:
 	netlist_core_device_t * RESTRICT m_netdev;
 };
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // netlist_core_terminal_t
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 class netlist_core_terminal_t : public netlist_owned_object_t, public plinkedlist_element_t<netlist_core_terminal_t>
 {
@@ -436,7 +451,7 @@ public:
 		m_state = astate;
 	}
 
-	const netlist_logic_family_desc_t *m_family_desc;
+	const netlist_logic_family_desc_t *m_logic_family;
 
 protected:
 	ATTR_COLD virtual void save_register()
@@ -505,9 +520,9 @@ private:
 };
 
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // netlist_input_t
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 class netlist_input_t : public netlist_core_terminal_t
 {
@@ -533,9 +548,9 @@ protected:
 private:
 };
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // netlist_logic_input_t
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 class netlist_logic_input_t : public netlist_input_t
 {
@@ -553,9 +568,9 @@ public:
 
 };
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // netlist_ttl_input_t
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 class netlist_ttl_input_t : public netlist_logic_input_t
 {
@@ -564,9 +579,9 @@ public:
 		: netlist_logic_input_t() { }
 };
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // netlist_analog_input_t
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 class netlist_analog_input_t : public netlist_input_t
 {
@@ -579,9 +594,9 @@ public:
 
 //#define INPVAL(_x) (_x).Q()
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // net_net_t
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 class netlist_net_t : public netlist_object_t
 {
@@ -759,9 +774,9 @@ public:
     netlist_matrix_solver_t *m_solver;
 };
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // net_output_t
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 class netlist_output_t : public netlist_core_terminal_t
 {
@@ -829,9 +844,9 @@ private:
     netlist_analog_net_t m_my_net;
 };
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // net_param_t
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 class netlist_param_t : public netlist_owned_object_t
 {
@@ -941,9 +956,9 @@ private:
 	pstring m_param;
 };
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // net_device_t
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 class netlist_core_device_t : public netlist_object_t
 {
@@ -952,7 +967,7 @@ public:
 
 	typedef plinearlist_t<netlist_core_device_t *> list_t;
 
-	ATTR_COLD netlist_core_device_t(const family_t afamily, const netlist_logic_family_desc_t *family_desc);
+	ATTR_COLD netlist_core_device_t(const family_t afamily);
 
 	ATTR_COLD virtual ~netlist_core_device_t();
 
@@ -1013,12 +1028,14 @@ public:
 	net_update_delegate static_update;
 #endif
 
-	const netlist_logic_family_desc_t *m_family_desc;
-
 protected:
 
 	ATTR_HOT virtual void update() { }
 	ATTR_COLD virtual void start() { }
+	ATTR_COLD virtual const netlist_logic_family_desc_t *logic_family()
+	{
+	    return &netlist_family_TTL;
+	}
 
 private:
 };
@@ -1061,9 +1078,9 @@ private:
 };
 
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // netlist_queue_t
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 class netlist_queue_t : public netlist_timed_queue<netlist_net_t *, netlist_time, 512>,
                         public netlist_object_t,
@@ -1086,9 +1103,9 @@ private:
 	char m_name[512][64];
 };
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // netlist_base_t
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 
 class netlist_base_t : public netlist_object_t, public pstate_manager_t
@@ -1216,9 +1233,9 @@ private:
 	netlist_setup_t *m_setup;
 };
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Inline implementations
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 PSTATE_INTERFACE(netlist_object_t, m_netlist, name())
 
@@ -1357,9 +1374,9 @@ ATTR_HOT inline void netlist_analog_output_t::set_Q(const double newQ)
 }
 
 
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // net_dev class factory
-// ----------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
 class net_device_t_base_factory
 {

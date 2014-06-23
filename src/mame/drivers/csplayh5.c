@@ -30,7 +30,6 @@
 #include "cpu/z80/tmpz84c011.h"
 #include "sound/dac.h"
 #include "sound/3812intf.h"
-#include "cpu/z80/z80daisy.h"
 #include "machine/nvram.h"
 #include "cpu/h8/h83002.h"
 
@@ -45,14 +44,16 @@ public:
 		m_v9958(*this, "v9958"),
 		m_dac1(*this, "dac1"),
 		m_dac2(*this, "dac2")
-		{ }
-
-	UINT16 m_mux_data;
-
+	{ }
 
 	required_device<cpu_device> m_maincpu;
 	required_device<tmp68301_device> m_tmp68301;
 	required_device<v9958_device> m_v9958;
+	required_device<dac_device> m_dac1;
+	required_device<dac_device> m_dac2;
+
+	UINT16 m_mux_data;
+
 	DECLARE_READ16_MEMBER(csplayh5_mux_r);
 	DECLARE_WRITE16_MEMBER(csplayh5_mux_w);
 	DECLARE_WRITE16_MEMBER(csplayh5_sound_w);
@@ -79,8 +80,6 @@ public:
 	virtual void machine_reset();
 	TIMER_DEVICE_CALLBACK_MEMBER(csplayh5_irq);
 	DECLARE_WRITE_LINE_MEMBER(csplayh5_vdp0_interrupt);
-	required_device<dac_device> m_dac1;
-	required_device<dac_device> m_dac2;
 };
 
 
@@ -451,7 +450,7 @@ TIMER_DEVICE_CALLBACK_MEMBER(csplayh5_state::csplayh5_irq)
 
 static const z80_daisy_config daisy_chain_sound[] =
 {
-	{ "audiocpu:ctc" },
+	TMPZ84C011_DAISY_INTERNAL,
 	{ NULL }
 };
 
@@ -481,8 +480,7 @@ static MACHINE_CONFIG_START( csplayh5, csplayh5_state )
 	MCFG_TMPZ84C011_PORTC_WRITE_CB(WRITE8(csplayh5_state, soundcpu_dac1_w))
 	MCFG_TMPZ84C011_PORTD_READ_CB(READ8(csplayh5_state, soundcpu_portd_r))
 	MCFG_TMPZ84C011_PORTE_WRITE_CB(WRITE8(csplayh5_state, soundcpu_porte_w))
-	MCFG_TMPZ84C011_Z80CTC_INTR_CB(INPUTLINE("audiocpu", INPUT_LINE_IRQ0))
-	MCFG_TMPZ84C011_Z80CTC_ZC0_CB(DEVWRITELINE("audiocpu:ctc", z80ctc_device, trg3))
+	MCFG_TMPZ84C011_ZC0_CB(DEVWRITELINE("audiocpu", tmpz84c011_device, trg3))
 
 	MCFG_NVRAM_ADD_0FILL("nvram")
 
