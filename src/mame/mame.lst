@@ -5540,7 +5540,8 @@ mkartagp        // 2005.12 Mario Kart Arcade Grand Prix
                 // 2006.01.31 Virtua Striker 4 Ver.2006 (export)
 vs42006         // 2006.05 Virtua Striker 4 Ver.2006 (Japan) (Rev D)
 				// 2006.?? Firmware Update For Compact Flash Box (Rev A)
-				// 2007.03 Mario Kart Arcade Grand Prix 2
+mkartag2		// 2007.03 Mario Kart Arcade Grand Prix 2
+mkartag2a		// 2007.03 Mario Kart Arcade Grand Prix 2
 
 // Chihiro (X-Box based)
 chihiro         // 2002.?? Chihiro BIOS
@@ -8498,6 +8499,7 @@ chimerab        // (c) 1993
 cybattlr        // (c) 1993
 hayaosi1        // (c) 1993
 peekaboo        // (c) 1993
+peekaboo1		// (c) 1993
 
 // Jaleco Mega System 32 games
 hayaosi2        // (c) 1993

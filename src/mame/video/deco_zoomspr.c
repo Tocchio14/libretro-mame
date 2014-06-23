@@ -3,6 +3,11 @@
 
 /* probably 186 + 187 custom chips, although there is a 145 too? */
 
+// helicopter in lockload is only half drawn? (3rd attract demo)
+// how are we meant to mix these with the tilemaps, parts must go above / behind parts of tilemap '4/7' in lockload, could be more priority masking sprites we're missing / not drawing tho?
+// dragongun also does a masking trick on the dragon during the attract intro, it should not be visible but rather cause the fire to be invisible in the shape of the dragon (see note / hack in code to enable this effect)
+// dragongun 'waterfall' prior to one of the bosses also needs correct priority
+
 #include "emu.h"
 #include "deco_zoomspr.h"
 
@@ -47,11 +52,13 @@ void deco_zoomspr_device::device_reset()
 /******************************************************************************/
 
 
-inline void deco_zoomspr_device::deco_zoomspr_device::dragngun_drawgfxzoom(
+inline void deco_zoomspr_device::dragngun_drawgfxzoom(
 		bitmap_rgb32 &dest_bmp,const rectangle &clip,gfx_element *gfx,
 		UINT32 code,UINT32 color,int flipx,int flipy,int sx,int sy,
 		int transparent_color,
-		int scalex, int scaley,bitmap_ind8 *pri_buffer,UINT32 pri_mask, int sprite_screen_width, int  sprite_screen_height, UINT8 alpha )
+		int scalex, int scaley,bitmap_ind8 *pri_buffer,UINT32 pri_mask, int sprite_screen_width, int  sprite_screen_height, UINT8 alpha,
+		bitmap_ind8 &pri_bitmap, bitmap_rgb32 &temp_bitmap,
+		int priority)
 {
 	rectangle myclip;
 
@@ -66,7 +73,7 @@ inline void deco_zoomspr_device::deco_zoomspr_device::dragngun_drawgfxzoom(
 
 	/* KW 991012 -- Added code to force clip to bitmap boundary */
 	myclip = clip;
-	myclip &= dest_bmp.cliprect();
+	myclip &= temp_bitmap.cliprect();
 
 	{
 		if( gfx )
@@ -137,42 +144,31 @@ inline void deco_zoomspr_device::deco_zoomspr_device::dragngun_drawgfxzoom(
 					/* case 1: no alpha */
 					if (alpha == 0xff)
 					{
-						if (pri_buffer)
 						{
 							for( y=sy; y<ey; y++ )
 							{
 								const UINT8 *source = code_base + (y_index>>16) * gfx->rowbytes();
-								UINT32 *dest = &dest_bmp.pix32(y);
-								UINT8 *pri = &pri_buffer->pix8(y);
+								UINT32 *dest = &temp_bitmap.pix32(y);
+								UINT8 *pri = &pri_bitmap.pix8(y);
+
 
 								int x, x_index = x_index_base;
 								for( x=sx; x<ex; x++ )
 								{
 									int c = source[x_index>>16];
-									if( c != transparent_color )
+									if (c != transparent_color)
 									{
-										if (((1 << pri[x]) & pri_mask) == 0)
+										if (priority >= pri[x])
+										{
 											dest[x] = pal[c];
-										pri[x] = 31;
+											dest[x] |= 0xff000000;
+										}
+										else // sprites can have a 'masking' effect on other sprites
+										{
+											dest[x] = 0x00000000;
+										}
 									}
-									x_index += dx;
-								}
 
-								y_index += dy;
-							}
-						}
-						else
-						{
-							for( y=sy; y<ey; y++ )
-							{
-								const UINT8 *source = code_base + (y_index>>16) * gfx->rowbytes();
-								UINT32 *dest = &dest_bmp.pix32(y);
-
-								int x, x_index = x_index_base;
-								for( x=sx; x<ex; x++ )
-								{
-									int c = source[x_index>>16];
-									if( c != transparent_color ) dest[x] = pal[c];
 									x_index += dx;
 								}
 
@@ -184,42 +180,39 @@ inline void deco_zoomspr_device::deco_zoomspr_device::dragngun_drawgfxzoom(
 					/* alpha-blended */
 					else
 					{
-						if (pri_buffer)
 						{
 							for( y=sy; y<ey; y++ )
 							{
 								const UINT8 *source = code_base + (y_index>>16) * gfx->rowbytes();
-								UINT32 *dest = &dest_bmp.pix32(y);
-								UINT8 *pri = &pri_buffer->pix8(y);
+								UINT32 *dest = &temp_bitmap.pix32(y);
+								UINT8 *pri = &pri_bitmap.pix8(y);
+								UINT32 *tmapcolor = &dest_bmp.pix32(y);
 
+								
 								int x, x_index = x_index_base;
 								for( x=sx; x<ex; x++ )
 								{
 									int c = source[x_index>>16];
-									if( c != transparent_color )
+									if (c != transparent_color)
 									{
-										if (((1 << pri[x]) & pri_mask) == 0)
-											dest[x] = alpha_blend_r32(dest[x], pal[c], alpha);
-										pri[x] = 31;
+										if (priority >= pri[x])
+										{
+											// this logic doesn't seem correct.  Sprites CAN blend other sprites (needed in many places) but based on videos of the character select screen it appears that sprites can't blend already blended sprites
+											// I'm not sure which colour gets used but the video shows a single shade of yellow rather than the yellow blending the yellow)
+
+											if ((dest[x] & 0xff000000) == 0x00000000)
+												dest[x] = alpha_blend_r32(tmapcolor[x] & 0x00ffffff, pal[c] & 0x00ffffff, alpha); // if nothing has been drawn pull the pixel from the tilemap to blend with
+											else
+												dest[x] = alpha_blend_r32(dest[x] & 0x00ffffff, pal[c] & 0x00ffffff, alpha); // otherwise blend with what was previously drawn
+
+											dest[x] |= 0xff000000;
+										}
+										else // sprites can have a 'masking' effect on other sprites
+										{
+											dest[x] = 0x00000000;
+										}
 									}
-									x_index += dx;
-								}
 
-								y_index += dy;
-							}
-						}
-						else
-						{
-							for( y=sy; y<ey; y++ )
-							{
-								const UINT8 *source = code_base + (y_index>>16) * gfx->rowbytes();
-								UINT32 *dest = &dest_bmp.pix32(y);
-
-								int x, x_index = x_index_base;
-								for( x=sx; x<ex; x++ )
-								{
-									int c = source[x_index>>16];
-									if( c != transparent_color ) dest[x] = alpha_blend_r32(dest[x], pal[c], alpha);
 									x_index += dx;
 								}
 
@@ -233,11 +226,12 @@ inline void deco_zoomspr_device::deco_zoomspr_device::dragngun_drawgfxzoom(
 	}
 }
 
-void deco_zoomspr_device::dragngun_draw_sprites( bitmap_rgb32 &bitmap, const rectangle &cliprect, const UINT32 *spritedata, UINT32* dragngun_sprite_layout_0_ram, UINT32* dragngun_sprite_layout_1_ram, UINT32* dragngun_sprite_lookup_0_ram, UINT32* dragngun_sprite_lookup_1_ram, UINT32 dragngun_sprite_ctrl )
+void deco_zoomspr_device::dragngun_draw_sprites( bitmap_rgb32 &bitmap, const rectangle &cliprect, const UINT32 *spritedata, UINT32* dragngun_sprite_layout_0_ram, UINT32* dragngun_sprite_layout_1_ram, UINT32* dragngun_sprite_lookup_0_ram, UINT32* dragngun_sprite_lookup_1_ram, UINT32 dragngun_sprite_ctrl,  bitmap_ind8 &pri_bitmap, bitmap_rgb32 &temp_bitmap)
 {
 	const UINT32 *layout_ram;
 	const UINT32 *lookup_ram;
 	int offs;
+	temp_bitmap.fill(0x00000000, cliprect);
 
 	/*
 	    Sprites are built from main control ram, which references tile
@@ -284,9 +278,9 @@ void deco_zoomspr_device::dragngun_draw_sprites( bitmap_rgb32 &bitmap, const rec
 	        0x01ff - Y block offset
 	*/
 
-	/* Sprite global disable bit */
-	if (dragngun_sprite_ctrl&0x40000000)
-		return;
+	/* Sprite global disable bit - can't be, it's set in lockload calibration menu where the targets are sprites */
+//	if (dragngun_sprite_ctrl&0x40000000)
+//		return;
 
 	for (offs = 0;offs < 0x800;offs += 8)
 	{
@@ -299,25 +293,39 @@ void deco_zoomspr_device::dragngun_draw_sprites( bitmap_rgb32 &bitmap, const rec
 		if (!scalex || !scaley) /* Zero pixel size in X or Y - skip block */
 			continue;
 
-		if (spritedata[offs+0]&0x400)
-			layout_ram = dragngun_sprite_layout_1_ram + ((spritedata[offs+0]&0x1ff)*4); //CHECK!
+		int layoutram_offset = (spritedata[offs + 0] & 0x1ff) * 4;
+
+		if (spritedata[offs + 0] & 0x400)
+			layout_ram = dragngun_sprite_layout_1_ram;
 		else
-			layout_ram = dragngun_sprite_layout_0_ram + ((spritedata[offs+0]&0x1ff)*4); //1ff in drag gun code??
-		h = (layout_ram[1]>>0)&0xf;
-		w = (layout_ram[1]>>4)&0xf;
+			layout_ram = dragngun_sprite_layout_0_ram;
+		h = (layout_ram[layoutram_offset + 1]>>0)&0xf;
+		w = (layout_ram[layoutram_offset + 1]>>4)&0xf;
 		if (!h || !w)
 			continue;
 
 		sx = spritedata[offs+2] & 0x3ff;
 		sy = spritedata[offs+3] & 0x3ff;
-		bx = layout_ram[2] & 0x1ff;
-		by = layout_ram[3] & 0x1ff;
+		bx = layout_ram[layoutram_offset + 2] & 0x1ff;
+		by = layout_ram[layoutram_offset + 3] & 0x1ff;
 		if (bx&0x100) bx=1-(bx&0xff);
 		if (by&0x100) by=1-(by&0xff); /* '1 - ' is strange, but correct for Dragongun 'Winners' screen. */
 		if (sx >= 512) sx -= 1024;
 		if (sy >= 512) sy -= 1024;
 
 		colour = spritedata[offs+6]&0x1f;
+
+		int priority = (spritedata[offs + 6] & 0x60) >> 5;
+		
+
+		
+
+//		printf("%02x\n", priority);
+		
+		if (priority == 0) priority = 7;
+		else if (priority == 1) priority = 7; // set to 1 to have the 'masking effect' with the dragon on the dragngun attract mode, but that breaks the player select where it needs to be 3, probably missing some bits..
+		else if (priority == 2) priority = 7;
+		else if (priority == 3) priority = 7;
 
 		if (spritedata[offs+6]&0x80)
 			alpha=0x80;
@@ -327,11 +335,13 @@ void deco_zoomspr_device::dragngun_draw_sprites( bitmap_rgb32 &bitmap, const rec
 		fx = spritedata[offs+4]&0x8000;
 		fy = spritedata[offs+5]&0x8000;
 
+		int lookupram_offset = layout_ram[layoutram_offset + 0] & 0x1fff;
+
 //      if (spritedata[offs+0]&0x400)
-		if (layout_ram[0]&0x2000)
-			lookup_ram = dragngun_sprite_lookup_1_ram + (layout_ram[0]&0x1fff);
+		if (layout_ram[layoutram_offset + 0] & 0x2000)
+			lookup_ram = dragngun_sprite_lookup_1_ram;
 		else
-			lookup_ram = dragngun_sprite_lookup_0_ram + (layout_ram[0]&0x1fff);
+			lookup_ram = dragngun_sprite_lookup_0_ram;
 
 		zoomx=scalex * 0x10000 / (w*16);
 		zoomy=scaley * 0x10000 / (h*16);
@@ -350,7 +360,10 @@ void deco_zoomspr_device::dragngun_draw_sprites( bitmap_rgb32 &bitmap, const rec
 			for (x=0; x<w; x++) {
 				int bank,sprite;
 
-				sprite = ((*(lookup_ram++))&0x3fff);
+				sprite = lookup_ram[lookupram_offset];
+				sprite &= 0x3fff;
+
+				lookupram_offset++;
 
 				/* High bits of the sprite reference into the sprite control bits for banking */
 				switch (sprite&0x3000) {
@@ -378,7 +391,6 @@ void deco_zoomspr_device::dragngun_draw_sprites( bitmap_rgb32 &bitmap, const rec
 				if (sprite&0x8000) bank=4; else bank=3;
 				sprite&=0x7fff;
 
-				if (zoomx!=0x10000 || zoomy!=0x10000)
 					dragngun_drawgfxzoom(
 						bitmap,cliprect,m_gfxdecode->gfx(bank),
 						sprite,
@@ -386,14 +398,11 @@ void deco_zoomspr_device::dragngun_draw_sprites( bitmap_rgb32 &bitmap, const rec
 						fx,fy,
 						xpos>>16,ypos>>16,
 						15,zoomx,zoomy,NULL,0,
-						((xpos+(zoomx<<4))>>16) - (xpos>>16), ((ypos+(zoomy<<4))>>16) - (ypos>>16), alpha );
-				else
-					m_gfxdecode->gfx(bank)->alpha(bitmap,cliprect,
-						sprite,
-						colour,
-						fx,fy,
-						xpos>>16,ypos>>16,
-						15,alpha);
+						((xpos+(zoomx<<4))>>16) - (xpos>>16), ((ypos+(zoomy<<4))>>16) - (ypos>>16), alpha,
+						pri_bitmap, temp_bitmap,
+						priority
+						);
+
 
 				if (fx)
 					xpos-=zoomx<<4;
@@ -406,5 +415,23 @@ void deco_zoomspr_device::dragngun_draw_sprites( bitmap_rgb32 &bitmap, const rec
 				ypos+=zoomy<<4;
 		}
 	}
+		
+	for (int y = cliprect.min_y; y <= cliprect.max_y; y++)
+	{
+		UINT32 *src = &temp_bitmap.pix32(y);
+		UINT32 *dst = &bitmap.pix32(y);
+
+		for (int x = cliprect.min_x; x <= cliprect.max_x; x++)
+		{
+			UINT32 srcpix = src[x];
+
+			if ((srcpix & 0xff000000) == 0xff000000)
+			{
+				dst[x] = srcpix & 0x00ffffff;
+			}
+		}
+
+	}
+
 }
 
