@@ -19,6 +19,12 @@
 #ifndef __OSDCORE_H__
 #define __OSDCORE_H__
 
+#ifdef __LIBRETRO__
+#ifdef RETRO_AND
+#include <stdarg.h>
+#endif
+#endif
+
 #include "osdcomm.h"
 #include "delegate.h"
 

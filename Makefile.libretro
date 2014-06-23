@@ -653,6 +653,8 @@ endif
 # add SQLite3 library
 ifeq ($(TARGETOS), win32)
 SQLITE3_LIB = $(OBJ)/libsqlite3.a
+else ifeq ($(platform), android)
+SQLITE3_LIB = $(OBJ)/libsqlite3.a
 else
 SQLITE3_LIB = $(OBJ)/libsqlite3.a -ldl
 endif

@@ -18,6 +18,12 @@
 #include "drivenum.h"
 #include "web/mongoose.h"
 
+#ifdef __LIBRETRO__
+#ifdef RETRO_AND
+#undef _L
+#endif
+#endif
+
 //**************************************************************************
 //  LUA ENGINE
 //**************************************************************************
@@ -523,8 +529,9 @@ void lua_engine::initialize()
 		.endNamespace ();
 	luabridge::push (m_lua_state, machine_manager::instance());
 	lua_setglobal(m_lua_state, "manager");
-
+#ifndef __LIBRETRO__
 	mg_start_thread(::serve_lua, this);
+#endif
 #endif
 
 }
