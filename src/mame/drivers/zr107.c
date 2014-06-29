@@ -253,6 +253,7 @@ public:
 	INTERRUPT_GEN_MEMBER(zr107_vblank);
 	WRITE_LINE_MEMBER(k054539_irq_gen);
 	ADC083X_INPUT_CB(adc0838_callback);
+	K056832_CB_MEMBER(tile_callback);
 
 protected:
 	virtual void machine_start();
@@ -298,7 +299,7 @@ WRITE32_MEMBER(zr107_state::paletteram32_w)
 
 #define NUM_LAYERS  2
 
-static void game_tile_callback(running_machine &machine, int layer, int *code, int *color, int *flags)
+K056832_CB_MEMBER(zr107_state::tile_callback)
 {
 	*color += layer * 0x40;
 }
@@ -534,11 +535,6 @@ static ADDRESS_MAP_START( sound_memmap, AS_PROGRAM, 16, zr107_state )
 	AM_RANGE(0x580000, 0x580001) AM_WRITENOP // 'NRES' - D2: K056602 /RESET
 ADDRESS_MAP_END
 
-static const k054539_interface k054539_config =
-{
-	"shared"
-};
-
 /*****************************************************************************/
 
 
@@ -737,15 +733,6 @@ WRITE_LINE_MEMBER(zr107_state::k054539_irq_gen)
 }
 
 
-static const k056832_interface zr107_k056832_intf =
-{
-	"gfx2", 1,
-	K056832_BPP_8,
-	1, 0,
-	KONAMI_ROM_DEINTERLEAVE_NONE,
-	game_tile_callback, "none"
-};
-
 /* PowerPC interrupts
 
     IRQ0:  Vblank
@@ -797,7 +784,9 @@ static MACHINE_CONFIG_START( zr107, zr107_state )
 
 	MCFG_GFXDECODE_ADD("gfxdecode", "palette", empty)
 
-	MCFG_K056832_ADD("k056832", zr107_k056832_intf)
+	MCFG_DEVICE_ADD("k056832", K056832, 0)
+	MCFG_K056832_CB(zr107_state, tile_callback)
+	MCFG_K056832_CONFIG("gfx2", 1, K056832_BPP_8, 1, 0, "none")
 	MCFG_K056832_GFXDECODE("gfxdecode")
 	MCFG_K056832_PALETTE("palette")
 
@@ -813,12 +802,14 @@ static MACHINE_CONFIG_START( zr107, zr107_state )
 
 	MCFG_SPEAKER_STANDARD_STEREO("lspeaker", "rspeaker")
 
-	MCFG_K054539_ADD("k054539_1", XTAL_18_432MHz, k054539_config)
+	MCFG_DEVICE_ADD("k054539_1", K054539, XTAL_18_432MHz)
+	MCFG_K054539_REGION_OVERRRIDE("shared")
 	MCFG_K054539_TIMER_HANDLER(WRITELINE(zr107_state, k054539_irq_gen))
 	MCFG_SOUND_ROUTE(0, "lspeaker", 0.75)
 	MCFG_SOUND_ROUTE(1, "rspeaker", 0.75)
 
-	MCFG_K054539_ADD("k054539_2", XTAL_18_432MHz, k054539_config)
+	MCFG_DEVICE_ADD("k054539_2", K054539, XTAL_18_432MHz)
+	MCFG_K054539_REGION_OVERRRIDE("shared")
 	MCFG_SOUND_ROUTE(0, "lspeaker", 0.75)
 	MCFG_SOUND_ROUTE(1, "rspeaker", 0.75)
 
@@ -893,13 +884,14 @@ static MACHINE_CONFIG_START( jetwave, zr107_state )
 
 	MCFG_SPEAKER_STANDARD_STEREO("lspeaker", "rspeaker")
 
-	MCFG_K054539_ADD("k054539_1", XTAL_18_432MHz, k054539_config)
+	MCFG_DEVICE_ADD("k054539_1", K054539, XTAL_18_432MHz)
+	MCFG_K054539_REGION_OVERRRIDE("shared")
 	MCFG_K054539_TIMER_HANDLER(WRITELINE(zr107_state, k054539_irq_gen))
 	MCFG_SOUND_ROUTE(0, "lspeaker", 0.75)
 	MCFG_SOUND_ROUTE(1, "rspeaker", 0.75)
 
-	MCFG_K054539_ADD("k054539_2", XTAL_18_432MHz, k054539_config)
-	MCFG_SOUND_CONFIG(k054539_config)
+	MCFG_DEVICE_ADD("k054539_2", K054539, XTAL_18_432MHz)
+	MCFG_K054539_REGION_OVERRRIDE("shared")
 	MCFG_SOUND_ROUTE(0, "lspeaker", 0.75)
 	MCFG_SOUND_ROUTE(1, "rspeaker", 0.75)
 
