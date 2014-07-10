@@ -32,6 +32,19 @@
 #define VA13 BIT(va, 13)
 #define VA12 BIT(va, 12)
 
+enum
+{
+	PLA_OUT_CASRAM = 0,
+	PLA_OUT_BASIC  = 1,
+	PLA_OUT_KERNAL = 2,
+	PLA_OUT_CHAROM = 3,
+	PLA_OUT_GRW    = 4,
+	PLA_OUT_IO     = 5,
+	PLA_OUT_ROML   = 6,
+	PLA_OUT_ROMH   = 7
+};
+
+
 QUICKLOAD_LOAD_MEMBER( c64_state, cbm_c64 )
 {
 	return general_cbm_loadsnap(image, file_type, quickload_size, m_maincpu->space(AS_PROGRAM), 0, cbm_quick_sethiaddress);
@@ -66,7 +79,7 @@ void c64_state::check_interrupts()
 //  read_pla -
 //-------------------------------------------------
 
-void c64_state::read_pla(offs_t offset, offs_t va, int rw, int aec, int ba, int *casram, int *basic, int *kernal, int *charom, int *grw, int *io, int *roml, int *romh)
+int c64_state::read_pla(offs_t offset, offs_t va, int rw, int aec, int ba)
 {
 	//int ba = m_vic->ba_r();
 	//int aec = !m_vic->aec_r();
@@ -78,16 +91,7 @@ void c64_state::read_pla(offs_t offset, offs_t va, int rw, int aec, int ba, int 
 	UINT32 input = VA12 << 15 | VA13 << 14 | game << 13 | exrom << 12 | rw << 11 | aec << 10 | ba << 9 | A12 << 8 |
 		A13 << 7 | A14 << 6 | A15 << 5 | m_va14 << 4 | m_charen << 3 | m_hiram << 2 | m_loram << 1 | cas;
 
-	UINT32 data = m_pla->read(input);
-
-	*casram = BIT(data, 0);
-	*basic = BIT(data, 1);
-	*kernal = BIT(data, 2);
-	*charom = BIT(data, 3);
-	*grw = BIT(data, 4);
-	*io = BIT(data, 5);
-	*roml = BIT(data, 6);
-	*romh = BIT(data, 7);
+	return m_pla->read(input);
 }
 
 
@@ -98,11 +102,10 @@ void c64_state::read_pla(offs_t offset, offs_t va, int rw, int aec, int ba, int 
 UINT8 c64_state::read_memory(address_space &space, offs_t offset, offs_t va, int aec, int ba)
 {
 	int rw = 1;
-	int casram, basic, kernal, charom, grw, io, roml, romh;
 	int io1 = 1, io2 = 1;
 	int sphi2 = m_vic->phi0_r();
 
-	read_pla(offset, va, rw, !aec, ba, &casram, &basic, &kernal, &charom, &grw, &io, &roml, &romh);
+	int plaout = read_pla(offset, va, rw, !aec, ba);
 
 	UINT8 data = 0xff;
 
@@ -111,7 +114,7 @@ UINT8 c64_state::read_memory(address_space &space, offs_t offset, offs_t va, int
 		data = m_vic->bus_r();
 	}
 
-	if (!casram)
+	if (!BIT(plaout, PLA_OUT_CASRAM))
 	{
 		if (aec)
 		{
@@ -122,71 +125,63 @@ UINT8 c64_state::read_memory(address_space &space, offs_t offset, offs_t va, int
 			data = m_ram->pointer()[(!m_va15 << 15) | (!m_va14 << 14) | va];
 		}
 	}
-	if (!basic)
+	if (!BIT(plaout, PLA_OUT_BASIC))
 	{
-		if (m_basic != NULL)
-		{
-			data = m_basic->base()[offset & 0x1fff];
-		}
-		else
-		{
-			data = m_kernal->base()[offset & 0x1fff];
-		}
+		data = m_basic[offset & 0x1fff];
 	}
-	if (!kernal)
+	if (!BIT(plaout, PLA_OUT_KERNAL))
 	{
-		if (m_basic != NULL)
-		{
-			data = m_kernal->base()[offset & 0x1fff];
-		}
-		else
-		{
-			data = m_kernal->base()[0x2000 | (offset & 0x1fff)];
-		}
+		data = m_kernal[offset & 0x1fff];
 	}
-	if (!charom)
+	if (!BIT(plaout, PLA_OUT_CHAROM))
 	{
-		data = m_charom->base()[offset & 0xfff];
+		data = m_charom[offset & 0xfff];
 	}
-	if (!io)
+	if (!BIT(plaout, PLA_OUT_IO))
 	{
-		switch ((offset >> 10) & 0x03)
+		switch ((offset >> 8) & 0x0f)
 		{
-		case 0: // VIC
+		case 0:
+		case 1:
+		case 2:
+		case 3: // VIC
 			data = m_vic->read(space, offset & 0x3f);
 			break;
 
-		case 1: // SID
+		case 4:
+		case 5:
+		case 6:
+		case 7: // SID
 			data = m_sid->read(space, offset & 0x1f);
 			break;
 
-		case 2: // COLOR
+		case 0x8:
+		case 0x9:
+		case 0xa:
+		case 0xb: // COLOR
 			data = m_color_ram[offset & 0x3ff] & 0x0f;
 			break;
 
-		case 3: // CIAS
-			switch ((offset >> 8) & 0x03)
-			{
-			case 0: // CIA1
-				data = m_cia1->read(space, offset & 0x0f);
-				break;
+		case 0xc: // CIA1
+			data = m_cia1->read(space, offset & 0x0f);
+			break;
 
-			case 1: // CIA2
-				data = m_cia2->read(space, offset & 0x0f);
-				break;
+		case 0xd: // CIA2
+			data = m_cia2->read(space, offset & 0x0f);
+			break;
 
-			case 2: // I/O1
-				io1 = 0;
-				break;
+		case 0xe: // I/O1
+			io1 = 0;
+			break;
 
-			case 3: // I/O2
-				io2 = 0;
-				break;
-			}
+		case 0xf: // I/O2
+			io2 = 0;
 			break;
 		}
 	}
 
+	int roml = BIT(plaout, PLA_OUT_ROML);
+	int romh = BIT(plaout, PLA_OUT_ROMH);
 	return m_exp->cd_r(space, offset, data, sphi2, ba, roml, romh, io1, io2);
 }
 
@@ -198,12 +193,11 @@ UINT8 c64_state::read_memory(address_space &space, offs_t offset, offs_t va, int
 void c64_state::write_memory(address_space &space, offs_t offset, UINT8 data, int aec, int ba)
 {
 	int rw = 0;
-	int casram, basic, kernal, charom, grw, io, roml, romh;
 	offs_t va = 0;
 	int io1 = 1, io2 = 1;
 	int sphi2 = m_vic->phi0_r();
 
-	read_pla(offset, va, rw, !aec, ba, &casram, &basic, &kernal, &charom, &grw, &io, &roml, &romh);
+	int plaout = read_pla(offset, va, rw, !aec, ba);
 
 	if (offset < 0x0002)
 	{
@@ -211,49 +205,55 @@ void c64_state::write_memory(address_space &space, offs_t offset, UINT8 data, in
 		data = m_vic->bus_r();
 	}
 
-	if (!casram)
+	if (!BIT(plaout, PLA_OUT_CASRAM))
 	{
 		m_ram->pointer()[offset] = data;
 	}
-	if (!io)
+	if (!BIT(plaout, PLA_OUT_IO))
 	{
-		switch ((offset >> 10) & 0x03)
+		switch ((offset >> 8) & 0x0f)
 		{
-		case 0: // VIC
+		case 0:
+		case 1:
+		case 2:
+		case 3: // VIC
 			m_vic->write(space, offset & 0x3f, data);
 			break;
 
-		case 1: // SID
+		case 4:
+		case 5:
+		case 6:
+		case 7: // SID
 			m_sid->write(space, offset & 0x1f, data);
 			break;
 
-		case 2: // COLOR
-			if (!grw) m_color_ram[offset & 0x3ff] = data & 0x0f;
+		case 0x8:
+		case 0x9:
+		case 0xa:
+		case 0xb: // COLOR
+			if (!BIT(plaout, PLA_OUT_GRW)) m_color_ram[offset & 0x3ff] = data & 0x0f;
 			break;
 
-		case 3: // CIAS
-			switch ((offset >> 8) & 0x03)
-			{
-			case 0: // CIA1
-				m_cia1->write(space, offset & 0x0f, data);
-				break;
+		case 0xc: // CIA1
+			m_cia1->write(space, offset & 0x0f, data);
+			break;
 
-			case 1: // CIA2
-				m_cia2->write(space, offset & 0x0f, data);
-				break;
+		case 0xd: // CIA2
+			m_cia2->write(space, offset & 0x0f, data);
+			break;
 
-			case 2: // I/O1
-				io1 = 0;
-				break;
+		case 0xe: // I/O1
+			io1 = 0;
+			break;
 
-			case 3: // I/O2
-				io2 = 0;
-				break;
-			}
+		case 0xf: // I/O2
+			io2 = 0;
 			break;
 		}
 	}
 
+	int roml = BIT(plaout, PLA_OUT_ROML);
+	int romh = BIT(plaout, PLA_OUT_ROMH);
 	m_exp->cd_w(space, offset, data, sphi2, ba, roml, romh, io1, io2);
 }
 
@@ -1029,6 +1029,19 @@ SLOT_INTERFACE_END
 
 void c64_state::machine_start()
 {
+	// get pointers to ROMs
+	if (memregion("basic") != NULL)
+	{
+		m_basic = memregion("basic")->base();
+		m_kernal = memregion("kernal")->base();
+	}
+	else
+	{
+		m_basic = memregion("kernal")->base();
+		m_kernal = &m_basic[0x2000];
+	}
+	m_charom = memregion("charom")->base();
+
 	// allocate memory
 	m_color_ram.allocate(0x400);
 
@@ -1088,6 +1101,7 @@ static MACHINE_CONFIG_START( ntsc, c64_state )
 	// basic hardware
 	MCFG_CPU_ADD(M6510_TAG, M6510, XTAL_14_31818MHz/14)
 	MCFG_CPU_PROGRAM_MAP(c64_mem)
+	MCFG_M6502_DISABLE_DIRECT() // address decoding is 100% dynamic, no RAM/ROM banks
 	MCFG_M6510_PORT_CALLBACKS(READ8(c64_state, cpu_r), WRITE8(c64_state, cpu_w))
 	MCFG_M6510_PORT_PULLS(0x17, 0xc8)
 	MCFG_QUANTUM_PERFECT_CPU(M6510_TAG)
@@ -1243,6 +1257,7 @@ static MACHINE_CONFIG_START( pal, c64_state )
 	// basic hardware
 	MCFG_CPU_ADD(M6510_TAG, M6510, XTAL_17_734472MHz/18)
 	MCFG_CPU_PROGRAM_MAP(c64_mem)
+	MCFG_M6502_DISABLE_DIRECT() // address decoding is 100% dynamic, no RAM/ROM banks
 	MCFG_M6510_PORT_CALLBACKS(READ8(c64_state, cpu_r), WRITE8(c64_state, cpu_w))
 	MCFG_M6510_PORT_PULLS(0x17, 0xc8)
 	MCFG_QUANTUM_PERFECT_CPU(M6510_TAG)
@@ -1376,6 +1391,7 @@ static MACHINE_CONFIG_START( pal_gs, c64gs_state )
 	// basic hardware
 	MCFG_CPU_ADD(M6510_TAG, M6510, XTAL_17_734472MHz/18)
 	MCFG_CPU_PROGRAM_MAP(c64_mem)
+	MCFG_M6502_DISABLE_DIRECT() // address decoding is 100% dynamic, no RAM/ROM banks
 	MCFG_M6510_PORT_CALLBACKS(READ8(c64gs_state, cpu_r), WRITE8(c64gs_state, cpu_w))
 	MCFG_M6510_PORT_PULLS(0x07, 0xc0)
 	MCFG_QUANTUM_PERFECT_CPU(M6510_TAG)
@@ -1479,7 +1495,7 @@ ROM_START( c64 )
 	ROM_REGION( 0x2000, "basic", 0 )
 	ROM_LOAD( "901226-01.u3", 0x0000, 0x2000, CRC(f833d117) SHA1(79015323128650c742a3694c9429aa91f355905e) )
 
-	ROM_REGION( 0x4000, "kernal", 0 )
+	ROM_REGION( 0x2000, "kernal", 0 )
 	ROM_DEFAULT_BIOS("r3")
 	ROM_SYSTEM_BIOS(0, "r1", "Kernal rev. 1" )
 	ROMX_LOAD( "901227-01.u4", 0x0000, 0x2000, CRC(dce782fa) SHA1(87cc04d61fc748b82df09856847bb5c2754a2033), ROM_BIOS(1) )
@@ -1535,12 +1551,10 @@ ROM_START( c64 )
 	ROMX_LOAD( "exos3.u4", 0x0000, 0x2000, CRC(4e54d020) SHA1(f8931b7c0b26807f4de0cc241f0b1e2c8f5271e9), ROM_BIOS(26) )
 	ROM_SYSTEM_BIOS(26, "exos4", "EXOS v4" )
 	ROMX_LOAD( "exos4.u4", 0x0000, 0x2000, CRC(d5cf83a9) SHA1(d5f03a5c0e9d00032d4751ecc6bcd6385879c9c7), ROM_BIOS(27) )
-	ROM_SYSTEM_BIOS(27, "pdc", "ProLogic-DOS Classic" )
-	ROMX_LOAD( "pdc.u4", 0x0000, 0x4000, CRC(6b653b9c) SHA1(0f44a9c62619424a0cd48a90e1b377b987b494e0), ROM_BIOS(28) )
-	ROM_SYSTEM_BIOS(28, "digidos", "DigiDOS" )
-	ROMX_LOAD( "digidos.u4", 0x0000, 0x2000, CRC(2b0c8e89) SHA1(542d6f61c318bced0642e7c2d4d3b34a0f13e634), ROM_BIOS(29) )
-	ROM_SYSTEM_BIOS(29, "magnum", "Magnum Load" )
-	ROMX_LOAD( "magnum.u4", 0x0000, 0x2000, CRC(b2cffcc6) SHA1(827c782c1723b5d0992c05c00738ae4b2133b641), ROM_BIOS(30) )
+	ROM_SYSTEM_BIOS(27, "digidos", "DigiDOS" )
+	ROMX_LOAD( "digidos.u4", 0x0000, 0x2000, CRC(2b0c8e89) SHA1(542d6f61c318bced0642e7c2d4d3b34a0f13e634), ROM_BIOS(28) )
+	ROM_SYSTEM_BIOS(28, "magnum", "Magnum Load" )
+	ROMX_LOAD( "magnum.u4", 0x0000, 0x2000, CRC(b2cffcc6) SHA1(827c782c1723b5d0992c05c00738ae4b2133b641), ROM_BIOS(29) )
 
 	ROM_REGION( 0x1000, "charom", 0 )
 	ROM_LOAD( "901225-01.u5", 0x0000, 0x1000, CRC(ec4272ee) SHA1(adc7c31e18c7c7413d54802ef2f4193da14711aa) )
@@ -1690,7 +1704,11 @@ ROM_END
 
 ROM_START( c64c )
 	ROM_REGION( 0x4000, "kernal", 0 )
-	ROM_LOAD( "251913-01.u4", 0x0000, 0x4000, CRC(0010ec31) SHA1(765372a0e16cbb0adf23a07b80f6b682b39fbf88) )
+	ROM_DEFAULT_BIOS("cbm")
+	ROM_SYSTEM_BIOS(0, "cbm", "Original" )
+	ROMX_LOAD( "251913-01.u4", 0x0000, 0x4000, CRC(0010ec31) SHA1(765372a0e16cbb0adf23a07b80f6b682b39fbf88), ROM_BIOS(1) )
+	ROM_SYSTEM_BIOS(1, "pdc", "ProLogic-DOS Classic" )
+	ROMX_LOAD( "pdc.u4", 0x0000, 0x4000, CRC(6b653b9c) SHA1(0f44a9c62619424a0cd48a90e1b377b987b494e0), ROM_BIOS(2) )
 
 	ROM_REGION( 0x1000, "charom", 0 )
 	ROM_LOAD( "901225-01.u5", 0x0000, 0x1000, CRC(ec4272ee) SHA1(adc7c31e18c7c7413d54802ef2f4193da14711aa) )

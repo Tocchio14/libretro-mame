@@ -2042,8 +2042,8 @@ ROM_START( pepp0083 ) /* Normal board : Tens or Better (PP0083) */
 /*
 PayTable  10s+  2PR  3K   STR  FL  FH  4K  SF  RF  (Bonus)
 ----------------------------------------------------------
-  P39B     1     1    3    5    7  11  50 100 250    800
-  % Range: 91.0-93.0%  Optimum: 95.0%  Hit Frequency: 47.2%
+  P39D     1     1    3    5    7  11  50 100 300    940
+  % Range: 90.6-92.6%  Optimum: 94.6%  Hit Frequency: 48.6%
      Programs Available: PP0083
 */
 	ROM_REGION( 0x10000, "maincpu", 0 )
@@ -2123,9 +2123,9 @@ ROM_END
 ROM_START( pepp0120 ) /* Normal board : Wild Sevens Poker (PP0120) */
 /*
                                         w/7 Four w/o7
-PayTable   3K   STR  FL  FH  4K  SF  5K  RF  7s  RF  (Bonus)
-----------------------------------------------------------
-  ????      1    2    3   4   4   9  ??  25 200 250    ???
+PayTable   3K   STR  FL  FH  4K  SF  5K  RF  7s   RF  (Bonus)
+-------------------------------------------------------------
+  ????      1    2    3   4   4   9  ??  25 200  250    ???
      Programs Available: PP0120
 */
 
@@ -2633,7 +2633,7 @@ PayTable   Js+  2PR  3K   STR  FL  FH  4K  4K  4A  SF  RF  (Bonus)
 	ROM_LOAD( "cap904.u50", 0x0000, 0x0100, CRC(0eec8336) SHA1(a6585c978dbc2f4f3818e3a5b92f8c28be23c4c0) ) /* BPROM type N82S135N verified */
 ROM_END
 
-ROM_START( pepp0219 ) /* Normal board : Standard Draw Poker (Auto Hold) (PP0219) */
+ROM_START( pepp0219 ) /* Normal board : Standard Draw Poker - Auto Hold in Options (PP0219) */
 /*
 PayTable   Js+  2PR  3K   STR  FL  FH  4K  SF  RF  (Bonus)
 ----------------------------------------------------------
@@ -2697,7 +2697,6 @@ PayTable   Js+  2PR  3K   STR  FL  FH  4K  SF  RF  (Bonus)
 ROM_END
 
 ROM_START( pepp0224 ) /* Normal board : Deuces Wild Poker (No Double-up) (PP0224) */
-	ROM_REGION( 0x10000, "maincpu", 0 )
 /*
                                         w/D     w/oD
 PayTable   3K   STR  FL  FH  4K  SF  5K  RF  4D  RF  (Bonus)
@@ -2706,6 +2705,7 @@ PayTable   3K   STR  FL  FH  4K  SF  5K  RF  4D  RF  (Bonus)
   % Range: 92.8-94.8%  Optimum: 96.8%  Hit Frequency: 44.9%
      Programs Available: PP0290, X000224P & PP0224 - Non Double-up Only
 */
+	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "pp0224_a47-a76.u68",   0x00000, 0x10000, CRC(5d6881ad) SHA1(38953ffadea04df614b14c70177736039495c408) ) /* Game Version: A47, Library Version: A76 */
 
 	ROM_REGION( 0x020000, "gfx1", 0 )
@@ -2719,7 +2719,6 @@ PayTable   3K   STR  FL  FH  4K  SF  5K  RF  4D  RF  (Bonus)
 ROM_END
 
 ROM_START( pepp0224a ) /* Normal board : Deuces Wild Poker (No Double-up) (PP0224) */
-	ROM_REGION( 0x10000, "maincpu", 0 )
 /*
                                         w/D     w/oD
 PayTable   3K   STR  FL  FH  4K  SF  5K  RF  4D  RF  (Bonus)
@@ -2728,7 +2727,7 @@ PayTable   3K   STR  FL  FH  4K  SF  5K  RF  4D  RF  (Bonus)
   % Range: 92.8-94.8%  Optimum: 96.8%  Hit Frequency: 44.9%
      Programs Available: PP0290, X000224P & PP0224 - Non Double-up Only
 */
-
+	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "pp0224_961-984.u68",   0x00000, 0x10000, CRC(71d5e112) SHA1(528f06ad7ea7e1e297939c7b3ca0bb7faa8ce8c1) ) /* Game Version: 961, Library Version: 984 */
 
 	ROM_REGION( 0x020000, "gfx1", 0 )
@@ -2756,7 +2755,6 @@ ROM_START( pepp0230 ) /* Normal board : Standard Draw Poker (PP0230) */
 ROM_END
 
 ROM_START( pepp0242 ) /* Normal board : Deuces Wild Poker (PP0242) - Multi Regional / Multi Currency in English / Spanish - Tournament Mode capable */
-	ROM_REGION( 0x10000, "maincpu", 0 )
 /*
                                         w/D     w/oD
 PayTable   3K   STR  FL  FH  4K  SF  5K  RF  4D  RF  (Bonus)
@@ -2765,7 +2763,7 @@ PayTable   3K   STR  FL  FH  4K  SF  5K  RF  4D  RF  (Bonus)
   % Range: 89.4-91.4%  Optimum: 93.4%  Hit Frequency: 45.1%
      Programs Available: PP0242, X000242P
 */
-
+	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "pp0242_a1c-a31.u68",   0x00000, 0x10000, CRC(cb7cdf2b) SHA1(989db6bf860637ef0c9d38c4ec824e2ab92acb89) ) /* Game Version: A1C, Library Version: A31 */
 
 	ROM_REGION( 0x020000, "gfx1", 0 )
@@ -2886,7 +2884,6 @@ PayTable   Js+  2PR  3K   STR  FL  FH  4K  4K  4A  SF  RF  (Bonus)
 ROM_END
 
 ROM_START( pepp0274 ) /* Normal board : Standard Draw Poker (PP0274) - Normal Poker & Tournament Mode capable */
-
 /*
 PayTable   Js+  2PR  3K  STR  FL  FH  4K  SF  RF  (Bonus)
 ---------------------------------------------------------
@@ -3315,7 +3312,6 @@ PayTable   Js+  2PR  3K   STR  FL  FH  4K  SF  RF  (Bonus)
 	ROM_LOAD( "mbo-cg1426.u72",  0x10000, 0x8000, CRC(5fd94bc5) SHA1(b2a23a6a8eb23fbefd7b16e7afb7eddad5f6656c) )
 	ROM_LOAD( "mxo-cg1426.u75",  0x18000, 0x8000, CRC(74bc1556) SHA1(9afc00ec4643baa448e0131e1c7aeb3da4739f59) )
 
-
 	ROM_REGION( 0x100, "proms", 0 )
 	ROM_LOAD( "cap904.u50", 0x0000, 0x0100, CRC(0eec8336) SHA1(a6585c978dbc2f4f3818e3a5b92f8c28be23c4c0) ) /* BPROM type N82S135N verified */
 ROM_END
@@ -3670,14 +3666,6 @@ PayTable   Js+  2PR  3K  STR  FL  FH  4K  4K  4A  SF  RF  (Bonus)
 ROM_END
 
 ROM_START( pepp0531 ) /* Normal board : Joker Poker (PP0531) */
-/*
-                                            w/J     w/oJ
-PayTable   Ks+  2P  3K  STR  FL  FH  4K  SF  RF  5K  RF  (Bonus)
-----------------------------------------------------------------
- P244D      1    1   2   3    5   7  17  50 100 200 400    940
-  % Range: 94.4-96.4%  Optimum: 98.4%  Hit Frequency: 44.1%
-     Programs Available: PP0536
-*/
 	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "pp0531_979-a0c.u68",   0x00000, 0x10000, CRC(6138e095) SHA1(6075613b5d818c26cdc5da1d05cff3af5d4cbf01) ) /* Game Version: 979, Library Version: A0C */
 
@@ -4034,8 +4022,8 @@ Overall average for the 4 of a Kind bonus is 173.35 credits
 	ROM_LOAD( "mgo-cg2xxx.u73",  0x08000, 0x8000, NO_DUMP )
 	ROM_LOAD( "mbo-cg2xxx.u74",  0x10000, 0x8000, NO_DUMP )
 	ROM_LOAD( "mxo-cg2xxx.u75",  0x18000, 0x8000, NO_DUMP )
-	ROM_LOAD( "mro-cg2004.u72",  0x00000, 0x8000, CRC(e5e40ea5) SHA1(e0d9e50b30cc0c25c932b2bf444990df1fb2c38c) ) /* WRONG CG set!! MAX Bet 4K "BONUS" graphics is missing!! */
-	ROM_LOAD( "mgo-cg2004.u73",  0x08000, 0x8000, CRC(12607f1e) SHA1(248e1ecee4e735f5943c50f8c350ca95b81509a7) )
+	ROM_LOAD( "mro-cg2004.u72",  0x00000, 0x8000, CRC(e5e40ea5) SHA1(e0d9e50b30cc0c25c932b2bf444990df1fb2c38c) ) /* WRONG CG set!! MAX Bet 4K "BONUS" graphics is missing and */
+	ROM_LOAD( "mgo-cg2004.u73",  0x08000, 0x8000, CRC(12607f1e) SHA1(248e1ecee4e735f5943c50f8c350ca95b81509a7) ) /* all treasure chest graphics missing for bonus & attract screens */
 	ROM_LOAD( "mbo-cg2004.u74",  0x10000, 0x8000, CRC(78c3fb9f) SHA1(2b9847c511888de507a008dec981778ca4dbcd6c) )
 	ROM_LOAD( "mxo-cg2004.u75",  0x18000, 0x8000, CRC(5aaa4480) SHA1(353c4ce566c944406fce21f2c5045c856ef7a609) )
 
@@ -4498,31 +4486,35 @@ PayTable   Js+  2PR  3K   STR  FL  FH  4K  SF  RF  (Bonus)
 	ROM_LOAD( "cap656.u50", 0x0000, 0x0100, CRC(038cabc6) SHA1(c6514b4f9dbed6ab2631f563f7e00648661ebdbb) )
 ROM_END
 
-ROM_START( pebe0014 ) /* Normal board : Blackjack (BE0014) - Non-Progressive Jackpot - Payout 98.30% */
+ROM_START( pebe0014 ) /* Normal board : Blackjack (BE0014) */
 /*
-Blackjack BE0014 game features / rules:
+Paytable ID: BJ7
 
-Game Options:
-  Auto Bet
-  Double Up
+Deal: 1 Deck (52 cards)
+      Shuffled before each hand
 
-Deal: 1 Deck (52 cards) - Shuffled before each hand
+Progressive Jackpot: None
 
 Game Rules:
-  1. Dealer stands on 17 or better or six (6) cards totaling 21 or less
-  2. Player wins on six (6) cards totaling 21 or less
-  3. All wins pay 2 for 1, including Blackjack
-  4. Bet returned on pushes
+  1. Dealer stands on any 17 or more
+  2. Blackjack pays 2 for 1, all other wins pay 2 for 1
+  3. Bet returned on pushes
+  4. Player wins on six (6) cards totaling 21 or less
+  5. Split allowed on 1st two cards if a pair, Aces only receive one card
+  6. Insurance if dealer has an Ace showing
+  7. Surrender only on 1st two cards and if dealer has no Ace (pays 1/2 of original bet)
+  8. Double Down only on the 1st two cards
+  9. Insurances pays 3 for 1
 
-In game features/Options:
-  Insurance offered
-  Surrender
-  Splits
+Optimum percentage payout: 98.3%
+
+In game features that can be enabled/disabled:
+  Auto Bet
   Double Down
 
 Known to exist:
- BE0013 508-544 (Non Double-up)
- BE0013 528-A22 (Non Double-up)
+ BE0013 508-544 (Non Double-up version of BE0014)
+ BE0013 528-A22 (Non Double-up version of BE0014)
  BE0014 526-906
  BE0014 527-936
  BE0017 532-A22
@@ -6557,9 +6549,12 @@ ROM_START( pex2031p ) /* Superboard : Lucky Deal Poker (X002031P+XP000112) */
                                       5-K 2-4
 PayTable   Js+  2PR  3K  STR  FL  FH  4K  4K  4A  SF  RF  (Bonus)
 -----------------------------------------------------------------
-  P567AL    1    1    3   4    6  10  25  40  80  50 250    800
-  % Range: 90.8-92.8%  Optimum: 94.8%  Hit Frequency: 44.9%
+  P566AL    1    1    3   5    7   9  25  40  80  50 250    800
+  % Range: 93.0-95.0%  Optimum: 97.0%  Hit Frequency: 42.9%
      Programs Available: X002031P
+
+Straights or Better on the initial deal PAY DOUBLE!
+
 */
 	ROM_REGION( 0x10000, "maincpu", 0 )
 	ROM_LOAD( "xp000112.u67",   0x00000, 0x10000, CRC(c1ae96ad) SHA1(da109602f0fbe9b225cdcd60be0613fd41014864) )
@@ -6989,8 +6984,8 @@ ROM_START( pex2172p ) /* Superboard : Ace$ Bonus Poker (X002172P+XP000112) */
                                       5-K 2-4
 PayTable   Js+  2PR  3K  STR  FL  FH  4K  4K  4A  SA$  SF  RF  (Bonus)
 ----------------------------------------------------------------------
-  P903A     1    2    3   4    5   7  25  40  80  250  50 250    800
-  % Range: 94.3-96.3%  Optimum: 98.3%  Hit Frequency: 45.7%
+  P789AM    1    2    3   4    5   7  25  40  80  250  50 250    800
+  % Range: 94.3-96.3%  Optimum: 98.3%  Hit Frequency: 45.5%
      Programs Available: X002172P
 
 SA$ - Sequential ACE$ pays the same as RF
@@ -8216,8 +8211,9 @@ Known Wingboard compatible program roms:
    XMP00026 - Spanish
    XMP00030
 
-XMP00017 is not compatible with:
- Lucky Deal Poker, Shockwave Poker or Ace$ Bonus Poker
+Wingboard programs are not compatible with:
+ Lucky Deal Poker, Shockwave Poker, Ace$ Bonus Poker, Dealt Deuces Bonus, Barbaric Deuces, Pay the Ace (No Face)
+ and many other "specialty" poker games.
 
 The CG2298 graphics can support the following XnnnnnnP Data game types:
 

@@ -16,6 +16,8 @@
  *   - This entire notice must remain in the source code.
  *
  *****************************************************************************
+ *  Misc. improvements were done over the years by team MESS/MAME
+ *
  *  Currently this source emulates a TMS70x0, not any of the other variants
  *  Unimplemented is the MC pin which (in conjunection with IOCNT0 bits 7 and 6
  *  control the memory mapping.
@@ -23,12 +25,6 @@
  *  This source implements the MC pin at Vss and mode bits in single chip mode.
  *****************************************************************************/
 
-// SJE: Changed all references to ICount to icount (to match MAME requirements)
-// SJE: Changed RM/WM macros to reference newly created tms7000 read/write handlers & removed unused SRM(cpustate) macro
-// SJE: Fixed a mistake in tms70x0_pf_w where the wrong register was referenced
-// SJE: Implemented internal register file
-
-#include "emu.h"
 #include "debugger.h"
 #include "tms7000.h"
 
@@ -36,8 +32,6 @@
 
 #define LOG(x)  do { if (VERBOSE) logerror x; } while (0)
 
-
-/* Static variables */
 
 #define RM(Addr) ((unsigned)m_program->read_byte(Addr))
 #define WM(Addr,Value) (m_program->write_byte(Addr, Value))
@@ -54,36 +48,77 @@
 
 
 const device_type TMS7000 = &device_creator<tms7000_device>;
-const device_type TMS7000_EXL = &device_creator<tms7000_exl_device>;
+const device_type TMS7020 = &device_creator<tms7020_device>;
+const device_type TMS7020_EXL = &device_creator<tms7020_exl_device>;
+const device_type TMS7040 = &device_creator<tms7040_device>;
+const device_type TMS70C00 = &device_creator<tms70c00_device>;
+const device_type TMS70C20 = &device_creator<tms70c20_device>;
+const device_type TMS70C40 = &device_creator<tms70c40_device>;
 
+static ADDRESS_MAP_START(tms7000_io, AS_IO, 8, tms7000_device)
+	AM_RANGE(TMS7000_PORTA, TMS7000_PORTA) AM_WRITENOP
+	AM_RANGE(TMS7000_PORTB, TMS7000_PORTB) AM_READNOP
+ADDRESS_MAP_END
 
 static ADDRESS_MAP_START(tms7000_mem, AS_PROGRAM, 8, tms7000_device )
-	AM_RANGE(0x0000, 0x007f) AM_READWRITE(tms7000_internal_r, tms7000_internal_w) /* tms7000 internal RAM */
-	AM_RANGE(0x0080, 0x00ff) AM_NOP                                               /* reserved */
+	AM_RANGE(0x0000, 0x007f) AM_RAM // 128 bytes internal RAM
 	AM_RANGE(0x0100, 0x010f) AM_READWRITE(tms70x0_pf_r, tms70x0_pf_w)             /* tms7000 internal I/O ports */
+ADDRESS_MAP_END
+
+static ADDRESS_MAP_START(tms7020_mem, AS_PROGRAM, 8, tms7000_device )
+	AM_RANGE(0xf000, 0xffff) AM_ROM // 2kB internal ROM
+	AM_IMPORT_FROM( tms7000_mem )
+ADDRESS_MAP_END
+
+static ADDRESS_MAP_START(tms7040_mem, AS_PROGRAM, 8, tms7000_device )
+	AM_RANGE(0xf000, 0xffff) AM_ROM // 4kB internal ROM
+	AM_IMPORT_FROM( tms7000_mem )
 ADDRESS_MAP_END
 
 
 tms7000_device::tms7000_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
-	: cpu_device(mconfig, TMS7000, "TMS7000", tag, owner, clock, "tms7000", __FILE__)
-	, m_program_config("program", ENDIANNESS_BIG, 8, 16, 0, ADDRESS_MAP_NAME(tms7000_mem))
-	, m_io_config("io", ENDIANNESS_BIG, 8, 8, 0)
-	, m_opcode(s_opfn)
+	: cpu_device(mconfig, TMS7000, "TMS7000", tag, owner, clock, "tms7000", __FILE__),
+	m_program_config("program", ENDIANNESS_BIG, 8, 16, 0, ADDRESS_MAP_NAME(tms7000_mem)),
+	m_io_config("io", ENDIANNESS_BIG, 8, 8, 0, ADDRESS_MAP_NAME(tms7000_io)),
+	m_opcode(s_opfn)
 {
 }
 
-
-tms7000_device::tms7000_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source)
-	: cpu_device(mconfig, type, name, tag, owner, clock, shortname, source)
-	, m_program_config("program", ENDIANNESS_BIG, 8, 16, 0, ADDRESS_MAP_NAME(tms7000_mem))
-	, m_io_config("io", ENDIANNESS_BIG, 8, 8, 0)
-	, m_opcode(s_opfn_exl)
+tms7000_device::tms7000_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, address_map_constructor internal, const opcode_func *opcode, const char *shortname, const char *source)
+	: cpu_device(mconfig, type, name, tag, owner, clock, shortname, source),
+	m_program_config("program", ENDIANNESS_BIG, 8, 16, 0, internal),
+	m_io_config("io", ENDIANNESS_BIG, 8, 8, 0, ADDRESS_MAP_NAME(tms7000_io)),
+	m_opcode(opcode)
 {
 }
 
+tms7020_device::tms7020_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+	: tms7000_device(mconfig, TMS7020, "TMS7020", tag, owner, clock, ADDRESS_MAP_NAME(tms7020_mem), s_opfn, "tms7020", __FILE__)
+{
+}
 
-tms7000_exl_device::tms7000_exl_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
-	: tms7000_device(mconfig, TMS7000_EXL, "TMS7000_EXL", tag, owner, clock, "tms7000_exl", __FILE__)
+tms7020_exl_device::tms7020_exl_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+	: tms7000_device(mconfig, TMS7020_EXL, "TMS7020 (EXL)", tag, owner, clock, ADDRESS_MAP_NAME(tms7020_mem), s_opfn_exl, "tms7020_exl", __FILE__)
+{
+}
+
+tms7040_device::tms7040_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+	: tms7000_device(mconfig, TMS7040, "TMS7040", tag, owner, clock, ADDRESS_MAP_NAME(tms7040_mem), s_opfn, "tms7040", __FILE__)
+{
+}
+
+tms70c00_device::tms70c00_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+	: tms7000_device(mconfig, TMS70C00, "TMS70C00", tag, owner, clock, ADDRESS_MAP_NAME(tms7000_mem), s_opfn, "tms70c00", __FILE__)
+{
+}
+
+tms70c20_device::tms70c20_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+	: tms7000_device(mconfig, TMS70C20, "TMS70C20", tag, owner, clock, ADDRESS_MAP_NAME(tms7020_mem), s_opfn, "tms70c20", __FILE__)
+{
+}
+
+tms70c40_device::tms70c40_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
+	: tms7000_device(mconfig, TMS70C40, "TMS70C40", tag, owner, clock, ADDRESS_MAP_NAME(tms7040_mem), s_opfn, "tms70c40", __FILE__)
 {
 }
 
@@ -158,7 +193,6 @@ void tms7000_device::device_start()
 	m_io = &space(AS_IO);
 
 	memset(m_pf, 0, 0x100);
-	memset(m_rf, 0, 0x80);
 	m_cycles_per_INT2 = 0;
 	m_t1_capture_latch = 0;
 	m_t1_prescaler = 0;
@@ -177,7 +211,6 @@ void tms7000_device::device_start()
 	save_item(NAME(m_irq_state));
 
 	/* Save register and perpherial file state */
-	save_item(NAME(m_rf));
 	save_item(NAME(m_pf));
 
 	/* Save timer state */
@@ -381,14 +414,6 @@ void tms7000_device::execute_run()
 /****************************************************************************
  * Trigger the event counter
  ****************************************************************************/
-void tms7000_device::tms7000_A6EC1()
-{
-	if( (m_pf[0x03] & 0x80) == 0x80 ) /* Is timer system active? */
-	{
-		if( (m_pf[0x03] & 0x40) == 0x40) /* Is event counter the timer source? */
-			tms7000_service_timer1();
-	}
-}
 
 void tms7000_device::tms7000_service_timer1()
 {
@@ -590,14 +615,4 @@ inline UINT8 tms7000_device::bcd_sub( UINT8 a, UINT8 b, UINT8 c )
 		pSR |= SR_C;
 	
 	return ret;
-}
-
-WRITE8_MEMBER( tms7000_device::tms7000_internal_w )
-{
-	m_rf[ offset ] = data;
-}
-
-READ8_MEMBER( tms7000_device::tms7000_internal_r )
-{
-	return m_rf[ offset ];
 }

@@ -22,12 +22,10 @@
 #ifndef __TMS7000_H__
 #define __TMS7000_H__
 
+#include "emu.h"
+
 
 enum { TMS7000_PC=1, TMS7000_SP, TMS7000_ST, TMS7000_IDLE, TMS7000_T1_CL, TMS7000_T1_PS, TMS7000_T1_DEC };
-
-enum { TMS7000_VCC, TMS7000_VSS };
-
-enum { TMS7000_NMOS, TMS7000_CMOS };
 
 enum
 {
@@ -39,8 +37,8 @@ enum
 
 enum
 {
-	TMS7000_PORTA = 0,
-	TMS7000_PORTB,
+	TMS7000_PORTA = 0, /* read-only */
+	TMS7000_PORTB,     /* write-only */
 	TMS7000_PORTC,
 	TMS7000_PORTD
 };
@@ -49,16 +47,16 @@ enum
 class tms7000_device : public cpu_device
 {
 public:
+	typedef void ( tms7000_device::*opcode_func ) ();
+	static const opcode_func s_opfn[0x100];
+	static const opcode_func s_opfn_exl[0x100];
+
 	// construction/destruction
 	tms7000_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
-	tms7000_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, const char *shortname, const char *source);
+	tms7000_device(const machine_config &mconfig, device_type type, const char *name, const char *tag, device_t *owner, UINT32 clock, address_map_constructor internal, const opcode_func *opcode, const char *shortname, const char *source);
 
 	DECLARE_WRITE8_MEMBER( tms70x0_pf_w );
 	DECLARE_READ8_MEMBER( tms70x0_pf_r );
-	DECLARE_WRITE8_MEMBER( tms7000_internal_w );
-	DECLARE_READ8_MEMBER( tms7000_internal_r );
-
-	void tms7000_A6EC1();
 
 protected:
 	// device-level overrides
@@ -87,9 +85,6 @@ private:
 	address_space_config m_program_config;
 	address_space_config m_io_config;
 
-	typedef void ( tms7000_device::*opcode_func ) ();
-	static const opcode_func s_opfn[0x100];
-	static const opcode_func s_opfn_exl[0x100];
 	const opcode_func *m_opcode;
 
 	inline UINT8 bcd_add( UINT8 a, UINT8 b, UINT8 c );
@@ -99,7 +94,6 @@ private:
 	UINT8       m_sp;               /* Stack Pointer */
 	UINT8       m_sr;               /* Status Register */
 	UINT8       m_irq_state[3];     /* State of the three IRQs */
-	UINT8       m_rf[0x80];         /* Register file (SJE) */
 	UINT8       m_pf[0x100];        /* Perpherial file */
 
 	int         m_icount;
@@ -120,6 +114,8 @@ private:
 
 	void tms7000_check_IRQ_lines();
 	void tms7000_do_interrupt( UINT16 address, UINT8 line );
+	void tms7000_service_timer1();
+
 	void illegal();
 	void adc_b2a();
 	void adc_r2a();
@@ -349,20 +345,58 @@ private:
 	void xorp_a2p();
 	void xorp_b2p();
 	void xorp_i2p();
-	void tms7000_service_timer1();
 };
 
 
-class tms7000_exl_device : public tms7000_device
+class tms7020_device : public tms7000_device
 {
 public:
-	// construction/destruction
-	tms7000_exl_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+	tms7020_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+};
+
+
+class tms7020_exl_device : public tms7000_device
+{
+public:
+	tms7020_exl_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+};
+
+
+class tms7040_device : public tms7000_device
+{
+public:
+	tms7040_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+};
+
+
+class tms70c00_device : public tms7000_device
+{
+public:
+	tms70c00_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+};
+
+
+class tms70c20_device : public tms7000_device
+{
+public:
+	tms70c20_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
+};
+
+
+class tms70c40_device : public tms7000_device
+{
+public:
+	tms70c40_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock);
 };
 
 
 extern const device_type TMS7000;
-extern const device_type TMS7000_EXL;
+extern const device_type TMS7020;
+extern const device_type TMS7020_EXL;
+extern const device_type TMS7040;
+extern const device_type TMS70C00;
+extern const device_type TMS70C20;
+extern const device_type TMS70C40;
 
 
 #endif /* __TMS7000_H__ */

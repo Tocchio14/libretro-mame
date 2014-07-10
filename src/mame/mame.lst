@@ -3001,7 +3001,8 @@ sfu             //  8/1987 (c) 1987 (US)
 sfua            //  8/1987 (c) 1987 (US)
 sfj             //  8/1987 (c) 1987 (Japan)
 sfp             //  8/1987 (c) 1987
-tigeroad        // 11/1987 (c) 1987 + Romstar (US)
+tigeroad        // 11/1987 (c) 1987 (US)
+tigeroadu       // 11/1987 (c) 1987 + Romstar (US)
 toramich        // 11/1987 (c) 1987 (Japan
 tigeroadb       // bootleg
 f1dream         //  4/1988 (c) 1988 + Romstar
@@ -3206,7 +3207,7 @@ slampic         // bootleg
 mbomberj        // 13/07/1993 (c) 1993 (Japan) (CPS1 + QSound)
 mbombrd         // 06/12/1993 (c) 1993 (World) (CPS1 + QSound)
 mbombrdj        // 06/12/1993 (c) 1993 (Japan) (CPS1 + QSound)
-kenseim			// 1994 Ken Sei Mogura (not listed on Capcom's site)
+kenseim         // 18/04/1994 (c) 1994 Togo/Sigma (Japan) not listed on Capcom's site
 pnickj          // 08/06/1994 (c) 1994 Compile + Capcom license (Japan) not listed on Capcom's site
 qtono2j         // 23/01/1995 (c) 1995 (Japan)
 pang3           // 01/06/1995 (c) 1995 Mitchell (Euro) not listed on Capcom's site
@@ -3552,6 +3553,8 @@ jojobane        // 27/09/1999 (c) 1999 (Euro)
 jojobaner1      // 13/09/1999 (c) 1999 (Euro)
 cps3boot        // bootleg
 cps3boota       // bootleg
+cps3booto       // bootleg
+cps3bootoa      // bootleg
 cps3bs32        //
 cps3bs32a       //
 
@@ -4486,6 +4489,7 @@ fantzone1       // (c) 1986 (Unprotected)
 fantzonep       // (c) 1986 (NEC 0317-5000, encrypted)
 fantzonepr      //
 sdi             // (c) 1987 (FD1089B, decrypted)
+sdia            // (c) 1987 (FD1089B, decrypted)
 shinobi         // (c) 1987 (Unprotected)
 shinobi1        // (c) 1987 (FD1094, decrypted)
 shinobls        // (c) 1987 (Star bootleg)

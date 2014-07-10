@@ -814,6 +814,7 @@ SLOT_INTERFACE_START(cpc_exp_cards)
 	SLOT_INTERFACE("multiface2", CPC_MFACE2)
 	SLOT_INTERFACE("pds", CPC_PDS)
 	SLOT_INTERFACE("rs232", CPC_RS232)
+	SLOT_INTERFACE("amsrs232", CPC_RS232_AMS)
 SLOT_INTERFACE_END
 
 SLOT_INTERFACE_START(cpcplus_exp_cards)
@@ -822,6 +823,7 @@ SLOT_INTERFACE_START(cpcplus_exp_cards)
 	SLOT_INTERFACE("rom", CPC_ROM)
 	SLOT_INTERFACE("pds", CPC_PDS)
 	SLOT_INTERFACE("rs232", CPC_RS232)
+	SLOT_INTERFACE("amsrs232", CPC_RS232_AMS)
 SLOT_INTERFACE_END
 
 static MACHINE_CONFIG_START( amstrad_nofdc, amstrad_state )
@@ -1134,9 +1136,10 @@ ROM_END
 
 
 ROM_START( kccomp )
-	ROM_REGION(0x018000, "maincpu", 0)
+	ROM_REGION(0x01c000, "maincpu", 0)
 	ROM_LOAD("kccos.rom",  0x10000, 0x4000, CRC(7f9ab3f7) SHA1(f828045e98e767f737fd93df0af03917f936ad08))
 	ROM_LOAD("kccbas.rom", 0x14000, 0x4000, CRC(ca6af63d) SHA1(d7d03755099d0aff501fa5fffc9c0b14c0825448))
+	ROM_RELOAD(0x18000, 0x4000)  // has no AMSDOS ROM, so just reload BASIC in it's place (BASIC appears in any unused ROM slot)
 
 	ROM_REGION(0x018000+0x0800, "proms", 0)
 	ROM_LOAD("farben.rom", 0x18000, 0x0800, CRC(a50fa3cf) SHA1(2f229ac9f62d56973139dad9992c208421bc0f51))

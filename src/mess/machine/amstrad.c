@@ -2822,13 +2822,94 @@ static const UINT8 amstrad_cycle_table_ex[256]=
 		8,  0,  0,  0,  8,  0,  0,  0,  8,  0,  0,  0,  8,  0,  0,  0
 };
 
+#define NEXT_ROM_SLOT 	m_rom_count++; \
+						if(slot3 && m_rom_count == 3) m_rom_count++; \
+						if(slot7 && m_rom_count == 7) m_rom_count++;
+
+void amstrad_state::enumerate_roms()
+{
+	UINT8 m_rom_count = 1;
+	device_t* romexp;
+	rom_image_device* romimage;
+	UINT8 *rom = m_region_maincpu->base();
+	char str[20];
+	int i;
+	bool slot3 = false,slot7 = false;
+
+	if(m_system_type == SYSTEM_PLUS || m_system_type == SYSTEM_GX4000)
+	{
+		/* ROMs are stored on the inserted cartridge in the Plus/GX4000 */
+		for(i=0; i<128; i++)  // fill ROM table
+			m_Amstrad_ROM_Table[i] = &rom[0x4000];
+		for(i=128;i<160;i++)
+			m_Amstrad_ROM_Table[i] = &rom[(i-128)*0x4000];
+		m_Amstrad_ROM_Table[7] = &rom[0xc000];
+		slot7 = true;
+	}
+	else
+	{
+		/* slot 0 is always BASIC, as is any unused slot */
+		for(i=0; i<256; i++)
+			m_Amstrad_ROM_Table[i] = &rom[0x014000];
+		/* AMSDOS ROM -- TODO: exclude from 464 unless a DDI-1 device is connected */
+		m_Amstrad_ROM_Table[7] = &rom[0x018000];
+		slot7 = true;
+	}
+
+	/* MSX-DOS BIOS - Aleste MSX emulation */
+	if(m_system_type == SYSTEM_ALESTE)
+	{
+		m_Amstrad_ROM_Table[3] = &rom[0x01c000];
+		slot3 = true;
+	}
+
+	/* enumerate expansion ROMs */
+
+	/* find any expansion devices that have a 'exp_rom' region */
+	cpc_expansion_slot_device* exp_port = m_exp;
+
+	while(exp_port != NULL)
+	{
+		device_t* temp;
+
+		temp = dynamic_cast<device_t*>(exp_port->get_card_device());
+		if(temp != NULL)
+		{
+			if(temp->memregion("exp_rom")->base() != NULL)
+			{
+				int num = temp->memregion("exp_rom")->bytes() / 0x4000;
+				for(i=0;i<num;i++)
+				{
+					m_Amstrad_ROM_Table[m_rom_count] = temp->memregion("exp_rom")->base()+0x4000*i;
+					NEXT_ROM_SLOT
+				}
+			}
+		}
+		exp_port = temp->subdevice<cpc_expansion_slot_device>("exp");
+	}
+
+
+	/* add ROMs from ROMbox expansion */
+	romexp = get_expansion_device(machine(),"rom");
+	if(romexp)
+	{
+		for(i=0;i<8;i++)
+		{
+			sprintf(str,"rom%i",i+1);
+			romimage = romexp->subdevice<rom_image_device>(str);
+			if(romimage->base() != NULL)
+			{
+				m_Amstrad_ROM_Table[m_rom_count] = romimage->base();
+				NEXT_ROM_SLOT
+			}
+		}
+	}
+
+}
+
 void amstrad_state::amstrad_common_init()
 {
 	address_space &space = m_maincpu->space(AS_PROGRAM);
-	device_t* romexp;
-	rom_image_device* romimage;
-	char str[20];
-	int x;
 
 	m_aleste_mode = 0;
 
@@ -2862,20 +2943,7 @@ void amstrad_state::amstrad_common_init()
 	space.install_write_bank(0xc000, 0xdfff, "bank15");
 	space.install_write_bank(0xe000, 0xffff, "bank16");
 
-	/* Set up ROMs, if we have an expansion device connected */
-	romexp = get_expansion_device(machine(),"rom");
-	if(romexp)
-	{
-		for(x=0;x<6;x++)
-		{
-			sprintf(str,"rom%i",x+1);
-			romimage = romexp->subdevice<rom_image_device>(str);
-			if(romimage->base() != NULL)
-			{
-				m_Amstrad_ROM_Table[x+1] = romimage->base();
-			}
-		}
-	}
+	enumerate_roms();
 
 	m_maincpu->reset();
 	if ( m_system_type == SYSTEM_CPC || m_system_type == SYSTEM_ALESTE )
@@ -2936,15 +3004,6 @@ MACHINE_START_MEMBER(amstrad_state,amstrad)
 
 MACHINE_RESET_MEMBER(amstrad_state,amstrad)
 {
-	int i;
-	UINT8 *rom = m_region_maincpu->base();
-
-	for (i=0; i<256; i++)
-	{
-		m_Amstrad_ROM_Table[i] = &rom[0x014000];
-	}
-
-	m_Amstrad_ROM_Table[7] = &rom[0x018000];
 	amstrad_common_init();
 	amstrad_reset_machine();
 //  amstrad_init_palette(machine());
@@ -2969,18 +3028,6 @@ MACHINE_START_MEMBER(amstrad_state,plus)
 MACHINE_RESET_MEMBER(amstrad_state,plus)
 {
 	address_space &space = m_maincpu->space(AS_PROGRAM);
-	int i;
-	UINT8 *rom = m_region_maincpu->base();
-
-	for (i=0; i<128; i++)  // fill ROM table
-	{
-		m_Amstrad_ROM_Table[i] = &rom[0x4000];  // BASIC in system cart
-	}
-	for(i=128;i<160;i++)
-	{
-		m_Amstrad_ROM_Table[i] = &rom[(i-128)*0x4000];
-	}
-	m_Amstrad_ROM_Table[7] = &rom[0xc000];  // AMSDOS in system cart
 
 	m_asic.enabled = 0;
 	m_asic.seqptr = 0;
@@ -3019,18 +3066,6 @@ MACHINE_START_MEMBER(amstrad_state,gx4000)
 MACHINE_RESET_MEMBER(amstrad_state,gx4000)
 {
 	address_space &space = m_maincpu->space(AS_PROGRAM);
-	int i;
-	UINT8 *rom = m_region_maincpu->base();
-
-	for (i=0; i<128; i++)  // fill ROM table
-	{
-		m_Amstrad_ROM_Table[i] = &rom[0x4000];
-	}
-	for(i=128;i<160;i++)
-	{
-		m_Amstrad_ROM_Table[i] = &rom[(i-128)*0x4000];
-	}
-	m_Amstrad_ROM_Table[7] = &rom[0xc000];
 
 	m_asic.enabled = 0;
 	m_asic.seqptr = 0;
@@ -3063,19 +3098,18 @@ MACHINE_START_MEMBER(amstrad_state,kccomp)
 {
 	m_system_type = SYSTEM_CPC;
 	m_centronics->write_data7(0);
+
+	m_gate_array.de = 0;
+	m_gate_array.draw_p = NULL;
+	m_gate_array.hsync = 0;
+	m_gate_array.vsync = 0;
+
+	timer_set(attotime::zero, TIMER_SET_RESOLUTION);
 }
 
 
 MACHINE_RESET_MEMBER(amstrad_state,kccomp)
 {
-	int i;
-	UINT8 *rom = m_region_maincpu->base();
-
-	for (i=0; i<256; i++)
-	{
-		m_Amstrad_ROM_Table[i] = &rom[0x014000];
-	}
-
 	amstrad_common_init();
 	kccomp_reset_machine();
 
@@ -3097,16 +3131,6 @@ MACHINE_START_MEMBER(amstrad_state,aleste)
 
 MACHINE_RESET_MEMBER(amstrad_state,aleste)
 {
-	int i;
-	UINT8 *rom = m_region_maincpu->base();
-
-	for (i=0; i<256; i++)
-	{
-		m_Amstrad_ROM_Table[i] = &rom[0x014000];
-	}
-
-	m_Amstrad_ROM_Table[3] = &rom[0x01c000];  // MSX-DOS / BIOS
-	m_Amstrad_ROM_Table[7] = &rom[0x018000];  // AMSDOS
 	amstrad_common_init();
 	amstrad_reset_machine();
 

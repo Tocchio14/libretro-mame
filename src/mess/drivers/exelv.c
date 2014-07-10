@@ -78,12 +78,8 @@ public:
 	DECLARE_READ8_MEMBER( mailbox_wx319_r );
 	DECLARE_WRITE8_MEMBER( mailbox_wx318_w );
 	DECLARE_READ8_MEMBER( tms7020_porta_r );
-	DECLARE_WRITE8_MEMBER( tms7020_porta_w );
-	DECLARE_READ8_MEMBER( tms7020_portb_r );
 	DECLARE_WRITE8_MEMBER( tms7020_portb_w );
 	DECLARE_READ8_MEMBER( tms7041_porta_r );
-	DECLARE_WRITE8_MEMBER( tms7041_porta_w );
-	DECLARE_READ8_MEMBER( tms7041_portb_r );
 	DECLARE_WRITE8_MEMBER( tms7041_portb_w );
 	DECLARE_READ8_MEMBER( tms7041_portc_r );
 	DECLARE_WRITE8_MEMBER( tms7041_portc_w );
@@ -91,11 +87,9 @@ public:
 	DECLARE_WRITE8_MEMBER( tms7041_portd_w );
 
 	/* tms7020 i/o ports */
-	UINT8   m_tms7020_porta;
 	UINT8   m_tms7020_portb;
 
 	/* tms7041 i/o ports */
-	UINT8   m_tms7041_porta;
 	UINT8   m_tms7041_portb;
 	UINT8   m_tms7041_portc;
 	UINT8   m_tms7041_portd;
@@ -259,13 +253,6 @@ READ8_MEMBER(exelv_state::tms7020_porta_r)
 }
 
 
-WRITE8_MEMBER(exelv_state::tms7020_porta_w)
-{
-	logerror("tms7020_porta_w: data = 0x%02x\n", data);
-	m_tms7020_porta = data;
-}
-
-
 /*
     TMS7020 PORT B
     B0 - W - TMS7041 port A bit 2 (REV2)
@@ -277,13 +264,6 @@ WRITE8_MEMBER(exelv_state::tms7020_porta_w)
     B6 -
     B7 -
 */
-READ8_MEMBER(exelv_state::tms7020_portb_r)
-{
-	logerror("tms7020_portb_r\n");
-	return 0x00;
-}
-
-
 WRITE8_MEMBER(exelv_state::tms7020_portb_w)
 {
 	logerror("tms7020_portb_w: data = 0x%02x\n", data);
@@ -326,13 +306,6 @@ READ8_MEMBER(exelv_state::tms7041_porta_r)
 }
 
 
-WRITE8_MEMBER(exelv_state::tms7041_porta_w)
-{
-	logerror("tms7041_porta_w: data = 0x%02x\n", data);
-	m_tms7041_porta = data;
-}
-
-
 /*
     TMS7041 PORT B
     B0 - W - TMS5220 W
@@ -344,14 +317,6 @@ WRITE8_MEMBER(exelv_state::tms7041_porta_w)
     B6 - W - REV6 WX319-11
     B7 - W - TMS7020 port A bit 0 (REV3)
 */
-READ8_MEMBER(exelv_state::tms7041_portb_r)
-{
-	UINT8 data = 0xff;
-	logerror("tms7041_portb_r\n");
-	return data;
-}
-
-
 WRITE8_MEMBER(exelv_state::tms7041_portb_w)
 {
 	logerror("tms7041_portb_w: data = 0x%02x\n", data);
@@ -451,58 +416,54 @@ WRITE8_MEMBER(exelv_state::tms7041_portd_w)
 
 static ADDRESS_MAP_START(tms7020_mem, AS_PROGRAM, 8, exelv_state)
 	AM_RANGE(0x0080, 0x00ff) AM_NOP
-    AM_RANGE(0x0124, 0x00124) AM_DEVREAD("tms3556", tms3556_device, vram_r)
-    AM_RANGE(0x0125, 0x00125) AM_DEVREAD("tms3556", tms3556_device, reg_r)
-    AM_RANGE(0x0128, 0x00128) AM_DEVREAD("tms3556", tms3556_device, initptr_r)
-    AM_RANGE(0x012d, 0x0012d) AM_DEVWRITE("tms3556", tms3556_device, reg_w)
-    AM_RANGE(0x012e, 0x0012e) AM_DEVWRITE("tms3556", tms3556_device, vram_w)
+    AM_RANGE(0x0124, 0x0124) AM_DEVREAD("tms3556", tms3556_device, vram_r)
+    AM_RANGE(0x0125, 0x0125) AM_DEVREAD("tms3556", tms3556_device, reg_r)
+    AM_RANGE(0x0128, 0x0128) AM_DEVREAD("tms3556", tms3556_device, initptr_r)
+    AM_RANGE(0x012d, 0x012d) AM_DEVWRITE("tms3556", tms3556_device, reg_w)
+    AM_RANGE(0x012e, 0x012e) AM_DEVWRITE("tms3556", tms3556_device, vram_w)
 
-	AM_RANGE(0x0130, 0x00130) AM_READWRITE(mailbox_wx319_r, mailbox_wx318_w)
+	AM_RANGE(0x0130, 0x0130) AM_READWRITE(mailbox_wx319_r, mailbox_wx318_w)
 	AM_RANGE(0x0200, 0x7fff) AM_ROMBANK("bank1")                                /* system ROM */
 	AM_RANGE(0x8000, 0xbfff) AM_NOP
 	AM_RANGE(0xc000, 0xc7ff) AM_RAM                                     /* CPU RAM */
 	AM_RANGE(0xc800, 0xf7ff) AM_NOP
-	AM_RANGE(0xf800, 0xffff) AM_ROM AM_REGION("maincpu",0x0000)     /* tms7020 internal ROM */
 ADDRESS_MAP_END
 
-
 static ADDRESS_MAP_START(tms7020_port, AS_IO, 8, exelv_state)
-	AM_RANGE(TMS7000_PORTA, TMS7000_PORTA) AM_READWRITE(tms7020_porta_r, tms7020_porta_w)
-	AM_RANGE(TMS7000_PORTB, TMS7000_PORTB) AM_READWRITE(tms7020_portb_r, tms7020_portb_w)
+	AM_RANGE(TMS7000_PORTA, TMS7000_PORTA) AM_READ(tms7020_porta_r)
+	AM_RANGE(TMS7000_PORTB, TMS7000_PORTB) AM_WRITE(tms7020_portb_w)
 ADDRESS_MAP_END
 
 
 static ADDRESS_MAP_START(tms7041_map, AS_PROGRAM, 8, exelv_state)
-	AM_RANGE(0xf000, 0xffff) AM_ROM AM_REGION("tms7041",0x0000)
+	AM_RANGE(0x0080, 0x00ff) AM_RAM
 ADDRESS_MAP_END
 
-
 static ADDRESS_MAP_START(tms7041_port, AS_IO, 8, exelv_state)
-	AM_RANGE(TMS7000_PORTA, TMS7000_PORTA)  AM_READWRITE(tms7041_porta_r, tms7041_porta_w)
-	AM_RANGE(TMS7000_PORTB, TMS7000_PORTB)  AM_READWRITE(tms7041_portb_r, tms7041_portb_w)
-	AM_RANGE(TMS7000_PORTC, TMS7000_PORTC)  AM_READWRITE(tms7041_portc_r, tms7041_portc_w)
-	AM_RANGE(TMS7000_PORTD, TMS7000_PORTD)  AM_READWRITE(tms7041_portd_r, tms7041_portd_w)
+	AM_RANGE(TMS7000_PORTA, TMS7000_PORTA) AM_READ(tms7041_porta_r)
+	AM_RANGE(TMS7000_PORTB, TMS7000_PORTB) AM_WRITE(tms7041_portb_w)
+	AM_RANGE(TMS7000_PORTC, TMS7000_PORTC) AM_READWRITE(tms7041_portc_r, tms7041_portc_w)
+	AM_RANGE(TMS7000_PORTD, TMS7000_PORTD) AM_READWRITE(tms7041_portd_r, tms7041_portd_w)
 ADDRESS_MAP_END
 
 
 static ADDRESS_MAP_START(tms7040_mem, AS_PROGRAM, 8, exelv_state)
 	AM_RANGE(0x0080, 0x00ff) AM_NOP
-    AM_RANGE(0x0124, 0x00124) AM_DEVREAD("tms3556", tms3556_device, vram_r)
-    AM_RANGE(0x0125, 0x00125) AM_DEVREAD("tms3556", tms3556_device, reg_r)
-    AM_RANGE(0x0128, 0x00128) AM_DEVREAD("tms3556", tms3556_device, initptr_r)
-    AM_RANGE(0x012d, 0x0012d) AM_DEVWRITE("tms3556", tms3556_device, reg_w)
-    AM_RANGE(0x012e, 0x0012e) AM_DEVWRITE("tms3556", tms3556_device, vram_w)
-	AM_RANGE(0x0130, 0x00130) AM_READWRITE(mailbox_wx319_r, mailbox_wx318_w)
+    AM_RANGE(0x0124, 0x0124) AM_DEVREAD("tms3556", tms3556_device, vram_r)
+    AM_RANGE(0x0125, 0x0125) AM_DEVREAD("tms3556", tms3556_device, reg_r)
+    AM_RANGE(0x0128, 0x0128) AM_DEVREAD("tms3556", tms3556_device, initptr_r)
+    AM_RANGE(0x012d, 0x012d) AM_DEVWRITE("tms3556", tms3556_device, reg_w)
+    AM_RANGE(0x012e, 0x012e) AM_DEVWRITE("tms3556", tms3556_device, vram_w)
+	AM_RANGE(0x0130, 0x0130) AM_READWRITE(mailbox_wx319_r, mailbox_wx318_w)
 	AM_RANGE(0x0200, 0x7fff) AM_ROMBANK("bank1")                                /* system ROM */
 	AM_RANGE(0x8000, 0xbfff) AM_NOP
 	AM_RANGE(0xc000, 0xc7ff) AM_RAM                                     /* CPU RAM */
 	AM_RANGE(0xc800, 0xefff) AM_NOP
-	AM_RANGE(0xf000, 0xffff) AM_ROM AM_REGION("maincpu",0x0000)     /* tms7040 internal ROM */
 ADDRESS_MAP_END
 
 
 static ADDRESS_MAP_START(tms7042_map, AS_PROGRAM, 8, exelv_state)
-	AM_RANGE(0xf000, 0xffff) AM_ROM AM_REGION("tms7042",0x0000)  
+	AM_RANGE(0x0080, 0x00ff) AM_RAM
 ADDRESS_MAP_END
 
 
@@ -538,9 +499,7 @@ void exelv_state::machine_start()
 	membank("bank1")->set_entry(0);
 
 	/* register for state saving */
-	save_item(NAME(m_tms7020_porta));
 	save_item(NAME(m_tms7020_portb));
-	save_item(NAME(m_tms7041_porta));
 	save_item(NAME(m_tms7041_portb));
 	save_item(NAME(m_tms7041_portc));
 	save_item(NAME(m_tms7041_portd));
@@ -549,18 +508,18 @@ void exelv_state::machine_start()
 }
 
 static MACHINE_CONFIG_START( exl100, exelv_state )
+
 	/* basic machine hardware */
-	MCFG_CPU_ADD("maincpu", TMS7000_EXL, XTAL_4_9152MHz)    /* TMS7020 */
+	MCFG_CPU_ADD("maincpu", TMS7020_EXL, XTAL_4_9152MHz)
 	MCFG_CPU_PROGRAM_MAP(tms7020_mem)
 	MCFG_CPU_IO_MAP(tms7020_port)
 	MCFG_TIMER_DRIVER_ADD_SCANLINE("scantimer", exelv_state, exelv_hblank_interrupt, "screen", 0, 1)
 
-	MCFG_CPU_ADD("tms7041", TMS7000, XTAL_4_9152MHz)
+	MCFG_CPU_ADD("tms7041", TMS7040, XTAL_4_9152MHz) // should be TMS7041
 	MCFG_CPU_PROGRAM_MAP(tms7041_map)
 	MCFG_CPU_IO_MAP(tms7041_port)
 
 	MCFG_QUANTUM_PERFECT_CPU("maincpu")
-	MCFG_QUANTUM_PERFECT_CPU("tms7041")
 
 	MCFG_TMS3556_ADD("tms3556")
 
@@ -591,29 +550,28 @@ static MACHINE_CONFIG_START( exl100, exelv_state )
 	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 1.00)
 	
 /* cartridge */
-        MCFG_CARTSLOT_ADD("cart")
-        MCFG_CARTSLOT_EXTENSION_LIST("bin,rom")
-        MCFG_CARTSLOT_NOT_MANDATORY
-        MCFG_CARTSLOT_LOAD(exelv_state,exelvision_cartridge)
-        MCFG_CARTSLOT_INTERFACE("exelvision_cart")
-        MCFG_SOFTWARE_LIST_ADD("cart_list","exelvision_cart")
-	
+	MCFG_CARTSLOT_ADD("cart")
+	MCFG_CARTSLOT_EXTENSION_LIST("bin,rom")
+	MCFG_CARTSLOT_NOT_MANDATORY
+	MCFG_CARTSLOT_LOAD(exelv_state,exelvision_cartridge)
+	MCFG_CARTSLOT_INTERFACE("exelvision_cart")
+	MCFG_SOFTWARE_LIST_ADD("cart_list","exelvision_cart")
 MACHINE_CONFIG_END
 
 
 static MACHINE_CONFIG_START( exeltel, exelv_state )
+
 	/* basic machine hardware */
-	MCFG_CPU_ADD("maincpu", TMS7000_EXL, XTAL_4_9152MHz)    /* TMS7040 */
+	MCFG_CPU_ADD("maincpu", TMS7040, XTAL_4_9152MHz)
 	MCFG_CPU_PROGRAM_MAP(tms7040_mem)
 	MCFG_CPU_IO_MAP(tms7020_port)
 	MCFG_TIMER_DRIVER_ADD_SCANLINE("scantimer", exelv_state, exelv_hblank_interrupt, "screen", 0, 1)
 
-	MCFG_CPU_ADD("tms7042", TMS7000, XTAL_4_9152MHz)
+	MCFG_CPU_ADD("tms7042", TMS7040, XTAL_4_9152MHz) // should be TMS7042
 	MCFG_CPU_PROGRAM_MAP(tms7042_map)
 	MCFG_CPU_IO_MAP(tms7041_port)
 
 	MCFG_QUANTUM_PERFECT_CPU("maincpu")
-	MCFG_QUANTUM_PERFECT_CPU("tms7042")
 
 	MCFG_TMS3556_ADD("tms3556")
 
@@ -649,11 +607,11 @@ MACHINE_CONFIG_END
   ROM loading
 */
 ROM_START(exl100)
-	ROM_REGION(0x800, "maincpu", 0)
-	ROM_LOAD("exl100in.bin", 0x0000, 0x0800, CRC(049109a3) SHA1(98a07297dcdacef41c793c197b6496dac1e8e744))      /* TMS7020 ROM, correct */
+	ROM_REGION(0x10000, "maincpu", 0)
+	ROM_LOAD("exl100in.bin", 0xf800, 0x0800, CRC(049109a3) SHA1(98a07297dcdacef41c793c197b6496dac1e8e744))      /* TMS7020 ROM, correct */
 
-	ROM_REGION(0x1000, "tms7041", 0)
-	ROM_LOAD("exl100_7041.bin", 0x0000, 0x1000, CRC(38f6fc7a) SHA1(b71d545664a974d8ad39bdf600c5b9884c3efab6))           /* TMS7041 internal ROM, correct  */
+	ROM_REGION(0x10000, "tms7041", 0)
+	ROM_LOAD("exl100_7041.bin", 0xf000, 0x1000, CRC(38f6fc7a) SHA1(b71d545664a974d8ad39bdf600c5b9884c3efab6))           /* TMS7041 internal ROM, correct  */
 //	ROM_REGION(0x8000, "vsm", 0)
 
 	ROM_REGION(0x10000, "user1", ROMREGION_ERASEFF)         /* cartridge area */
@@ -661,11 +619,11 @@ ROM_END
 
 
 ROM_START(exeltel)
-	ROM_REGION(0x1000, "maincpu", 0)
-	ROM_LOAD("exeltel_7040.bin", 0x0000, 0x1000, CRC(2792f02f) SHA1(442a852eb68ef78974733d169084752a131de23d))      /* TMS7040 internal ROM */
+	ROM_REGION(0x10000, "maincpu", 0)
+	ROM_LOAD("exeltel_7040.bin", 0xf000, 0x1000, CRC(2792f02f) SHA1(442a852eb68ef78974733d169084752a131de23d))      /* TMS7040 internal ROM */
 
-	ROM_REGION(0x1000, "tms7042", 0)
-	ROM_LOAD("exeltel_7042.bin", 0x0000, 0x1000, BAD_DUMP CRC(a0163507) SHA1(8452849df7eac8a89cf03ee98e2306047c1c4c38))         /* TMS7042 internal ROM, needs redump */
+	ROM_REGION(0x10000, "tms7042", 0)
+	ROM_LOAD("exeltel_7042.bin", 0xf000, 0x1000, BAD_DUMP CRC(a0163507) SHA1(8452849df7eac8a89cf03ee98e2306047c1c4c38))         /* TMS7042 internal ROM, needs redump */
 
 	ROM_REGION(0x10000,"user1",0)
 	ROM_SYSTEM_BIOS( 0, "french", "French v1.4" )

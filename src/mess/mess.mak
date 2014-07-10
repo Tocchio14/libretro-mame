@@ -1916,6 +1916,7 @@ $(MESSOBJ)/ti.a:                \
 	$(MESS_VIDEO)/avigo.o       \
 	$(MESS_DRIVERS)/avigo.o     \
 	$(MESS_DRIVERS)/evmbug.o    \
+	$(MESS_DRIVERS)/cc40.o      \
 
 $(MESSOBJ)/tiger.a:             \
 	$(MESS_DRIVERS)/gamecom.o   \
@@ -2090,6 +2091,7 @@ $(MESSOBJ)/skeleton.a:          \
 	$(MESS_DRIVERS)/dim68k.o    \
 	$(MESS_DRIVERS)/dm7000.o    \
 	$(MESS_DRIVERS)/dmv.o       \
+	$(MESS_MACHINE)/dmv_keyb.o  \
 	$(MESS_DRIVERS)/dps1.o      \
 	$(MESS_DRIVERS)/dsb46.o     \
 	$(MESS_DRIVERS)/dual68.o    \

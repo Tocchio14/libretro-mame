@@ -19,104 +19,15 @@
 
 #define MAINCPU_TAG "maincpu"
 #define IOCPU_TAG   "iocpu"
-
-#define SCREEN_WIDTH_PIXELS     640
-#define SCREEN_HEIGHT_LINES     250
-#define SCREEN_NO_COLOURS       16
-
-#define NO_VIDREGS              (0x30/2)
-
-
-/* Nimbus specific */
-
-/* External int vectors for chained interupts */
-#define EXTERNAL_INT_DISK       0x80
-#define EXTERNAL_INT_MSM5205    0x84
-#define EXTERNAL_INT_MOUSE_YU   0x88
-#define EXTERNAL_INT_MOUSE_YD   0x89
-#define EXTERNAL_INT_MOUSE_XL   0x8A
-#define EXTERNAL_INT_MOUSE_XR   0x8B
-#define EXTERNAL_INT_PC8031_8C  0x8c
-#define EXTERNAL_INT_PC8031_8E  0x8E
-#define EXTERNAL_INT_PC8031_8F  0x8F
-
-
-/* Memory controler */
-#define RAM_BANK00_TAG  "bank0"
-#define RAM_BANK01_TAG  "bank1"
-#define RAM_BANK02_TAG  "bank2"
-#define RAM_BANK03_TAG  "bank3"
-#define RAM_BANK04_TAG  "bank4"
-#define RAM_BANK05_TAG  "bank5"
-#define RAM_BANK06_TAG  "bank6"
-#define RAM_BANK07_TAG  "bank7"
-
-#define HIBLOCK_BASE_MASK   0x08
-#define HIBLOCK_SELECT_MASK 0x10
-
-/* Z80 SIO for keyboard */
-
-#define Z80SIO_TAG          "z80sio"
-
-/* Floppy/Fixed drive interface */
-
-#define FDC_TAG                 "wd2793"
-
-#define NO_DRIVE_SELECTED   0xFF
-
-/* SASI harddisk interface */
-#define SCSIBUS_TAG             "scsibus"
-
-/* Masks for writes to port 0x400 */
-#define FDC_DRIVE0_MASK 0x01
-#define FDC_DRIVE1_MASK 0x02
-#define FDC_DRIVE2_MASK 0x04
-#define FDC_DRIVE3_MASK 0x08
-#define FDC_SIDE_MASK   0x10
-#define FDC_MOTOR_MASKO 0x20
-#define HDC_DRQ_MASK    0x40
-#define FDC_DRQ_MASK    0x80
-#define FDC_DRIVE_MASK  (FDC_DRIVE0_MASK | FDC_DRIVE1_MASK | FDC_DRIVE2_MASK | FDC_DRIVE3_MASK)
-
-#define FDC_SIDE()          ((m_nimbus_drives.reg400 & FDC_SIDE_MASK) >> 4)
-#define FDC_MOTOR()         ((m_nimbus_drives.reg400 & FDC_MOTOR_MASKO) >> 5)
-#define FDC_DRIVE()         (fdc_driveno(m_nimbus_drives.reg400 & FDC_DRIVE_MASK))
-#define HDC_DRQ_ENABLED()   ((m_nimbus_drives.reg400 & HDC_DRQ_MASK) ? 1 : 0)
-#define FDC_DRQ_ENABLED()   ((m_nimbus_drives.reg400 & FDC_DRQ_MASK) ? 1 : 0)
-
-
-/* 8031/8051 Peripheral controler */
-
-#define IPC_OUT_ADDR        0X01
-#define IPC_OUT_READ_PEND   0X02
-#define IPC_OUT_BYTE_AVAIL  0X04
-
-#define IPC_IN_ADDR         0X01
-#define IPC_IN_BYTE_AVAIL   0X02
-#define IPC_IN_READ_PEND    0X04
-
-
-
-
-#define ER59256_TAG             "er59256"
-
-/* IO unit */
-
-#define DISK_INT_ENABLE         0x01
-#define MSM5205_INT_ENABLE      0x04
-#define MOUSE_INT_ENABLE        0x08
-#define PC8031_INT_ENABLE       0x10
-
-
-/* Sound hardware */
-
-#define AY8910_TAG              "ay8910"
-#define MONO_TAG                "mono"
-
-
-
-
-#define MSM5205_TAG             "msm5205"
+#define Z80SIO_TAG  "z80sio"
+#define FDC_TAG     "wd2793"
+#define SCSIBUS_TAG "scsibus"
+#define ER59256_TAG "er59256"
+#define AY8910_TAG  "ay8910"
+#define MONO_TAG    "mono"
+#define MSM5205_TAG "msm5205"
+#define VIA_TAG     "via6522"
+#define CENTRONICS_TAG "centronics"
 
 /* Mouse / Joystick */
 
@@ -125,26 +36,15 @@
 #define MOUSEX_TAG              "mousex"
 #define MOUSEY_TAG              "mousey"
 
-enum
-{
-	MOUSE_PHASE_STATIC = 0,
-	MOUSE_PHASE_POSITIVE,
-	MOUSE_PHASE_NEGATIVE
-};
-
-
-#define MOUSE_INT_ENABLED(state)     (((state)->m_iou_reg092 & MOUSE_INT_ENABLE) ? 1 : 0)
-
-/* Paralell / User port BBC compatible ! */
-
-#define VIA_TAG                 "via6522"
-#define CENTRONICS_TAG          "centronics"
-
-#define VIA_INT                 0x03
-
-#define LINEAR_ADDR(seg,ofs)    ((seg<<4)+ofs)
-
-#define OUTPUT_SEGOFS(mess,seg,ofs)  logerror("%s=%04X:%04X [%08X]\n",mess,seg,ofs,((seg<<4)+ofs))
+/* Memory controller */
+#define RAM_BANK00_TAG  "bank0"
+#define RAM_BANK01_TAG  "bank1"
+#define RAM_BANK02_TAG  "bank2"
+#define RAM_BANK03_TAG  "bank3"
+#define RAM_BANK04_TAG  "bank4"
+#define RAM_BANK05_TAG  "bank5"
+#define RAM_BANK06_TAG  "bank6"
+#define RAM_BANK07_TAG  "bank7"
 
 class rmnimbus_state : public driver_device
 {
@@ -191,10 +91,8 @@ public:
 	UINT8 m_last_playmode;
 	UINT8 m_ay8910_a;
 	UINT8 m_sio_int_state;
-	UINT16 m_vidregs[NO_VIDREGS];
-	UINT8 m_bpp;
-	UINT16 m_pixel_mask;
-	UINT8 m_hs_count;
+	UINT16 m_x, m_y, m_yline;
+	UINT8 m_colours, m_mode, m_op;
 	UINT32 m_debug_video;
 	UINT8 m_vector;
 	UINT8 m_eeprom_bits;
@@ -202,8 +100,6 @@ public:
 
 	DECLARE_READ8_MEMBER(nimbus_mcu_r);
 	DECLARE_WRITE8_MEMBER(nimbus_mcu_w);
-	DECLARE_READ16_MEMBER(nimbus_io_r);
-	DECLARE_WRITE16_MEMBER(nimbus_io_w);
 	DECLARE_READ8_MEMBER(scsi_r);
 	DECLARE_WRITE8_MEMBER(scsi_w);
 	DECLARE_WRITE8_MEMBER(fdc_ctl_w);
@@ -225,7 +121,6 @@ public:
 	virtual void machine_reset();
 	virtual void video_start();
 	virtual void video_reset();
-	DECLARE_PALETTE_INIT(rmnimbus);
 	UINT32 screen_update_nimbus(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	DECLARE_WRITE_LINE_MEMBER(sio_interrupt);
 	DECLARE_WRITE_LINE_MEMBER(nimbus_fdc_intrq_w);
@@ -241,24 +136,14 @@ public:
 	DECLARE_WRITE_LINE_MEMBER(write_scsi_iena);
 
 	UINT8 get_pixel(UINT16 x, UINT16 y);
-	UINT16 read_pixel_line(UINT16 x, UINT16 y, UINT8 width);
+	UINT16 read_pixel_line(UINT16 x, UINT16 y, UINT8 pixels, UINT8 bpp);
 	UINT16 read_pixel_data(UINT16 x, UINT16 y);
 	void set_pixel(UINT16 x, UINT16 y, UINT8 colour);
 	void set_pixel40(UINT16 x, UINT16 y, UINT8 colour);
-	void write_pixel_line(UINT16 x, UINT16 y, UINT16    data, UINT8 width);
-	void move_pixel_line(UINT16 x, UINT16 y, UINT16    data, UINT8 width);
+	void write_pixel_line(UINT16 x, UINT16 y, UINT16, UINT8 pixels, UINT8 bpp);
+	void move_pixel_line(UINT16 x, UINT16 y, UINT8 width);
 	void write_pixel_data(UINT16 x, UINT16 y, UINT16    data);
-	void write_reg_004();
-	void write_reg_006();
-	void write_reg_010();
-	void write_reg_012();
-	void write_reg_014();
-	void write_reg_016();
-	void write_reg_01A();
-	void write_reg_01C();
-	void write_reg_01E();
-	void write_reg_026();
-	void change_palette(UINT8 bank, UINT16 colours, UINT8 regno);
+	void change_palette(UINT8 bank, UINT16 colours);
 	void external_int(UINT16 intno, UINT8 vector);
 	DECLARE_READ8_MEMBER(cascade_callback);
 	void *get_dssi_ptr(address_space &space, UINT16   ds, UINT16 si);
@@ -271,7 +156,7 @@ public:
 	void hdc_post_rw();
 	void hdc_drq();
 	void pc8031_reset();
-	void ipc_dumpregs();
+	//void ipc_dumpregs();
 	void iou_reset();
 	void rmni_sound_reset();
 	void mouse_js_reset();
