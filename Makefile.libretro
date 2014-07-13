@@ -302,7 +302,7 @@ else ifeq ($(platform), wincross)
 	NATIVELD = $(LD)
 	CC_AS ?= gcc
 	SHARED := -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=src/osd/retro/link.T
-   	CCOMFLAGS += -D__LIBRETRO__ -D__WIN32__ -D__WIN32_LIBRETRO__
+   	CCOMFLAGS += -D__WIN32__ -D__WIN32_LIBRETRO__
 	LDFLAGS +=   $(SHARED)
 	EXE = .exe
 	#LIBS += -lpthread
@@ -318,7 +318,7 @@ else
 	NATIVELD = $(LD)
 	CC_AS = gcc
 	SHARED := -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=src/osd/retro/link.T
-   	#CFLAGS += -D__LIBRETRO__-D__WIN32__ -D__WIN32_LIBRETRO__
+   	#CFLAGS += -D__WIN32__ -D__WIN32_LIBRETRO__
    	CCOMFLAGS += -D__WIN32__ -D__WIN32_LIBRETRO__
 	LDFLAGS +=   $(SHARED)
 	EXE = .exe
@@ -331,6 +331,7 @@ endif
 endif
 
 PLATCFLAGS += -D__LIBRETRO__
+CCOMFLAGS += -D__LIBRETRO__
 
 
 ###########################################################################
@@ -654,6 +655,10 @@ endif
 ifeq ($(TARGETOS), win32)
 SQLITE3_LIB = $(OBJ)/libsqlite3.a
 else ifeq ($(platform), android)
+SQLITE3_LIB = $(OBJ)/libsqlite3.a
+else ifeq ($(platform), osx)
+SQLITE3_LIB = $(OBJ)/libsqlite3.a
+else ifeq ($(platform), ios)
 SQLITE3_LIB = $(OBJ)/libsqlite3.a
 else
 SQLITE3_LIB = $(OBJ)/libsqlite3.a -ldl
