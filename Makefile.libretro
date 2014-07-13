@@ -194,10 +194,12 @@ else ifeq ($(platform), ios)
    CC_AS = clang -arch armv7 -isysroot $(IOSSDK)
    CC = clang++ -arch armv7 -isysroot $(IOSSDK)
    LD = $(CC) -stdlib=libc++
+LDFLAGS +=  $(fpic) $(SHARED)
    NATIVELD = c++ -stdlib=libc++
    NATIVECC = c++
    PYTHON ?= @python
    CFLAGS += -DIOS 
+   LDFLAGSEMULATOR +=  -stdlib=libc++
    PLATCFLAGS += -DSDLMAME_NO64BITIO -DIOS -DUSE_ARM_HACK -DHAVE_POSIX_MEMALIGN
 	CCOMFLAGS += $(PLATCFLAGS) -ffast-math  
 else ifeq ($(platform), qnx)
