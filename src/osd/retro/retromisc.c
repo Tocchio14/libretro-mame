@@ -24,10 +24,8 @@ void *osd_alloc_executable(size_t size)
 {
 #if defined(WIN32)
    return VirtualAlloc(NULL, size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-#elif defined(SDLMAME_BSD) || defined(SDLMAME_MACOSX)
+#else
 	return (void *)mmap(0, size, PROT_EXEC|PROT_READ|PROT_WRITE, MAP_ANON|MAP_SHARED, -1, 0);
-#elif defined(SDLMAME_UNIX) || defined(__LIBRETRO__)
-	return (void *)mmap(0, size, PROT_EXEC|PROT_READ|PROT_WRITE, MAP_ANON|MAP_SHARED, 0, 0);
 #endif
 }
 
@@ -41,8 +39,6 @@ void osd_free_executable(void *ptr, size_t size)
 {
 #if defined(WIN32)
    VirtualFree(ptr, 0, MEM_RELEASE);
-#elif defined SDLMAME_SOLARIS
-	munmap((char *)ptr, size);
 #else
 	munmap(ptr, size);
 #endif
