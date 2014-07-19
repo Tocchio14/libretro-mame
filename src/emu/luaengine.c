@@ -499,7 +499,6 @@ void lua_engine::update_machine()
 
 void lua_engine::initialize()
 {
-#ifndef __LIBRETRO__
 	luabridge::getGlobalNamespace (m_lua_state)
 		.beginNamespace ("emu")
 			.addCFunction ("gamename",    l_emu_gamename )
@@ -529,7 +528,6 @@ void lua_engine::initialize()
 		.endNamespace ();
 	luabridge::push (m_lua_state, machine_manager::instance());
 	lua_setglobal(m_lua_state, "manager");
-#endif
 }
 
 void lua_engine::start_console()
