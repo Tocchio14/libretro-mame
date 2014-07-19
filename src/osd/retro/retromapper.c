@@ -78,7 +78,6 @@ void retro_set_environment(retro_environment_t cb)
 	
 	//common for MAME/MESS/UME	
 	{ option_read_config, "Read configuration; disabled|enabled" },
-	{ option_auto_save, "Auto save/load states; disabled|enabled" },
 
 	// ONLY FOR MESS/UME
 #if !defined(WANT_MAME)
@@ -86,6 +85,7 @@ void retro_set_environment(retro_environment_t cb)
 #endif
 	
 	//common for MAME/MESS/UME	
+	{ option_auto_save, "Auto save/load states; disabled|enabled" },
 	{ option_mouse, "Enable in-game mouse; disabled|enabled" },
 	{ option_cheats, "Enable cheats; disabled|enabled" },
 	{ option_nag, "Hide nag screen; disabled|enabled" },
@@ -94,10 +94,14 @@ void retro_set_environment(retro_environment_t cb)
 	{ option_renderer, "Alternate render method; disabled|enabled" },
 
 	// ONLY FOR MESS/UME
-#if !defined(WANT_MAME)
+#if !defined(WANT_MAME) 
     { option_softlist, "Enable softlists; enabled|disabled" },
 	{ option_softlist_media, "Softlist automatic media type; enabled|disabled" },
-	{ option_media, "Media type; cart|flop|cdrm|cass|hard|serl|prin" },   	  	
+#if defined(WANT_MESS)
+	{ option_media, "Media type; cart|flop|cdrm|cass|hard|serl|prin" },
+#elif defined(WANT_UME)
+	{ option_media, "Media type; rom|cart|flop|cdrm|cass|hard|serl|prin" },
+#endif	
 	{ option_bios, "Boot to BIOS; disabled|enabled" },
 #endif
 	
