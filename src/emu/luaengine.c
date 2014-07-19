@@ -529,9 +529,14 @@ void lua_engine::initialize()
 		.endNamespace ();
 	luabridge::push (m_lua_state, machine_manager::instance());
 	lua_setglobal(m_lua_state, "manager");
+#endif
+}
+
+void lua_engine::start_console()
+{
+#ifndef __LIBRETRO__
 	mg_start_thread(::serve_lua, this);
 #endif
-
 }
 
 void lua_engine::periodic_check()

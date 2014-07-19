@@ -531,7 +531,7 @@ sexygal         // (c) 1985
 sweetgal        // (c) 1985
 ngalsumr        // (c) 1985
 pastelg         // (c) 1985
-3ds             // (c) 1985
+threeds         // (c) 1985
 galds           // (c) 1985
 crystalg        // (c) 1986
 crystal2        // (c) 1986
@@ -1678,6 +1678,7 @@ gghost          // (c) 1984
 hattrick        // (c) 1984
 otwalls         // (c) 1984
 snakepit        // (c) 1984
+snakepit2       // (c) 1983
 snakjack        // (c) 1984
 stocker         // (c) 1984
 triviag1        // (c) 1984
@@ -4551,6 +4552,7 @@ mvpj            // (c) 1989 (FD1094, decrypted)
 passsht         // (c) 1988 (FD1094, decrypted)
 passshta        // (c) 1988 (FD1094, decrypted)
 passshtj        // (c) 1988 (FD1094, decrypted)
+cencourt		// (c) 1988 (MC-8123B)
 riotcity        // (c) 1991 Sega / Westone (Unprotected)
 ryukyu          // (c) 1990 (FD1094, decrypted)
 sdib            // (c) 1987 (FD1089A, decrypted)
@@ -6813,6 +6815,7 @@ missilem        // hack
 // Atari vector games
 llander         // 0345xx           no copyright notice
 llander1        // 0345xx           no copyright notice
+llandert        // (test)           no copyright notice
 asteroid        // 035127-035145    (c) 1979
 asteroid2       // 035127-035145    (c) 1979
 asteroid1       // 035127-035145    no copyright notice
@@ -8620,6 +8623,7 @@ tengaij         // (c) 1996
 // Semicom games on "Psikyo 68020"-like hardware
 baryon          // (c) 1997 SemiCom
 dreamwld        // (c) 2000 SemiCom
+rolcrush		// (c) 1999 Trust
 
 // SH2 board
 s1945ii         // (c) 1997
@@ -30667,7 +30671,7 @@ ratrc_l1
 // s8.c
 pfevr_l2
 pfevr_p3
-stillcra
+scrzy_l1
 
 
 // s9.c
@@ -30679,7 +30683,6 @@ sshtl_l7
 alcat_l7
 szone_l5
 szone_l2
-scrzy_l1
 
 // sam.c
 
