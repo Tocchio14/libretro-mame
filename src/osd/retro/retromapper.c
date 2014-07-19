@@ -17,6 +17,9 @@ static char option_bios[50];
 static char option_softlist[50];
 static char option_softlist_media[50];
 static char option_media[50];
+static char option_read_config[50];     
+static char option_write_config[50];
+static char option_auto_save[50];
 
 int SHIFTON=-1,NEWGAME_FROM_OSD=0;
 char RPATH[512];
@@ -55,8 +58,6 @@ void retro_set_audio_sample(retro_audio_sample_t cb) { }
 
 void retro_set_environment(retro_environment_t cb)
 {
-
- 
    sprintf(option_mouse,"%s_%s",core,"mouse_enable");
    sprintf(option_cheats,"%s_%s",core,"cheats_enable");
    sprintf(option_nag,"%s_%s",core,"hide_nagscreen");
@@ -69,11 +70,22 @@ void retro_set_environment(retro_environment_t cb)
    sprintf(option_softlist,"%s_%s",core,"softlists_enable");
    sprintf(option_softlist_media,"%s_%s",core,"softlists_auto_media");
    sprintf(option_media,"%s_%s",core,"media_type");
-   
-     
+   sprintf(option_read_config,"%s_%s",core,"read_config");
+   sprintf(option_write_config,"%s_%s",core,"write_config");
+   sprintf(option_auto_save,"%s_%s",core,"auto_save");
+      
    static const struct retro_variable vars[] = {
 	
-	//common for MAME/MESS/UME
+	//common for MAME/MESS/UME	
+	{ option_read_config, "Read configuration; disabled|enabled" },
+	{ option_auto_save, "Auto save/load states; disabled|enabled" },
+
+	// ONLY FOR MESS/UME
+#if !defined(WANT_MAME)
+	{ option_write_config, "Write configuration; disabled|enabled" },
+#endif
+	
+	//common for MAME/MESS/UME	
 	{ option_mouse, "Enable in-game mouse; disabled|enabled" },
 	{ option_cheats, "Enable cheats; disabled|enabled" },
 	{ option_nag, "Hide nag screen; disabled|enabled" },
@@ -88,6 +100,8 @@ void retro_set_environment(retro_environment_t cb)
 	{ option_media, "Media type; cart|flop|cdrm|cass|hard|serl|prin" },   	  	
 	{ option_bios, "Boot to BIOS; disabled|enabled" },
 #endif
+	
+	//common for MAME/MESS/UME	
 	{ option_osd, "Boot to OSD; disabled|enabled" },
 	{ option_cli, "Boot from CLI; disabled|enabled" },
 	{ NULL, NULL },
@@ -102,7 +116,7 @@ void retro_set_environment(retro_environment_t cb)
 static void check_variables(void)
 {
    struct retro_variable var = {0};
- 
+
    var.key = option_cli;
    var.value = NULL;
 
@@ -194,6 +208,28 @@ static void check_variables(void)
       if (strcmp(var.value, "disabled") == 0)
          boot_to_osd_enabled = false;       
    }
+   
+   var.key = option_read_config;
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "disabled") == 0)
+         read_config_enable = false;
+      if (strcmp(var.value, "enabled") == 0)
+         read_config_enable = true;
+   }   
+
+   var.key = option_auto_save;
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "disabled") == 0)
+         auto_save_enable = false;
+      if (strcmp(var.value, "enabled") == 0)
+         auto_save_enable = true;
+   }      
 
 #if !defined(WANT_MAME)
 
@@ -237,6 +273,17 @@ static void check_variables(void)
       if (strcmp(var.value, "disabled") == 0)
          boot_to_bios_enabled = false;       
    } 
+   
+   var.key = option_write_config;
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "disabled") == 0)
+         write_config_enable = false;
+      if (strcmp(var.value, "enabled") == 0)
+         write_config_enable = true;
+   }      
      
 #endif   
 }

@@ -89,7 +89,9 @@ static bool boot_to_bios_enabled = false;
 static bool experimental_cmdline = false;
 static bool softlist_enabled = false;
 static bool softlist_auto = false;
-
+static bool write_config_enable = false;
+static bool read_config_enable = false;
+static bool auto_save_enable = false;
 
 
 
@@ -381,8 +383,7 @@ void Set_Default_Option(){
 	Add_Option("-nothrottle");
 	Add_Option("-joystick");
 	Add_Option("-samplerate");
-	Add_Option("48000");
-	Add_Option("-sound");		
+	Add_Option("48000");	
 	if(cheats_enable)
 	   Add_Option("-cheat");
 	else
@@ -395,6 +396,14 @@ void Set_Default_Option(){
 	   Add_Option("-skip_gameinfo");
 	else
 	   Add_Option("-noskip_gameinfo");
+	if(write_config_enable)
+		Add_Option("-writeconfig");
+	if(read_config_enable)
+		Add_Option("-readconfig");		
+	else
+		Add_Option("-noreadconfig");		
+	if(auto_save_enable)
+		Add_Option("-autosave");		
 }
 
 void Set_Path_Option(){
