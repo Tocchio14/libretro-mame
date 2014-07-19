@@ -14,22 +14,9 @@ Granny uses the MPU4 board, but it has a Vidiot Deluxe for the
 video, and a Cheep Squeek sound board. The manual incorrectly
 describes the babypac vidiot board, which is of little use.
 
-Debug trick to get granny to work:
->mame granny -debug
-focus 1
-g
-After 10 beeps it will get stuck in a loop, so press enter.
-pc=e1f1
-g
-The game boots up, insert a coin, you can play.
-
 
 ToDo (babypac):
-- You can play the video portion but try not to use the lower
-  escape chutes. If you do, alternate between pressing X and
-  right-shift until you are returned to the maze.
 - No sound
-- Playfield inputs
 - Mechanical
 - Artwork
 - Beeper needs to be replaced by a red LED when artwork is done.
@@ -40,7 +27,7 @@ ToDo (granny):
 - Mechanical
 - Artwork
 - Beeper needs to be replaced by a red LED when artwork is done.
-- Doesn't boot (test of TMS9928 fails).
+- Video CPU type and clock needs verification.
 - Screen blending needs improvement
 - No schematic found.
 
@@ -337,36 +324,36 @@ static INPUT_PORTS_START( babypac )
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Right Flipper EOS") PORT_CODE(KEYCODE_RSHIFT)
 	PORT_BIT( 0x0a, IP_ACTIVE_HIGH, IPT_UNUSED )
 	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_START2 )
-	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Rebounds")
+	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Rebounds") PORT_CODE(KEYCODE_Z)
 	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_START1 )
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Right Spinner")
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Left Spinner")
+	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Right Spinner") PORT_CODE(KEYCODE_J)
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Left Spinner") PORT_CODE(KEYCODE_F)
 
 	PORT_START("X1")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_COIN2 )
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_COIN1 )
 	PORT_BIT( 0x3c, IP_ACTIVE_HIGH, IPT_UNUSED )
 	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_TILT )
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Slam Tilt")
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_TILT1 ) PORT_NAME("Slam Tilt")
 
 	PORT_START("X2")
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("R. Top Loop Lane")
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("R. Top Loop Lane") PORT_CODE(KEYCODE_COLON)
 	PORT_BIT( 0x06, IP_ACTIVE_HIGH, IPT_UNUSED )
-	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("L. Top Loop Lane")
-	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Tunnel Outlane")
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Fruits Outlane")
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("R. Inside Outlane")
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("L. Inside Outlane")
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("L. Top Loop Lane") PORT_CODE(KEYCODE_A)
+	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Tunnel Outlane") PORT_CODE(KEYCODE_L)
+	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Fruits Outlane") PORT_CODE(KEYCODE_S)
+	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("R. Inside Outlane") PORT_CODE(KEYCODE_K)
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("L. Inside Outlane") PORT_CODE(KEYCODE_D)
 
 	PORT_START("X3")
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("#5 Drop Target (R.)")
-	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("#4 Drop Target")
-	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("#3 Drop Target")
-	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("#2 Drop Target")
-	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("#1 Drop Target (L.)")
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("#5 Drop Target (R.)") PORT_CODE(KEYCODE_M)
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("#4 Drop Target") PORT_CODE(KEYCODE_N)
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("#3 Drop Target") PORT_CODE(KEYCODE_B)
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("#2 Drop Target") PORT_CODE(KEYCODE_V)
+	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("#1 Drop Target (L.)") PORT_CODE(KEYCODE_C)
 	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Outhole") PORT_CODE(KEYCODE_X)
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("R. Maze Saucer")
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("L. Maze Saucer")
+	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("R. Maze Saucer") PORT_CODE(KEYCODE_H)
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("L. Maze Saucer") PORT_CODE(KEYCODE_G)
 
 	PORT_START("X4")
 	PORT_BIT( 0xff, IP_ACTIVE_HIGH, IPT_UNUSED )
@@ -378,7 +365,7 @@ static INPUT_PORTS_START( granny )
 	PORT_BIT( 0x02, IP_ACTIVE_LOW, IPT_SERVICE2 ) PORT_NAME("Sound Test") PORT_IMPULSE(1) PORT_CHANGED_MEMBER(DEVICE_SELF, by133_state, sound_test, 0)
 	PORT_BIT( 0x04, IP_ACTIVE_LOW, IPT_SERVICE3 ) PORT_NAME("Activity") PORT_IMPULSE(1) PORT_CHANGED_MEMBER(DEVICE_SELF, by133_state, activity_test, 0)
 	PORT_BIT( 0x08, IP_ACTIVE_LOW, IPT_SERVICE4 ) PORT_NAME("Self Test") PORT_IMPULSE(1) PORT_CHANGED_MEMBER(DEVICE_SELF, by133_state, self_test, 0)
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_CODE(KEYCODE_F2) PORT_NAME("Power")
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_JOYSTICK_UP ) PORT_NAME("Power")
 
 	PORT_START("DSW0")
 	PORT_DIPNAME( 0x01, 0x00, "S01") // S1-5: 32 combinations of coins/credits of a coin slot. S9-13 other slot.
@@ -491,49 +478,49 @@ static INPUT_PORTS_START( granny )
 	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_START2 )
 
 	PORT_START("X0")
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Canoe Rollover Button 1")
-	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Canoe Rollover Button 2")
-	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Canoe Rollover Button 3")
-	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Canoe Rollover Button 4")
-	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Canoe Rollover Button 5")
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Canoe Rollover Button 6")
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Canoe Rollover Button 7")
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Canoe Rollover Button 8")
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Canoe Rollover Button 1") PORT_CODE(KEYCODE_U)
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Canoe Rollover Button 2") PORT_CODE(KEYCODE_I)
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Canoe Rollover Button 3") PORT_CODE(KEYCODE_O)
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Canoe Rollover Button 4") PORT_CODE(KEYCODE_OPENBRACE)
+	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Canoe Rollover Button 5") PORT_CODE(KEYCODE_CLOSEBRACE)
+	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Canoe Rollover Button 6") PORT_CODE(KEYCODE_L)
+	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Canoe Rollover Button 7") PORT_CODE(KEYCODE_COLON)
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Canoe Rollover Button 8") PORT_CODE(KEYCODE_QUOTE)
 
 	PORT_START("X1")
 	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_COIN2 )
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_COIN1 )
 	PORT_BIT( 0x3c, IP_ACTIVE_HIGH, IPT_UNUSED )
 	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_TILT )
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Slam Tilt")
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_TILT1 ) PORT_NAME("Slam Tilt")
 
 	PORT_START("X2")
 	PORT_BIT( 0x09, IP_ACTIVE_HIGH, IPT_UNUSED )
 	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Outhole") PORT_CODE(KEYCODE_X)
-	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME(" Top R. Gate")
-	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("L. Rollover Buttons")
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("R. Return Lane")
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("L. Return Lane")
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Drop Target R")
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Top R. Gate") PORT_CODE(KEYCODE_R)
+	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("L. Rollover Buttons") PORT_CODE(KEYCODE_W)
+	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("R. Return Lane") PORT_CODE(KEYCODE_E)
+	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("L. Return Lane") PORT_CODE(KEYCODE_Q)
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Drop Target R") PORT_CODE(KEYCODE_M)
 
 	PORT_START("X3")
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Top Saucer")
-	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("R. Lane Kickback")
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Top Saucer") PORT_CODE(KEYCODE_Z)
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("R. Lane Kickback") PORT_CODE(KEYCODE_Y)
 	PORT_BIT( 0x0c, IP_ACTIVE_HIGH, IPT_UNUSED )
-	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Ammo Target O")
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("2nd Ammo Target M")
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("1st Ammo Target M")
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Ammo Target A")
+	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Ammo Target O") PORT_CODE(KEYCODE_K)
+	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("2nd Ammo Target M") PORT_CODE(KEYCODE_J)
+	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("1st Ammo Target M") PORT_CODE(KEYCODE_H)
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Ammo Target A") PORT_CODE(KEYCODE_G)
 
 	PORT_START("X4")
-	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Back Target T")
-	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Back Target I")
-	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Back Target X")
-	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Back Target E")
-	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Drop Target P")
-	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Drop Target O")
-	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Drop Target W")
-	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Drop Target E")
+	PORT_BIT( 0x01, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Back Target T") PORT_CODE(KEYCODE_F)
+	PORT_BIT( 0x02, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Back Target I") PORT_CODE(KEYCODE_D)
+	PORT_BIT( 0x04, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Back Target X") PORT_CODE(KEYCODE_S)
+	PORT_BIT( 0x08, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Back Target E") PORT_CODE(KEYCODE_A)
+	PORT_BIT( 0x10, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Drop Target P") PORT_CODE(KEYCODE_C)
+	PORT_BIT( 0x20, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Drop Target O") PORT_CODE(KEYCODE_V)
+	PORT_BIT( 0x40, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Drop Target W") PORT_CODE(KEYCODE_B)
+	PORT_BIT( 0x80, IP_ACTIVE_HIGH, IPT_OTHER ) PORT_NAME("Drop Target E") PORT_CODE(KEYCODE_N)
 INPUT_PORTS_END
 
 
@@ -622,7 +609,7 @@ READ8_MEMBER( by133_state::u7_b_r )
 	if (BIT(m_u7_a, 7)) // bits 6 and 7 work; pinmame uses 7
 		m_u7_b |= m_io_joy->read();
 
-	if (BIT(m_u7_a, 6)) // Granny has a power button? according to Pinmame. Tested - doesn't do anything.
+	if (BIT(m_u7_a, 6)) // Granny has a "power" button - used to shoot your gun. Is also 2-player start.
 		m_u7_b = m_io_test->read() & 0x80;
 
 	return m_u7_b;
@@ -812,7 +799,8 @@ static MACHINE_CONFIG_START( babypac, by133_state )
 MACHINE_CONFIG_END
 
 static MACHINE_CONFIG_DERIVED( granny, babypac )
-	MCFG_CPU_MODIFY( "videocpu" )
+	MCFG_DEVICE_REMOVE("videocpu")
+	MCFG_CPU_ADD("videocpu", M6809E, XTAL_8MHz) //??
 	MCFG_CPU_PROGRAM_MAP(granny_map)
 
 	MCFG_DEVICE_REMOVE("screen")
@@ -883,6 +871,6 @@ ROM_START(granny)
 ROM_END
 
 
-GAME( 1982, babypac,  0,        babypac, babypac, driver_device,  0,  ROT90, "Dave Nutting Associates / Bally", "Baby Pac-Man (set 1)", GAME_IS_SKELETON_MECHANICAL)
-GAME( 1982, babypac2, babypac,  babypac, babypac, driver_device,  0,  ROT90, "Dave Nutting Associates / Bally", "Baby Pac-Man (set 2)", GAME_IS_SKELETON_MECHANICAL)
-GAME( 1984, granny,   0,        granny,  granny,  driver_device,  0,  ROT0,  "Bally", "Granny and the Gators", GAME_IS_SKELETON_MECHANICAL)
+GAME( 1982, babypac,  0,        babypac, babypac, driver_device,  0,  ROT90, "Dave Nutting Associates / Bally", "Baby Pac-Man (set 1)", GAME_MECHANICAL | GAME_NO_SOUND )
+GAME( 1982, babypac2, babypac,  babypac, babypac, driver_device,  0,  ROT90, "Dave Nutting Associates / Bally", "Baby Pac-Man (set 2)", GAME_MECHANICAL | GAME_NO_SOUND )
+GAME( 1984, granny,   0,        granny,  granny,  driver_device,  0,  ROT0,  "Bally", "Granny and the Gators", GAME_MECHANICAL | GAME_NO_SOUND )
