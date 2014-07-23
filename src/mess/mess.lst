@@ -704,29 +704,29 @@ c128dcr_de
 c128dcr_se
 c128d81
 
-a1000   	// Commodore Amiga 1000
+a1000       // Commodore Amiga 1000
 a1000n
-a2000		// Commodore Amiga 2000
+a2000       // Commodore Amiga 2000
 a2000n
-a500    	// Commodore Amiga 500
+a500        // Commodore Amiga 500
 a500n
-cdtv		// Commodore CDTV
+cdtv        // Commodore CDTV
 cdtvn
-a3000		// Commodore Amiga 3000
+a3000       // Commodore Amiga 3000
 a3000n
-a500p		// Commodore Amiga 500 Plus
+a500p       // Commodore Amiga 500 Plus
 a500pn
-a600		// Commodore Amiga 600
+a600        // Commodore Amiga 600
 a600n
-a1200		// Commodore Amiga 1200
+a1200       // Commodore Amiga 1200
 a1200n
-a4000		// Commodore Amiga 4000/040
+a4000       // Commodore Amiga 4000/040
 a4000n
-a400030		// Commodore Amiga 4000/030
+a400030     // Commodore Amiga 4000/030
 a400030n
-cd32		// Commodore Amiga CD32
+cd32        // Commodore Amiga CD32
 cd32n
-a4000t		// Commodore Amiga 4000T
+a4000t      // Commodore Amiga 4000T
 a4000tn
 
 c65    // 1991 C65 / C64DX (Prototype, NTSC)
@@ -860,7 +860,7 @@ apxenp2 // 1993 Apricot XEN PC (P2 Motherboard)
 aprpand
 aprfte
 megapc // 1992 Amstrad plc
-megapcpl 
+megapcpl
 megapcpla // AMI BIOS version with Winbond WINBUS chipset
 ec1849
 t2000sx
@@ -1049,6 +1049,7 @@ avigo_it     // 1997 Avigo (Italian)
 
 // Texas Instruments Calculators
 ti73      // 1990 TI-73
+ti74      // 1986 TI-74
 ti81      // 1990 TI-81 (Z80 2 MHz)
 ti81v2  // 1990 TI-81 (Z80 2 MHz)
 ti85      // 1992 TI-85 (Z80 6 MHz)
@@ -1065,6 +1066,10 @@ ti92p    // 1999 TI-92 Plus
 v200      // 2002 Voyage 200 PLT
 ti89t    // 2004 TI-89 Titanium
 evmbug
+
+// Exelvision (founded by former TI employees)
+exl100
+exeltel
 
 // NEC
 pc6001
@@ -1849,10 +1854,6 @@ poly8813
 // Bondwell
 bw2
 
-// Exeltel
-exl100
-exeltel
-
 // Comx World Operations Ltd
 comx35p
 comx35n
@@ -1914,7 +1915,7 @@ fmtownsux  // 1991.11 FM-Towns II UX
 fmtownssj  // FM-Towns II SJ
 fmtownshr  // 1992 FM-Towns II HR
 fmtownsmx  // FM-Towns II MX
-fmtownsftv  // 1994 FM-Towns II FreshTV 
+fmtownsftv  // 1994 FM-Towns II FreshTV
 fmtmarty  // 1993 Fujitsu FM-Towns Marty
 fmtmarty2  // 1993 Fujitsu FM-Towns Marty 2
 carmarty  // Fujitsu FM-Towns Car Marty
@@ -2239,8 +2240,11 @@ bml3
 bml3mk2
 bml3mk5
 b16
+psion1
 psioncm
 psionla
+psionxp
+psionp200
 psionp350
 psionlam
 psionlz64
@@ -2419,3 +2423,4 @@ fc100
 alto2
 gimix
 tecnbras
+minicom

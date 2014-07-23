@@ -123,7 +123,7 @@ static ADDRESS_MAP_START( video_map, AS_PROGRAM, 8, mrgame_state )
 	AM_RANGE(0x5000, 0x50ff) AM_MIRROR(0x0700) AM_RAM AM_SHARE("objectram")
 	AM_RANGE(0x6800, 0x6807) AM_MIRROR(0x07f8) AM_WRITE(video_ctrl_w)
 	AM_RANGE(0x7000, 0x77ff) AM_READNOP //AFR - looks like a watchdog
-	AM_RANGE(0x8100, 0x8103) AM_MIRROR(0x7efc) AM_DEVREADWRITE("ppi", i8255_device, read, write) 
+	AM_RANGE(0x8100, 0x8103) AM_MIRROR(0x7efc) AM_DEVREADWRITE("ppi", i8255_device, read, write)
 ADDRESS_MAP_END
 
 static ADDRESS_MAP_START( audio1_map, AS_PROGRAM, 8, mrgame_state )
@@ -365,7 +365,6 @@ static GFXDECODE_START( mrgame )
 	GFXDECODE_ENTRY( "chargen", 0, spritelayout, 0, 16 )
 GFXDECODE_END
 
-// this gives bad colours although it looks right
 PALETTE_INIT_MEMBER( mrgame_state, mrgame)
 {
 	static const int resistances[3] = { 1000, 470, 220 };
@@ -374,7 +373,7 @@ PALETTE_INIT_MEMBER( mrgame_state, mrgame)
 	const UINT8 *color_prom = machine().root_device().memregion("proms")->base();
 
 	/* compute the color output resistor weights */
-	compute_resistor_weights(0,	255, -1.0,
+	compute_resistor_weights(0, 255, -1.0,
 			3, &resistances[0], rweights, 0, 0,
 			3, &resistances[0], gweights, 0, 0,
 			2, &resistances[1], bweights, 0, 0);
@@ -656,8 +655,8 @@ ROM_START(wcup90)
 ROM_END
 
 
-GAME(1988,  dakar,     0,         mrgame,  mrgame, mrgame_state,  mrgame,  ROT0,  "Mr Game",    "Dakar",                      GAME_IS_SKELETON_MECHANICAL)
-GAME(1989,  motrshow,  0,         mrgame,  mrgame, mrgame_state,  mrgame,  ROT0,  "Mr Game",    "Motor Show (set 1)",         GAME_IS_SKELETON_MECHANICAL)
-GAME(1989,  motrshowa, motrshow,  mrgame,  mrgame, mrgame_state,  mrgame,  ROT0,  "Mr Game",    "Motor Show (set 2)",         GAME_IS_SKELETON_MECHANICAL)
-GAME(1990,  macattck,  0,         mrgame,  mrgame, mrgame_state,  mrgame,  ROT0,  "Mr Game",    "Mac Attack",                 GAME_IS_SKELETON_MECHANICAL)
-GAME(1990,  wcup90,    0,         mrgame,  mrgame, mrgame_state,  mrgame,  ROT0,  "Mr Game",    "World Cup 90",               GAME_IS_SKELETON_MECHANICAL)
+GAME(1988,  dakar,     0,         mrgame,  mrgame, mrgame_state,  mrgame,  ROT0,  "Mr Game", "Dakar", GAME_MECHANICAL | GAME_IMPERFECT_SOUND )
+GAME(1989,  motrshow,  0,         mrgame,  mrgame, mrgame_state,  mrgame,  ROT0,  "Mr Game", "Motor Show (set 1)", GAME_MECHANICAL | GAME_IMPERFECT_SOUND )
+GAME(1989,  motrshowa, motrshow,  mrgame,  mrgame, mrgame_state,  mrgame,  ROT0,  "Mr Game", "Motor Show (set 2)", GAME_MECHANICAL | GAME_IMPERFECT_SOUND )
+GAME(1990,  macattck,  0,         mrgame,  mrgame, mrgame_state,  mrgame,  ROT0,  "Mr Game", "Mac Attack", GAME_IS_SKELETON_MECHANICAL)
+GAME(1990,  wcup90,    0,         mrgame,  mrgame, mrgame_state,  mrgame,  ROT0,  "Mr Game", "World Cup 90", GAME_IS_SKELETON_MECHANICAL)

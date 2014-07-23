@@ -683,7 +683,6 @@ DRVLIBS += \
 	$(MESSOBJ)/entex.a \
 	$(MESSOBJ)/epoch.a \
 	$(MESSOBJ)/epson.a \
-	$(MESSOBJ)/exeltel.a \
 	$(MESSOBJ)/exidy.a \
 	$(MESSOBJ)/fairch.a \
 	$(MESSOBJ)/fidelity.a \
@@ -795,6 +794,7 @@ DRVLIBS += \
 	$(MESSOBJ)/toshiba.a \
 	$(MESSOBJ)/trainer.a \
 	$(MESSOBJ)/trs.a \
+	$(MESSOBJ)/ultratec.a \
 	$(MESSOBJ)/unisys.a \
 	$(MESSOBJ)/veb.a \
 	$(MESSOBJ)/vidbrain.a \
@@ -1272,9 +1272,6 @@ $(MESSOBJ)/epson.a:             \
 	$(MESS_DRIVERS)/px8.o       \
 	$(MESS_DRIVERS)/qx10.o      \
 	$(MESS_MACHINE)/qx10kbd.o   \
-
-$(MESSOBJ)/exeltel.a:           \
-	$(MESS_DRIVERS)/exelv.o     \
 
 $(MESSOBJ)/exidy.a:             \
 	$(MESS_MACHINE)/sorcerer.o  \
@@ -1885,6 +1882,7 @@ $(MESSOBJ)/thomson.a:           \
 	$(MESS_MACHINE)/thomflop.o  \
 
 $(MESSOBJ)/ti.a:                \
+	$(MESS_DRIVERS)/ti74.o      \
 	$(MESS_DRIVERS)/ti85.o      \
 	$(MESS_VIDEO)/ti85.o        \
 	$(MESS_MACHINE)/ti85.o      \
@@ -1914,8 +1912,9 @@ $(MESSOBJ)/ti.a:                \
 	$(MESS_DRIVERS)/ti99_2.o    \
 	$(MESS_VIDEO)/avigo.o       \
 	$(MESS_DRIVERS)/avigo.o     \
-	$(MESS_DRIVERS)/evmbug.o    \
 	$(MESS_DRIVERS)/cc40.o      \
+	$(MESS_DRIVERS)/evmbug.o    \
+	$(MESS_DRIVERS)/exelv.o     \
 
 $(MESSOBJ)/tiger.a:             \
 	$(MESS_DRIVERS)/gamecom.o   \
@@ -1970,6 +1969,9 @@ $(MESSOBJ)/trs.a:               \
 	$(MESS_MACHINE)/trs80m2kb.o \
 	$(MESS_DRIVERS)/tandy2k.o   \
 	$(MESS_MACHINE)/tandy2kb.o  \
+
+$(MESSOBJ)/ultratec.a:        \
+	$(MESS_DRIVERS)/minicom.o   \
 
 $(MESSOBJ)/unisys.a:            \
 	$(MESS_DRIVERS)/univac.o    \
@@ -2296,6 +2298,7 @@ $(MESS_MACHINE)/megacd.o:   $(MESS_LAYOUT)/megacd.lh
 $(MESS_DRIVERS)/mekd2.o:    $(MESS_LAYOUT)/mekd2.lh
 $(MESS_DRIVERS)/mephisto.o: $(MESS_LAYOUT)/mephisto.lh
 $(MESS_DRIVERS)/merlin.o:   $(MESS_LAYOUT)/merlin.lh
+$(MESS_DRIVERS)/minicom.o:   $(MESS_LAYOUT)/minicom.lh
 $(MESS_DRIVERS)/mirage.o:   $(MESS_LAYOUT)/mirage.lh
 $(MESS_DRIVERS)/mk1.o:      $(MESS_LAYOUT)/mk1.lh
 $(MESS_DRIVERS)/mk14.o:     $(MESS_LAYOUT)/mk14.lh
@@ -2338,6 +2341,7 @@ $(MESS_DRIVERS)/sym1.o:     $(MESS_LAYOUT)/sym1.lh
 $(MESS_DRIVERS)/tavernie.o: $(MESS_LAYOUT)/tavernie.lh
 $(MESS_DRIVERS)/tec1.o:     $(MESS_LAYOUT)/tec1.lh
 $(MESS_DRIVERS)/tecnbras.o: $(MESS_LAYOUT)/tecnbras.lh
+$(MESS_DRIVERS)/ti74.o:     $(MESS_LAYOUT)/ti74.lh
 $(MESS_DRIVERS)/tk80.o:     $(MESS_LAYOUT)/tk80.lh
 $(MESS_DRIVERS)/tm990189.o: $(MESS_LAYOUT)/tm990189.lh \
 							$(MESS_LAYOUT)/tm990189v.lh
