@@ -73,9 +73,10 @@ static int ui_ipt_pushchar=-1;
 
 static int mame_reset = -1;
 
-// cores options
+// core options
 bool hide_nagscreen = false;
 bool hide_warnings = false;
+bool nobuffer_enable = false;
 
 static bool hide_gameinfo = false;
 static bool mouse_enable = false;
@@ -90,8 +91,6 @@ static bool write_config_enable = false;
 static bool read_config_enable = false;
 static bool auto_save_enable = false;
 static bool throttle_enable = false;
-
-
 
 // emu flags
 static int tate = 0;

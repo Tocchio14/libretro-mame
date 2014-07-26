@@ -21,6 +21,7 @@ static char option_read_config[50];
 static char option_write_config[50];
 static char option_auto_save[50];
 static char option_throttle[50];
+static char option_nobuffer[50];
 
 int SHIFTON=-1,NEWGAME_FROM_OSD=0;
 char RPATH[512];
@@ -75,6 +76,7 @@ void retro_set_environment(retro_environment_t cb)
    sprintf(option_write_config,"%s_%s",core,"write_config");
    sprintf(option_auto_save,"%s_%s",core,"auto_save");
    sprintf(option_throttle,"%s_%s",core,"throttle");
+   sprintf(option_nobuffer,"%s_%s",core,"nobuffer");
       
    static const struct retro_variable vars[] = {
 	
@@ -91,6 +93,7 @@ void retro_set_environment(retro_environment_t cb)
 	{ option_mouse, "Enable in-game mouse; disabled|enabled" },
 	{ option_throttle, "Enable throttle; disabled|enabled" },
 	{ option_cheats, "Enable cheats; disabled|enabled" },
+	{ option_nobuffer, "Nobuffer patch; disabled|enabled" },	
 	{ option_nag, "Hide nag screen; disabled|enabled" },
 	{ option_info, "Hide gameinfo screen; disabled|enabled" },
 	{ option_warnings, "Hide warnings screen; disabled|enabled" },
@@ -155,6 +158,17 @@ static void check_variables(void)
          throttle_enable = false;
       if (strcmp(var.value, "enabled") == 0)
          throttle_enable = true;
+   }   
+   
+   var.key = option_nobuffer;
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "disabled") == 0)
+         nobuffer_enable = false;
+      if (strcmp(var.value, "enabled") == 0)
+         nobuffer_enable = true;
    }   
    
    var.key = option_cheats;
