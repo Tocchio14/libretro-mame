@@ -20,6 +20,7 @@ static char option_media[50];
 static char option_read_config[50];     
 static char option_write_config[50];
 static char option_auto_save[50];
+static char option_throttle[50];
 
 int SHIFTON=-1,NEWGAME_FROM_OSD=0;
 char RPATH[512];
@@ -73,6 +74,7 @@ void retro_set_environment(retro_environment_t cb)
    sprintf(option_read_config,"%s_%s",core,"read_config");
    sprintf(option_write_config,"%s_%s",core,"write_config");
    sprintf(option_auto_save,"%s_%s",core,"auto_save");
+   sprintf(option_throttle,"%s_%s",core,"throttle");
       
    static const struct retro_variable vars[] = {
 	
@@ -87,6 +89,7 @@ void retro_set_environment(retro_environment_t cb)
 	//common for MAME/MESS/UME	
 	{ option_auto_save, "Auto save/load states; disabled|enabled" },
 	{ option_mouse, "Enable in-game mouse; disabled|enabled" },
+	{ option_throttle, "Enable throttle; disabled|enabled" },
 	{ option_cheats, "Enable cheats; disabled|enabled" },
 	{ option_nag, "Hide nag screen; disabled|enabled" },
 	{ option_info, "Hide gameinfo screen; disabled|enabled" },
@@ -142,6 +145,17 @@ static void check_variables(void)
       if (strcmp(var.value, "enabled") == 0)
          mouse_enable = true;
    }
+   
+   var.key = option_throttle;
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "disabled") == 0)
+         throttle_enable = false;
+      if (strcmp(var.value, "enabled") == 0)
+         throttle_enable = true;
+   }   
    
    var.key = option_cheats;
    var.value = NULL;
@@ -208,9 +222,9 @@ static void check_variables(void)
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
       if (strcmp(var.value, "enabled") == 0)
-         boot_to_osd_enabled = true;
+         boot_to_osd_enable = true;
       if (strcmp(var.value, "disabled") == 0)
-         boot_to_osd_enabled = false;       
+         boot_to_osd_enable = false;       
    }
    
    var.key = option_read_config;
@@ -251,9 +265,9 @@ static void check_variables(void)
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
       if (strcmp(var.value, "enabled") == 0)
-         softlist_enabled = true;
+         softlist_enable = true;
       if (strcmp(var.value, "disabled") == 0)
-         softlist_enabled = false;       
+         softlist_enable = false;       
    }      
    
    var.key = option_softlist_media;
@@ -273,9 +287,9 @@ static void check_variables(void)
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
       if (strcmp(var.value, "enabled") == 0)
-         boot_to_bios_enabled = true;
+         boot_to_bios_enable = true;
       if (strcmp(var.value, "disabled") == 0)
-         boot_to_bios_enabled = false;       
+         boot_to_bios_enable = false;       
    } 
    
    var.key = option_write_config;

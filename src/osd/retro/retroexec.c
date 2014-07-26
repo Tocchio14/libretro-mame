@@ -23,7 +23,7 @@ int executeGame(char* path) {
 		return -2;
 	}	
 #else
-    	if(!commandline_enabled)
+    	if(!commandline_enable)
 	{
 	   	//find if the driver exists for MgameName, if not, check if a driver exists for MsystemName, if not, exit
 	   	if (getGameInfo(MgameName, &gameRot, &driverIndex,&arcade) == 0) {
@@ -77,7 +77,7 @@ int executeGame(char* path) {
 		if (log_cb)
 	{
 		log_cb(RETRO_LOG_INFO, "Creating frontend for game: %s\n",MgameName);
-		log_cb(RETRO_LOG_INFO, "Softlists: %d\n",softlist_enabled);
+		log_cb(RETRO_LOG_INFO, "Softlists: %d\n",softlist_enable);
 	}
 	
 	Set_Default_Option();
@@ -100,22 +100,22 @@ int executeGame(char* path) {
 #ifdef WANT_MAME
    	sprintf(tmp_dir, "%s", MgamePath);
    	Add_Option((char*)(tmp_dir));		   
-   	if(!boot_to_osd_enabled)
+   	if(!boot_to_osd_enable)
    		Add_Option(MgameName);
   
 #else
-   	if(!commandline_enabled)
+   	if(!commandline_enable)
    	{
-		if(!boot_to_osd_enabled)
+		if(!boot_to_osd_enable)
 	   	{
 			sprintf(tmp_dir, "%s", MgamePath);
 			Add_Option((char*)(tmp_dir));		   
-		  	if(softlist_enabled)
+		  	if(softlist_enable)
 		  	{
 				if(!arcade)
 				{
 					Add_Option(MsystemName);   
-					if(!boot_to_bios_enabled)
+					if(!boot_to_bios_enable)
 					{
 						if(!softlist_auto)
 					  		Add_Option((char*)mediaType);

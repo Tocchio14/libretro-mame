@@ -73,9 +73,6 @@ static int ui_ipt_pushchar=-1;
 
 static int mame_reset = -1;
 
-// remove this after fixing retroexec.c
-static bool commandline_enabled=false;
-
 // cores options
 bool hide_nagscreen = false;
 bool hide_warnings = false;
@@ -84,14 +81,15 @@ static bool hide_gameinfo = false;
 static bool mouse_enable = false;
 static bool cheats_enable = false;
 static bool alternate_renderer = false;
-static bool boot_to_osd_enabled = false;
-static bool boot_to_bios_enabled = false;
+static bool boot_to_osd_enable = false;
+static bool boot_to_bios_enable = false;
 static bool experimental_cmdline = false;
-static bool softlist_enabled = false;
+static bool softlist_enable = false;
 static bool softlist_auto = false;
 static bool write_config_enable = false;
 static bool read_config_enable = false;
 static bool auto_save_enable = false;
+static bool throttle_enable = false;
 
 
 
@@ -380,7 +378,10 @@ void Set_Default_Option(){
 	//some hardcoded default Options
 
 	Add_Option(core);
-	Add_Option("-nothrottle");
+	if(throttle_enable)
+		Add_Option("-throttle");
+	else
+		Add_Option("-nothrottle");
 	Add_Option("-joystick");
 	Add_Option("-samplerate");
 	Add_Option("48000");	
