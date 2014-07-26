@@ -107,46 +107,46 @@ int executeGame(char* path) {
    		Add_Option(MgameName);
   
 #else
-   	{
-		if(!boot_to_osd_enable)
-	   	{
-			sprintf(tmp_dir, "%s", MgamePath);
-			Add_Option((char*)(tmp_dir));		   
-		  	if(softlist_enable)
-		  	{
-				if(!arcade)
+   	
+	if(!boot_to_osd_enable)
+	{
+		sprintf(tmp_dir, "%s", MgamePath);
+		Add_Option((char*)(tmp_dir));		   
+		if(softlist_enable)
+		{
+			if(!arcade)
+			{
+				Add_Option(MsystemName);   
+				if(!boot_to_bios_enable)
 				{
-					Add_Option(MsystemName);   
-					if(!boot_to_bios_enable)
-					{
-						if(!softlist_auto)
-					  		Add_Option((char*)mediaType);
-				   		Add_Option((char*)MgameName);
-					}
-			 	}
-			 	else
-			 	{
-					Add_Option((char*)MgameName);
-			 	}	     
-		  	}
-		  	else
-		  	{
-			 	if (strcmp(mediaType, "-rom") == 0) {
-					Add_Option(MgameName);
-			 	} else {
-					Add_Option(MsystemName);
-					Add_Option((char*)mediaType);
-					Add_Option((char*)gameName);
-			 	}   
-	   
-		  	}
+					if(!softlist_auto)
+				  		Add_Option((char*)mediaType);
+			   		Add_Option((char*)MgameName);
+				}
+		 	}
+		 	else
+		 	{
+				Add_Option((char*)MgameName);
+		 	}	     
 		}
 		else
 		{
-			sprintf(tmp_dir, "%s;%s", MgamePath,MparentPath);
-			Add_Option((char*)(tmp_dir));		   	
-		}
+			if (strcmp(mediaType, "-rom") == 0) {
+				Add_Option(MgameName);
+		 	} else 
+			{
+				Add_Option(MsystemName);
+				Add_Option((char*)mediaType);
+				Add_Option((char*)gameName);
+			 }    
+	  	}
 	}
+	else
+	{
+		sprintf(tmp_dir, "%s;%s", MgamePath,MparentPath);
+		Add_Option((char*)(tmp_dir));		   	
+	}
+	
 
  	
 #endif 	 	 
