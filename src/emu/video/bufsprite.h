@@ -84,6 +84,7 @@ public:
 #ifndef __LIBRETRO__
 			return m_buffered;
 #else
+		extern bool nobuffer_enable;
 		if(nobuffer_enable)
 			return m_spriteram;
 		else	

@@ -23,33 +23,36 @@ int executeGame(char* path) {
 		return -2;
 	}	
 #else
-    	if(!commandline_enable)
+   	//find if the driver exists for MgameName, if not, check if a driver exists for MsystemName, if not, exit
+   	if (getGameInfo(MgameName, &gameRot, &driverIndex,&arcade) == 0) 
 	{
-	   	//find if the driver exists for MgameName, if not, check if a driver exists for MsystemName, if not, exit
-	   	if (getGameInfo(MgameName, &gameRot, &driverIndex,&arcade) == 0) {
-			if (log_cb)
-				log_cb(RETRO_LOG_ERROR, "Driver not found %s\n",MgameName);
-		   	if (getGameInfo(MsystemName, &gameRot, &driverIndex,&arcade) == 0) {
-		      		if (log_cb)
-						log_cb(RETRO_LOG_ERROR, "System not found: %s\n",MsystemName);
-   		         	return -2;
-	       		}
-	   	}
-
-		// handle case where Arcade game exist and game on a System also
-		if(arcade==true){
-			// test system
-		   	if (getGameInfo(MsystemName, &gameRot, &driverIndex,&arcade) == 0) {
-		      		if (log_cb)
-						log_cb(RETRO_LOG_ERROR, "System not found: %s\n",MsystemName);	         	
-	       		}
-			else {
-		      	if (log_cb)
+		if (log_cb)
+			log_cb(RETRO_LOG_ERROR, "Driver not found %s\n",MgameName);
+	   	if (getGameInfo(MsystemName, &gameRot, &driverIndex,&arcade) == 0) 
+		{
+	      		if (log_cb)
 					log_cb(RETRO_LOG_ERROR, "System not found: %s\n",MsystemName);
-				arcade=false;
-			}
-		}  
-    	}	   
+		         return -2;
+       	}
+	}
+
+	// handle case where Arcade game exist and game on a System also
+	if(arcade==true)
+	{
+		// test system
+	   	if (getGameInfo(MsystemName, &gameRot, &driverIndex,&arcade) == 0) 
+		{
+	    	if (log_cb)
+				log_cb(RETRO_LOG_ERROR, "System not found: %s\n",MsystemName);	         	
+	    }
+		else 
+		{
+		   	if (log_cb)
+				log_cb(RETRO_LOG_ERROR, "System not found: %s\n",MsystemName);
+			arcade=false;
+		}
+	}  
+    	   
 #endif	
 
 	// useless ?
@@ -104,7 +107,6 @@ int executeGame(char* path) {
    		Add_Option(MgameName);
   
 #else
-   	if(!commandline_enable)
    	{
 		if(!boot_to_osd_enable)
 	   	{
@@ -145,8 +147,7 @@ int executeGame(char* path) {
 			Add_Option((char*)(tmp_dir));		   	
 		}
 	}
-	else	
-		Add_Option((char*)gameName);	
+
  	
 #endif 	 	 
 	
