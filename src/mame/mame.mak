@@ -2825,6 +2825,9 @@ $(DRIVERS)/sshot.o:     $(LAYOUT)/gunchamps.lh
 
 $(DRIVERS)/sstrangr.o:  $(LAYOUT)/sstrangr.lh
 
+$(DRIVERS)/st_mp100.o:  $(LAYOUT)/st_mp100.lh
+$(DRIVERS)/st_mp200.o:  $(LAYOUT)/st_mp200.lh
+
 $(DRIVERS)/subsino.o:   $(LAYOUT)/victor5.lh \
 			$(LAYOUT)/victor21.lh \
 			$(LAYOUT)/tisub.lh \

@@ -456,6 +456,7 @@ apple2eeuk  // Mar 1985 Apple //e Enhanced (UK)
 apple2ep  // Jan 1987 Apple //e Platinum
 apple2c   // Apr 1984 Apple //c
 tk2000      // Microdigital TK2000
+tk3000      // Microdigital TK3000
 prav8c  // Pravetz 8C
 apple2c0  // ??? 1985 Apple //c (3.5 ROM)
 apple2c3  // Sep 1986 Apple //c (Original Mem. Exp.)
@@ -1284,7 +1285,11 @@ gl6000sl // Genius Leader 6000SL (Germany)
 gl7007sl // Genius Leader 7007SL (Germany)
 glcolor  // Genius Leader Color (Germany)
 glmcolor // Genius Leader Magic Color (Germany)
+glscolor // Genius Leader Super Color (Germany)
 gjrstar3 // Genius Junior Redstar 3 (Germany)
+gj4000   // Genius Junior 4000 (Germany)
+gjrstar  // Genius Junior Redstar(Germany)
+gj5000   // Genius Junior 5000 (Germany)
 pitagjr  // Pitagorin Junior
 
 
