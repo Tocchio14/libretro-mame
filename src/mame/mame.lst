@@ -4772,7 +4772,7 @@ spidman         // 1991.?? Spiderman (World)
 spidmanu        // 1991.09 Spiderman (US)
 spidmanj    // 1991.09 Spiderman (Japan)
 f1en            // 1991.?? F-1 Exhaust Note (World)
-				// 1992.01 F-1 Exhaust Note (US)
+f1enu			// 1992.01 F-1 Exhaust Note (US)
 				// 1991.11 F-1 Exhaust Note (Japan)
 arabfgt         // 1992.?? Arabian Fight (World)
 arabfgtu        // 1992.03 Arabian Fight (US)
@@ -7236,8 +7236,10 @@ vcircle         // (proto)          (c) 1996
 a51site4        //     ??           (c) 1998
 a51site4a       // Sept.11,1998     (c) 1998
 
-// Atari Laserdisc
+// Atari/Nova Laserdisc
 cops            // (c) 1994
+copsuk          // (c) 1994 (Nova/Deith Leisure)
+revlatns        // (c) 199?
 
 // SNK / Rock-ola games
 sasuke          // [1980] Shin Nihon Kikaku (SNK)
