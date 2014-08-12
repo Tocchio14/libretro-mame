@@ -91,6 +91,7 @@ public:
 		: driver_device(mconfig, type, tag),
 			m_maincpu(*this, "maincpu"),
 			m_ram(*this, RAM_TAG),
+			m_cart(*this, "cart"),
 			m_keyboard(*this, "KEY"),
 			m_bank1(*this, "bank1"),
 			m_bank2(*this, "bank2"),
@@ -101,6 +102,7 @@ public:
 
 	required_device<cpu_device> m_maincpu;
 	required_device<ram_device> m_ram;
+	required_device<cartslot_image_device> m_cart;
 	required_ioport_array<16> m_keyboard;
 	required_memory_bank m_bank1;
 	required_memory_bank m_bank2;
@@ -159,14 +161,14 @@ WRITE8_MEMBER( prestige_state::bankswitch_w )
 		break;
 
 	case 1:
-		if (!(m_bank[5] & 0x01) && (m_bank[5] & 0x02))
+		if (!(m_bank[5] & 0x01) && (m_bank[5] & 0x02) && m_cart->exists())
 			m_bank2->set_entry(0x40 + (data & 0x1f));
 		else
 			m_bank2->set_entry(data & 0x3f);
 		break;
 
 	case 2:
-		if (!(m_bank[5] & 0x01) && (m_bank[5] & 0x04))
+		if (!(m_bank[5] & 0x01) && (m_bank[5] & 0x04) && m_cart->exists())
 			m_bank3->set_entry(0x40 + (data & 0x1f));
 		else
 			m_bank3->set_entry(data & 0x3f);
@@ -853,6 +855,14 @@ ROM_START( gjrstar3 )
 	ROM_CART_LOAD( "cart", 0, 0x80000, 0 )
 ROM_END
 
+ROM_START( gl6600cx )
+	ROM_REGION( 0x200000, "maincpu", 0 )
+	ROM_LOAD( "54-06400-00.u1", 0x000000, 0x200000, CRC(b05cd075) SHA1(b1d9eb02ca56350eb9e89518db89c0a2a845ebd8))
+
+	ROM_REGION( 0x80000, "cart", ROMREGION_ERASEFF )
+	ROM_CART_LOAD( "cart", 0, 0x80000, 0 )
+ROM_END
+
 /* Driver */
 
 /*    YEAR  NAME    PARENT  COMPAT   MACHINE    INPUT    INIT    COMPANY   FULLNAME       FLAGS */
@@ -869,3 +879,4 @@ COMP( 1996, gj4000,    0,       0,  prestige,   prestige, driver_device,     0, 
 COMP( 1996, gjrstar,   0,       0,  prestige,   prestige, driver_device,     0,  "VTech",   "Genius Junior Redstar(Germany)", GAME_IS_SKELETON)
 COMP( 1998, gjrstar3,  0,       0,  prestige,   prestige, driver_device,     0,  "VTech",   "Genius Junior Redstar 3 (Germany)", GAME_IS_SKELETON)
 COMP( 1998, gj5000,    0,       0,  prestige,   prestige, driver_device,     0,  "VTech",   "Genius Junior 5000 (Germany)", GAME_IS_SKELETON)
+COMP( 1999, gl6600cx,  0,       0,  prestige,   prestige, driver_device,     0,  "VTech",   "Genius Leader 6600CX (Germany)", GAME_IS_SKELETON)
