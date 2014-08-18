@@ -194,6 +194,7 @@ Address bus A0-A11 is Y0-Y11
 #include "formats/ap2_dsk.h"
 #include "includes/apple2.h"
 #include "cpu/z80/z80.h"
+#include "machine/appldriv.h"
 
 #include "bus/a2bus/a2bus.h"
 #include "bus/a2bus/a2lang.h"
@@ -222,6 +223,7 @@ Address bus A0-A11 is Y0-Y11
 #include "bus/a2bus/a2corvus.h"
 #include "bus/a2bus/a2mcms.h"
 #include "bus/a2bus/a2dx1.h"
+#include "bus/a2bus/timemasterho.h"
 #include "bus/a2bus/a2estd80col.h"
 #include "bus/a2bus/a2eext80col.h"
 #include "bus/a2bus/a2eramworks3.h"
@@ -1019,10 +1021,11 @@ static SLOT_INTERFACE_START(apple2_cards)
 	SLOT_INTERFACE("ultratermenh", A2BUS_ULTRATERMENH)    /* Videx UltraTerm (enhanced //e) */
 	SLOT_INTERFACE("aevm80", A2BUS_VTC2)    /* Applied Engineering ViewMaster 80 */
 	SLOT_INTERFACE("parallel", A2BUS_PIC)   /* Apple Parallel Interface Card */
-	SLOT_INTERFACE("corvus", A2BUS_CORVUS)  /* Corvus flat-cable HDD interface (must go in slot 6) */
+	SLOT_INTERFACE("corvus", A2BUS_CORVUS)  /* Corvus flat-cable HDD interface (see notes in a2corvus.c) */
 	SLOT_INTERFACE("mcms1", A2BUS_MCMS1)  /* Mountain Computer Music System, card 1 of 2 */
 	SLOT_INTERFACE("mcms2", A2BUS_MCMS2)  /* Mountain Computer Music System, card 2 of 2.  must be in card 1's slot + 1! */
 	SLOT_INTERFACE("dx1", A2BUS_DX1)    /* Decillonix DX-1 sampler card */
+	SLOT_INTERFACE("tm2ho", A2BUS_TIMEMASTERHO)	/* Applied Engineering TimeMaster II H.O. */
 SLOT_INTERFACE_END
 
 static SLOT_INTERFACE_START(apple2eaux_cards)
@@ -1253,8 +1256,28 @@ static MACHINE_CONFIG_DERIVED( apple2c_iwm, apple2c )
 	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl6", A2BUS_IWM_FDC, NULL)
 MACHINE_CONFIG_END
 
+const applefdc_interface fdc_interface =
+{
+	apple525_set_lines,         /* set_lines */
+	apple525_set_enable_lines,  /* set_enable_lines */
+
+	apple525_read_data,         /* read_data */
+	apple525_write_data,    /* write_data */
+	apple525_read_status    /* read_status */
+};
+
+static const floppy_interface floppy_interface =
+{
+	FLOPPY_STANDARD_5_25_DSHD,
+	LEGACY_FLOPPY_OPTIONS_NAME(apple2),
+	"floppy_5_25"
+};
+
 static MACHINE_CONFIG_DERIVED( laser128, apple2c )
 	MCFG_MACHINE_START_OVERRIDE(apple2_state,laser128)
+
+	MCFG_APPLEFDC_ADD(LASER128_UDC_TAG, fdc_interface)
+	MCFG_LEGACY_FLOPPY_APPLE_2_DRIVES_ADD(floppy_interface,15,16)
 
 	MCFG_A2BUS_SLOT_REMOVE("sl6")
 
@@ -1264,7 +1287,7 @@ static MACHINE_CONFIG_DERIVED( laser128, apple2c )
 	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl4", A2BUS_LASER128, NULL)
 	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl5", A2BUS_LASER128, NULL)
 	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl6", A2BUS_LASER128, NULL)
-//    MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl7", A2BUS_LASER128, NULL)
+    MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl7", A2BUS_LASER128, NULL)
 MACHINE_CONFIG_END
 
 static MACHINE_CONFIG_DERIVED( space84, apple2p )
@@ -1600,6 +1623,18 @@ ROM_START(las128ex)
 	ROM_LOAD( "342-0132-c.e12", 0x000, 0x800, BAD_DUMP CRC(e47045f4) SHA1(12a2e718f5f4acd69b6c33a45a4a940b1440a481) ) // need to dump real laser rom
 ROM_END
 
+ROM_START(las128e2)
+	ROM_REGION(0x2000,"gfx1",0)
+	ROM_LOAD ( "341-0265-a.chr", 0x0000, 0x1000, BAD_DUMP CRC(2651014d) SHA1(b2b5d87f52693817fc747df087a4aa1ddcdb1f10)) // need to dump real laser rom
+	ROM_LOAD ( "341-0265-a.chr", 0x1000, 0x1000, BAD_DUMP CRC(2651014d) SHA1(b2b5d87f52693817fc747df087a4aa1ddcdb1f10)) // need to dump real laser rom
+
+	ROM_REGION(0x8000,"maincpu",0)
+	ROM_LOAD( "laser 128ex2 rom version 6.1.bin", 0x000000, 0x008000, CRC(7f911c90) SHA1(125754c1bd777d4c510f5239b96178c6f2e3236b) ) 
+
+	ROM_REGION( 0x800, "keyboard", ROMREGION_ERASE00 )
+	ROM_LOAD( "342-0132-c.e12", 0x000, 0x800, BAD_DUMP CRC(e47045f4) SHA1(12a2e718f5f4acd69b6c33a45a4a940b1440a481) ) // need to dump real laser rom
+ROM_END
+
 #if 0
 ROM_START(las128e2)
 	ROM_REGION(0x2000,"gfx1",0)
@@ -1708,7 +1743,7 @@ COMP( 1986, tk3000,   apple2c,  0,        tk3000,      apple2e, driver_device,  
 COMP( 1989, prav8c,   apple2c,  0,        apple2c,     apple2e, driver_device,  0,        "Pravetz",           "Pravetz 8C", GAME_NOT_WORKING | GAME_SUPPORTS_SAVE )
 COMP( 1987, laser128, apple2c,  0,        laser128,    apple2e, driver_device,  0,        "Video Technology",  "Laser 128 (version 4.2)", GAME_NOT_WORKING )
 COMP( 1988, las128ex, apple2c,  0,        laser128,    apple2e, driver_device,  0,        "Video Technology",  "Laser 128ex (version 4.5)", GAME_NOT_WORKING )
-// TODO: add laser128ex2
+COMP( 1988, las128e2, apple2c,  0,        laser128,    apple2e, driver_device,  0,        "Video Technology",  "Laser 128ex2 (version 6.1)", GAME_NOT_WORKING )
 COMP( 1985, apple2c0, apple2c,  0,        apple2c_iwm, apple2e, driver_device,  0,        "Apple Computer",    "Apple //c (UniDisk 3.5)", GAME_SUPPORTS_SAVE )
 COMP( 1986, apple2c3, apple2c,  0,        apple2c_iwm, apple2e, driver_device,  0,        "Apple Computer",    "Apple //c (Original Memory Expansion)", GAME_SUPPORTS_SAVE )
 COMP( 1986, apple2c4, apple2c,  0,        apple2c_iwm, apple2e, driver_device,  0,        "Apple Computer",    "Apple //c (rev 4)", GAME_NOT_WORKING )
