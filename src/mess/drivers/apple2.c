@@ -192,8 +192,10 @@ Address bus A0-A11 is Y0-Y11
 #include "imagedev/flopdrv.h"
 #include "imagedev/cassette.h"
 #include "formats/ap2_dsk.h"
+#include "formats/ap_dsk35.h"
 #include "includes/apple2.h"
 #include "cpu/z80/z80.h"
+#include "machine/sonydriv.h"
 #include "machine/appldriv.h"
 
 #include "bus/a2bus/a2bus.h"
@@ -1204,6 +1206,9 @@ static MACHINE_CONFIG_DERIVED( apple2c, apple2ee )
 	MCFG_MACHINE_START_OVERRIDE(apple2_state,apple2c)
 	MCFG_VIDEO_START_OVERRIDE(apple2_state,apple2c)
 
+	// IIc and friends have no cassette port
+	MCFG_DEVICE_REMOVE("cassette")
+
 	MCFG_A2BUS_SLOT_REMOVE("sl1")   // IIc has no slots, of course :)
 	MCFG_A2BUS_SLOT_REMOVE("sl2")
 	MCFG_A2BUS_SLOT_REMOVE("sl3")
@@ -1243,11 +1248,29 @@ static MACHINE_CONFIG_DERIVED( apple2c, apple2ee )
 	MCFG_RAM_EXTRA_OPTIONS("128K")
 MACHINE_CONFIG_END
 
+const applefdc_interface a2cp_interface =
+{
+	sony_set_lines,         /* set_lines */
+	sony_set_enable_lines,  /* set_enable_lines */
+
+	sony_read_data,         /* read_data */
+	sony_write_data,    /* write_data */
+	sony_read_status    /* read_status */
+};
+
+static const floppy_interface apple2cp_floppy35_floppy_interface =
+{
+	FLOPPY_STANDARD_5_25_DSHD,
+	LEGACY_FLOPPY_OPTIONS_NAME(apple35_iigs),
+	"floppy_3_5"
+};
+
 static MACHINE_CONFIG_DERIVED( apple2cp, apple2c )
 	MCFG_MACHINE_START_OVERRIDE(apple2_state,apple2cp)
 
 	MCFG_A2BUS_SLOT_REMOVE("sl6")
-	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl6", A2BUS_IWM_FDC, NULL)
+	MCFG_IWM_ADD(IICP_IWM_TAG, a2cp_interface)
+	MCFG_LEGACY_FLOPPY_SONY_2_DRIVES_ADD(apple2cp_floppy35_floppy_interface)
 MACHINE_CONFIG_END
 
 static MACHINE_CONFIG_DERIVED( apple2c_iwm, apple2c )
@@ -1274,6 +1297,23 @@ static const floppy_interface floppy_interface =
 };
 
 static MACHINE_CONFIG_DERIVED( laser128, apple2c )
+	MCFG_MACHINE_START_OVERRIDE(apple2_state,laser128)
+
+	MCFG_APPLEFDC_ADD(LASER128_UDC_TAG, fdc_interface)
+	MCFG_LEGACY_FLOPPY_APPLE_2_DRIVES_ADD(floppy_interface,15,16)
+
+	MCFG_A2BUS_SLOT_REMOVE("sl6")
+
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl1", A2BUS_LASER128, NULL)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl2", A2BUS_LASER128, NULL)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl3", A2BUS_LASER128, NULL)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl4", A2BUS_LASER128, NULL)
+	MCFG_A2BUS_SLOT_ADD("a2bus", "sl5", apple2_cards, NULL)
+	MCFG_A2BUS_ONBOARD_ADD("a2bus", "sl6", A2BUS_LASER128, NULL)
+	MCFG_A2BUS_SLOT_ADD("a2bus", "sl7", apple2_cards, NULL)
+MACHINE_CONFIG_END
+
+static MACHINE_CONFIG_DERIVED( laser128ex2, apple2c )
 	MCFG_MACHINE_START_OVERRIDE(apple2_state,laser128)
 
 	MCFG_APPLEFDC_ADD(LASER128_UDC_TAG, fdc_interface)
@@ -1741,12 +1781,12 @@ COMP( 1984, apple2c,  0,        apple2,   apple2c,     apple2e, driver_device,  
 COMP( 1984, tk2000,   apple2c,  0,        tk2000,      apple2e, driver_device,  0,        "Microdigital",      "TK2000" , GAME_NOT_WORKING | GAME_SUPPORTS_SAVE )
 COMP( 1986, tk3000,   apple2c,  0,        tk3000,      apple2e, driver_device,  0,        "Microdigital",      "TK3000//e" , GAME_SUPPORTS_SAVE )
 COMP( 1989, prav8c,   apple2c,  0,        apple2c,     apple2e, driver_device,  0,        "Pravetz",           "Pravetz 8C", GAME_NOT_WORKING | GAME_SUPPORTS_SAVE )
-COMP( 1987, laser128, apple2c,  0,        laser128,    apple2e, driver_device,  0,        "Video Technology",  "Laser 128 (version 4.2)", GAME_NOT_WORKING )
-COMP( 1988, las128ex, apple2c,  0,        laser128,    apple2e, driver_device,  0,        "Video Technology",  "Laser 128ex (version 4.5)", GAME_NOT_WORKING )
-COMP( 1988, las128e2, apple2c,  0,        laser128,    apple2e, driver_device,  0,        "Video Technology",  "Laser 128ex2 (version 6.1)", GAME_NOT_WORKING )
+COMP( 1987, laser128, apple2c,  0,        laser128,    apple2e, driver_device,  0,        "Video Technology",  "Laser 128 (version 4.2)", GAME_SUPPORTS_SAVE )
+COMP( 1988, las128ex, apple2c,  0,        laser128,    apple2e, driver_device,  0,        "Video Technology",  "Laser 128ex (version 4.5)", GAME_SUPPORTS_SAVE )
+COMP( 1988, las128e2, apple2c,  0,        laser128ex2, apple2e, driver_device,  0,        "Video Technology",  "Laser 128ex2 (version 6.1)", GAME_SUPPORTS_SAVE )
 COMP( 1985, apple2c0, apple2c,  0,        apple2c_iwm, apple2e, driver_device,  0,        "Apple Computer",    "Apple //c (UniDisk 3.5)", GAME_SUPPORTS_SAVE )
 COMP( 1986, apple2c3, apple2c,  0,        apple2c_iwm, apple2e, driver_device,  0,        "Apple Computer",    "Apple //c (Original Memory Expansion)", GAME_SUPPORTS_SAVE )
-COMP( 1986, apple2c4, apple2c,  0,        apple2c_iwm, apple2e, driver_device,  0,        "Apple Computer",    "Apple //c (rev 4)", GAME_NOT_WORKING )
+COMP( 1986, apple2c4, apple2c,  0,        apple2c_iwm, apple2e, driver_device,  0,        "Apple Computer",    "Apple //c (rev 4)", GAME_SUPPORTS_SAVE )
 COMP( 1988, apple2cp, apple2c,  0,        apple2cp,    apple2e, driver_device,  0,        "Apple Computer",    "Apple //c Plus", GAME_SUPPORTS_SAVE )
 COMP( 1984, ivelultr, apple2,   0,        apple2p,     apple2p, driver_device,  0,        "Ivasim",            "Ivel Ultra", GAME_SUPPORTS_SAVE )
 COMP( 1983, agat7,    apple2,   0,        apple2p,     apple2p, driver_device,  0,        "Agat",              "Agat-7", GAME_NOT_WORKING) // disk controller ROM JSRs to $FCA8 which is a delay on apple II, illegal instruction crash here :(
