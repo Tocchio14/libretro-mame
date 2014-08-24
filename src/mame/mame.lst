@@ -2658,6 +2658,7 @@ pzlbreak        // (c) 1997 SemiCom
 3in1semi        // (c) 1998 SemiCom
 moremore        // (c) 1999 SemiCom + Exit
 moremorp        // (c) 1999 SemiCom + Exit
+sohosung		// (c) 199? SemiCom
 4in1boot        // (c) 2002 KISoft (includes hacks of Semicom games + Snowbros)
 
 // More Toaplan Games
@@ -3349,7 +3350,8 @@ mshb            // 17/11/1995 (c) 1995 (Brazil)
 19xxj           // 04/01/1996 (c) 1996 (Japan)
 19xxjr1         // 25/12/1995 (c) 1996 (Japan)
 19xxjr2         // 07/12/1995 (c) 1996 (Japan)
-19xxa           // 07/12/1995 (c) 1996 (Asia)
+19xxa           // 04/01/1996 (c) 1996 (Asia)
+19xxar1         // 07/12/1995 (c) 1996 (Asia)
 19xxh           // 18/12/1995 (c) 1996 (Hispanic)
 19xxb           // 18/12/1995 (c) 1996 (Brazil)
 ddsom           // 19/06/1996 (c) 1996 (Euro)
@@ -6903,6 +6905,7 @@ tunhuntc        // 136000           (c) 1981 // licensed to / distributed by Cen
 liberatr        // 136012           (c) 1982
 liberatr2       // 136012           (c) 1982
 foodf           // 136020           (c) 1982        // made by Gencomp
+foodf1          // 136020           (c) 1982        // made by Gencomp
 foodf2          // 136020           (c) 1982        // made by Gencomp
 foodfc          // 136020           (c) 1982        // made by Gencomp
 ccastles        // 136022           (c) 1983
@@ -7201,6 +7204,7 @@ roadrioto       // 136089           (c) 1991
 offtwall        // 136090           (c) 1991
 offtwallc       // 136090           (c) 1991
 guardian        // 136092           (c) 1992
+dangerex        // (proto)          (c) 1992
 relief          // 136093           (c) 1992
 relief2         // 136093           (c) 1992
 relief3         // 136093           (c) 1992
