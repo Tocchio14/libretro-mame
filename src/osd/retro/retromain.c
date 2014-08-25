@@ -125,7 +125,7 @@ static const char *dir_name[NB_OPTPATH]={
 static const char *opt_name[NB_OPTPATH]={
 	"-cfg_directory","-nvram_directory",/*"-memcard_directory",*/"-input_directory",
 	"-state_directory" ,"-snapshot_directory","-diff_directory","-samplepath",
-	"-artpath","-cheatpath","-inipath","-hashpath","hiscore_directory"
+	"-artpath","-cheatpath","-inipath","-hashpath","-hiscore_directory"
 };
 
 int opt_type[NB_OPTPATH]={ // 0 for save_dir | 1 for system_dir
