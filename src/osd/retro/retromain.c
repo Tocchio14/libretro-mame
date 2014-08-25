@@ -117,15 +117,15 @@ int PARAMCOUNT=0;
 #define NB_OPTPATH 12
 
 static const char *dir_name[NB_OPTPATH]={
-	"cfg","nvram"/*,"memcard"*/,"input",
+	"cfg","nvram","hi"/*,"memcard"*/,"input",
 	"states" ,"snaps","diff","samples",
-	"artwork","cheat","ini","hash","hi"
+	"artwork","cheat","ini","hash"
 };
 
 static const char *opt_name[NB_OPTPATH]={
-	"-cfg_directory","-nvram_directory",/*"-memcard_directory",*/"-input_directory",
+	"-cfg_directory","-nvram_directory","-hiscore_directory",/*"-memcard_directory",*/"-input_directory",
 	"-state_directory" ,"-snapshot_directory","-diff_directory","-samplepath",
-	"-artpath","-cheatpath","-inipath","-hashpath","-hiscore_directory"
+	"-artpath","-cheatpath","-inipath","-hashpath"
 };
 
 int opt_type[NB_OPTPATH]={ // 0 for save_dir | 1 for system_dir
