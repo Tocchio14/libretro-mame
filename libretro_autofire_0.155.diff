@@ -1,0 +1,316 @@
+diff -Nru src-old/emu/ioport.c src/emu/ioport.c
+--- src-old/emu/ioport.c	2014-07-22 08:38:18.000000000 +0200
++++ src/emu/ioport.c	2014-07-22 09:24:17.000000000 +0200
+@@ -482,6 +482,8 @@
+ 	{ UCHAR_MAMEKEY(CANCEL),    "Break",        NULL }      // Break/Pause key
+ };
+ 
++int autofire_delay;
++int autofire_toggle;
+ 
+ 
+ //**************************************************************************
+@@ -1463,6 +1465,8 @@
+ 		m_digital_value(false),
+ 		m_min(0),
+ 		m_max(maskbits),
++		m_autofire(0),
++		m_autopressed(0),
+ 		m_sensitivity(0),
+ 		m_delta(0),
+ 		m_centerdelta(0),
+@@ -1698,6 +1702,8 @@
+ 	else
+ 	{
+ 		settings.toggle = m_live->toggle;
++		settings.autofire = autofire();
++		settings.autopressed = autopressed();
+ 	}
+ }
+ 
+@@ -1736,6 +1742,8 @@
+ 	else
+ 	{
+ 		m_live->toggle = settings.toggle;
++		m_autofire = settings.autofire;
++		m_autopressed = settings.autopressed;
+ 	}
+ }
+ 
+@@ -1903,6 +1911,19 @@
+ 
+ 	// if the state changed, look for switch down/switch up
+ 	bool curstate = mouse_down || machine().input().seq_pressed(seq()) || m_digital_value;
++	if (curstate)
++	{
++		if ((m_autofire & 1) && (autofire_toggle == 0))
++		{
++			if (m_autopressed >= autofire_delay)
++			{
++				curstate = 0;
++				m_autopressed = 0;
++			}
++			else
++				m_autopressed++;
++		}
++	}
+ 	bool changed = false;
+ 	if (curstate != m_live->last)
+ 	{
+@@ -2466,6 +2487,9 @@
+ 
+ time_t ioport_manager::initialize()
+ {
++	autofire_delay = 1;
++	autofire_toggle = 0;
++
+ 	// add an exit callback and a frame callback
+ 	machine().add_notifier(MACHINE_NOTIFY_EXIT, machine_notify_delegate(FUNC(ioport_manager::exit), this));
+ 	machine().add_notifier(MACHINE_NOTIFY_FRAME, machine_notify_delegate(FUNC(ioport_manager::frame_update_callback), this));
+diff -Nru src-old/emu/ioport.h src/emu/ioport.h
+--- src-old/emu/ioport.h	2014-07-22 08:38:18.000000000 +0200
++++ src/emu/ioport.h	2014-07-22 09:24:17.000000000 +0200
+@@ -367,6 +367,7 @@
+		IPT_UI_LOAD_STATE,
+		IPT_UI_TAPE_START,
+		IPT_UI_TAPE_STOP,
++		IPT_UI_TOGGLE_AUTOFIRE,			// autofire toggle button
+ 
+ 		// additional OSD-specified UI port types (up to 16)
+ 		IPT_OSD_1,
+@@ -1026,6 +1027,8 @@
+ 	bool analog_invert() const { return ((m_flags & ANALOG_FLAG_INVERT) != 0); }
+ 
+ 	UINT8 impulse() const { return m_impulse; }
++	int autofire() const { return m_autofire; }
++	int autopressed() const { return m_autopressed; }
+ 	const char *name() const;
+ 	const char *specific_name() const { return m_name; }
+ 	const input_seq &seq(input_seq_type seqtype = SEQ_TYPE_STANDARD) const;
+@@ -1076,6 +1079,8 @@
+ 	{
+ 		ioport_value    value;                  // for DIP switches
+ 		input_seq       seq[SEQ_TYPE_TOTAL];    // sequences of all types
++		int				autofire;				// autofire
++		int				autopressed;			// autofire
+ 		INT32           sensitivity;            // for analog controls
+ 		INT32           delta;                  // for analog controls
+ 		INT32           centerdelta;            // for analog controls
+@@ -1117,6 +1122,8 @@
+ 	// data relevant to analog control types
+ 	ioport_value                m_min;              // minimum value for absolute axes
+ 	ioport_value                m_max;              // maximum value for absolute axes
++	int							m_autofire;			// autofire
++	int							m_autopressed;		// autofire
+ 	INT32                       m_sensitivity;      // sensitivity (100=normal)
+ 	INT32                       m_delta;            // delta to apply each frame a digital inc/dec key is pressed
+ 	INT32                       m_centerdelta;      // delta to apply each frame no digital inputs are pressed
+@@ -1830,5 +1837,7 @@
+ inline device_t &ioport_setting::device() const { return m_field.device(); }
+ inline running_machine &ioport_setting::machine() const { return m_field.machine(); }
+ 
++extern int autofire_delay;
++extern int autofire_toggle;
+ 
+ #endif  // __INPTPORT_H__ */
+diff -Nru src-old/emu/ui/mainmenu.c src/emu/ui/mainmenu.c
+--- src-old/emu/ui/mainmenu.c	2014-07-22 08:38:18.000000000 +0200
++++ src/emu/ui/mainmenu.c	2014-07-22 09:24:17.000000000 +0200
+@@ -54,6 +54,8 @@
+ 	menu_text.printf("Input (this %s)",emulator_info::get_capstartgamenoun());
+ 	item_append(menu_text.cstr(), NULL, 0, (void *)INPUT_SPECIFIC);
+ 
++	item_append("Autofire Settings", NULL, 0, (void *)AUTOFIRE_MENU);
++
+ 	/* add optional input-related menus */
+ 	if (machine().ioport().has_analog())
+ 		item_append("Analog Controls", NULL, 0, (void *)ANALOG);
+@@ -156,6 +158,10 @@
+ 			ui_menu::stack_push(auto_alloc_clear(machine(), ui_menu_input_specific(machine(), container)));
+ 			break;
+ 
++		case AUTOFIRE_MENU:
++			ui_menu::stack_push(auto_alloc_clear(machine(), ui_menu_autofire(machine(), container)));
++			break;
++
+ 		case SETTINGS_DIP_SWITCHES:
+ 			ui_menu::stack_push(auto_alloc_clear(machine(), ui_menu_settings_dip_switches(machine(), container)));
+ 			break;
+diff -Nru src-old/emu/ui/mainmenu.h src/emu/ui/mainmenu.h
+--- src-old/emu/ui/mainmenu.h	2014-07-22 08:38:18.000000000 +0200
++++ src/emu/ui/mainmenu.h	2014-07-22 09:24:17.000000000 +0200
+@@ -28,6 +28,7 @@
+ 	enum {
+ 		INPUT_GROUPS,
+ 		INPUT_SPECIFIC,
++		AUTOFIRE_MENU,
+ 		SETTINGS_DIP_SWITCHES,
+ 		SETTINGS_DRIVER_CONFIG,
+ 		ANALOG,
+diff -Nru src-old/emu/ui/miscmenu.c src/emu/ui/miscmenu.c
+--- src-old/emu/ui/miscmenu.c	2014-07-22 08:38:18.000000000 +0200
++++ src/emu/ui/miscmenu.c	2014-07-22 09:24:17.000000000 +0200
+@@ -2180,6 +2180,127 @@
+ }
+ 
+ /*-------------------------------------------------
++    menu_autofire - handle the autofire settings
++    menu
++-------------------------------------------------*/
++
++ui_menu_autofire::ui_menu_autofire(running_machine &machine, render_container *container) : ui_menu(machine, container)
++{
++	screen_device_iterator iter(machine.root_device());
++	const screen_device *screen = iter.first();
++	if (screen == 0)
++		refresh = 60;
++	else
++		refresh = ATTOSECONDS_TO_HZ(screen->refresh_attoseconds());
++}
++
++ui_menu_autofire::~ui_menu_autofire()
++{
++}
++
++void ui_menu_autofire::handle()
++{
++	bool changed = FALSE;
++
++	/* process the menu */
++	const ui_menu_event *menu_event = process(0);
++	
++	/* handle events */
++	if (menu_event != NULL && menu_event->itemref != NULL)
++	{
++		if (menu_event->iptkey == IPT_UI_LEFT || menu_event->iptkey == IPT_UI_RIGHT)
++		{
++			int selected_item = (int)(FPTR)menu_event->itemref - 1;
++
++			if (selected_item == 0)
++			{
++				if (menu_event->iptkey == IPT_UI_LEFT)
++				{
++					autofire_delay--;
++					if (autofire_delay < 1)
++						autofire_delay = 1;
++				}
++				else
++				{
++					autofire_delay++;
++					if (autofire_delay > 30)
++						autofire_delay = 30;
++				}
++
++				changed = TRUE;
++			}
++			else
++			{
++				ioport_field *field = (ioport_field *)menu_event->itemref;
++				ioport_field::user_settings settings;
++				int selected_value;
++				field->get_user_settings(settings);
++				selected_value = settings.autofire;
++
++				if (menu_event->iptkey == IPT_UI_LEFT)
++				{
++					selected_value--;
++					if (selected_value < 0)
++						selected_value = 1;
++				}
++				else
++				{
++					selected_value++;
++					if (selected_value > 1)
++						selected_value = 0;
++				}
++
++				settings.autofire = selected_value;
++				field->set_user_settings(settings);
++
++				changed = TRUE;
++			}
++		}
++	}
++
++	/* if something changed, rebuild the menu */
++	if (changed)
++		reset(UI_MENU_RESET_REMEMBER_REF);
++}
++
++
++/*-------------------------------------------------
++    menu_autofire_populate - populate the autofire
++    menu
++-------------------------------------------------*/
++
++void ui_menu_autofire::populate()
++{
++	ioport_field *field;
++	ioport_port *port;
++	astring subtext;
++	astring text;
++
++	/* iterate over the input ports and add autofire toggle items */
++	for (port = machine().ioport().first_port(); port != NULL; port = port->next())
++	{
++		for (field = port->first_field(); field != NULL; field = field->next())
++		{
++			if ((field->name()) && ((field->type() >= IPT_BUTTON1 && field->type() < IPT_BUTTON1 + 15)))
++			{
++				ioport_field::user_settings settings;
++				field->get_user_settings(settings);
++
++				/* add an autofire item */
++				subtext.cpy(settings.autofire ? "On" : "Off");
++				item_append(field->name(), subtext, MENU_FLAG_LEFT_ARROW | MENU_FLAG_RIGHT_ARROW, (void *)field);
++			}
++		}
++	}
++
++	/* add autofire delay item */
++	text.printf("Autofire Delay");
++	subtext.printf("%d = %.2fHz", autofire_delay, (float)refresh/autofire_delay);
++	item_append(text, subtext, MENU_FLAG_LEFT_ARROW | MENU_FLAG_RIGHT_ARROW, (void *)1);
++	item_append(MENU_SEPARATOR_ITEM, NULL, 0, NULL);
++}
++
++/*-------------------------------------------------
+     menu_quit_game - handle the "menu" for
+     quitting the game
+ -------------------------------------------------*/
+diff -Nru src-old/emu/ui/miscmenu.h src/emu/ui/miscmenu.h
+--- src-old/emu/ui/miscmenu.h	2014-07-22 08:38:18.000000000 +0200
++++ src/emu/ui/miscmenu.h	2014-07-22 09:24:17.000000000 +0200
+@@ -302,4 +302,15 @@
+ private:
+ };
+ 
++class ui_menu_autofire : public ui_menu {
++public:
++	ui_menu_autofire(running_machine &machine, render_container *container);
++	virtual ~ui_menu_autofire();
++	virtual void populate();
++	virtual void handle();
++
++private:
++	int refresh;
++};
++
+ #endif  /* __UI_MISCMENU_H__ */
+diff -Nru src-old/emu/ui/ui.c src/emu/ui/ui.c
+--- src-old/emu/ui/ui.c	2014-07-22 08:38:18.000000000 +0200
++++ src/emu/ui/ui.c	2014-07-22 09:24:17.000000000 +0200
+@@ -1610,6 +1610,13 @@
+ 	if (ui_input_pressed(machine, IPT_UI_THROTTLE))
+ 		machine.video().toggle_throttle();
+ 
++	// toggle autofire
++	if (ui_input_pressed(machine, IPT_UI_TOGGLE_AUTOFIRE))
++	{
++		autofire_toggle ^= 1;
++		popmessage("Autofire %s", autofire_toggle ? "Disabled" : "Enabled");
++	}
++	
+ 	// check for fast forward
+ 	if (machine.ioport().type_pressed(IPT_UI_FAST_FORWARD))
+ 	{
