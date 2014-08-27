@@ -22,6 +22,7 @@ static char option_write_config[50];
 static char option_auto_save[50];
 static char option_throttle[50];
 static char option_nobuffer[50];
+static char option_saves[50];
 
 int SHIFTON=-1,NEWGAME_FROM_OSD=0;
 char RPATH[512];
@@ -75,17 +76,20 @@ void retro_set_environment(retro_environment_t cb)
    sprintf(option_read_config,"%s_%s",core,"read_config");
    sprintf(option_write_config,"%s_%s",core,"write_config");
    sprintf(option_auto_save,"%s_%s",core,"auto_save");
+   sprintf(option_saves,"%s_%s",core,"saves");
    sprintf(option_throttle,"%s_%s",core,"throttle");
    sprintf(option_nobuffer,"%s_%s",core,"nobuffer");
       
    static const struct retro_variable vars[] = {
-	
+	//some ifdefs are redundant but I wanted to have these options in a logical order
 	//common for MAME/MESS/UME	
+
 	{ option_read_config, "Read configuration; disabled|enabled" },
 
 	// ONLY FOR MESS/UME
 #if !defined(WANT_MAME)
 	{ option_write_config, "Write configuration; disabled|enabled" },
+	{ option_saves, "Save state naming; game|system" },
 #endif
 	
 	//common for MAME/MESS/UME	
@@ -261,7 +265,18 @@ static void check_variables(void)
          auto_save_enable = false;
       if (strcmp(var.value, "enabled") == 0)
          auto_save_enable = true;
-   }      
+   }
+   
+   var.key = option_saves;
+   var.value = NULL;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (strcmp(var.value, "game") == 0)
+         game_specific_saves_enable = true;
+      if (strcmp(var.value, "system") == 0)
+         game_specific_saves_enable = false;
+   }         
 
 #if !defined(WANT_MAME)
 

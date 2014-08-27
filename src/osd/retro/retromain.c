@@ -91,6 +91,7 @@ static bool write_config_enable = false;
 static bool read_config_enable = false;
 static bool auto_save_enable = false;
 static bool throttle_enable = false;
+static bool game_specific_saves_enable = false;
 
 // emu flags
 static int tate = 0;
@@ -287,6 +288,7 @@ static int getGameInfo(char* gameName, int* rotation, int* driverIndex,bool *Arc
 	
 	int gameFound = 0;
 	int num=driver_list::find(gameName);
+	log_cb(RETRO_LOG_DEBUG, "Searching for driver %s\n",gameName);
 	
 	if (num != -1){		
 		if(driver_list::driver(num).flags& GAME_TYPE_ARCADE)
@@ -313,7 +315,7 @@ static int getGameInfo(char* gameName, int* rotation, int* driverIndex,bool *Arc
 	else
 	{
 		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Driver %s not found %i",gameName,num);	
+			log_cb(RETRO_LOG_WARN, "Driver %s not found %i\n",gameName,num);
 	}
 	
 	return gameFound;
@@ -404,6 +406,16 @@ void Set_Default_Option(){
 		Add_Option("-noreadconfig");		
 	if(auto_save_enable)
 		Add_Option("-autosave");		
+	if(game_specific_saves_enable)
+	{
+		Add_Option("-statename");
+		char option[50];
+		sprintf(option,"%%g/%s",MgameName);
+		Add_Option(option);
+		
+	}
+	
+	
 }
 
 void Set_Path_Option(){
