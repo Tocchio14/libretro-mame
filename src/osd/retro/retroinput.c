@@ -249,8 +249,8 @@ static void initInput(running_machine &machine)
 		// add the axes
 		input_device_item_add_joy (i, "LX", &joystate[i].a1[0], ITEM_ID_XAXIS, generic_axis_get_state);
 		input_device_item_add_joy (i, "LY", &joystate[i].a1[1], ITEM_ID_YAXIS, generic_axis_get_state);
-		input_device_item_add_joy (i, "RX", &joystate[i].a2[0], (input_item_id)(ITEM_ID_XAXIS+2), generic_axis_get_state);
-		input_device_item_add_joy (i, "RY", &joystate[i].a2[1], (input_item_id)(ITEM_ID_YAXIS+1), generic_axis_get_state);
+		input_device_item_add_joy (i, "RX", &joystate[i].a2[0], ITEM_ID_RXAXIS, generic_axis_get_state);
+		input_device_item_add_joy (i, "RY", &joystate[i].a2[1], ITEM_ID_RYAXIS, generic_axis_get_state);
 
 	 	//add the buttons
 		for(j=0;j<MAX_BUTTONS;j++)joystate[i].button[j] = 0;
