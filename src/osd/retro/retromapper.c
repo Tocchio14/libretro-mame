@@ -409,69 +409,70 @@ static void retro_wrap_emulator()
 }
 
 void retro_init (void){ 
-		
-		// initialize logger interface
-		struct retro_log_callback log;
-		if (environ_cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &log))
-			log_cb = log.log;
-		else 
-		    log_cb = NULL;		
+
+       // initialize logger interface
+       struct retro_log_callback log;
+       if (environ_cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &log))
+           log_cb = log.log;
+       else 
+           log_cb = NULL;
 
 #ifndef M16B
-    	enum retro_pixel_format fmt =RETRO_PIXEL_FORMAT_XRGB8888;
+       enum retro_pixel_format fmt =RETRO_PIXEL_FORMAT_XRGB8888;
 #else
-    	enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
+       enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_RGB565;
 #endif
 
-		const char *system_dir = NULL;
+       const char *system_dir = NULL;
    
-		if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) && system_dir)
-		{
-			// if defined, use the system directory			
-			retro_system_directory=system_dir;
-		}		   
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "SYSTEM_DIRECTORY: %s", retro_system_directory);			
-		
-		const char *content_dir = NULL;
+       if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) && system_dir)
+       {
+            // if defined, use the system directory
+            retro_system_directory=system_dir;            
+       }
+       if (log_cb)
+           log_cb(RETRO_LOG_INFO, "SYSTEM_DIRECTORY: %s", retro_system_directory);
+       
+       const char *content_dir = NULL;
    
-		if (environ_cb(RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY, &content_dir) && content_dir)
-		{
-			// if defined, use the system directory			
-			retro_content_directory=content_dir;		
-		}			
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "CONTENT_DIRECTORY: %s", retro_content_directory);						
-		
-		const char *save_dir = NULL;
+       if (environ_cb(RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY, &content_dir) && content_dir)
+       {
+           // if defined, use the system directory
+           retro_content_directory=content_dir;
+       }
+       if (log_cb)
+           log_cb(RETRO_LOG_INFO, "CONTENT_DIRECTORY: %s", retro_content_directory);
+       
+       const char *save_dir = NULL;
    
-		if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &save_dir) && save_dir)
-		{
-			// If save directory is defined use it, otherwise use system directory
-			retro_save_directory = *save_dir ? save_dir : retro_system_directory;      
-		}
-		else
-		{
-			// make retro_save_directory the same in case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY is not implemented by the frontend
-			retro_save_directory=retro_system_directory;
-		}
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "SAVE_DIRECTORY: %s", retro_save_directory);								
-		
-	
-    	if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
-    	{
-    		if (log_cb)
-				log_cb(RETRO_LOG_ERROR, "pixel format not supported");			
-			
-    		exit(0);
-    	}
+       if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &save_dir) && save_dir)
+       {
+           // If save directory is defined use it, otherwise use system directory
+           retro_save_directory = *save_dir ? save_dir : retro_system_directory;
 
-	if(!emuThread && !mainThread)
-    	{
-        	mainThread = co_active();
-        	emuThread = co_create(65536*sizeof(void*), retro_wrap_emulator);
-    	}
+       }
+       else
+       {
+           // make retro_save_directory the same in case RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY is not implemented by the frontend
+           retro_save_directory=retro_system_directory;
+       }
+       if (log_cb)
+           log_cb(RETRO_LOG_INFO, "SAVE_DIRECTORY: %s", retro_save_directory);                            
+       
+        if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
+        {
+           if (log_cb)
+              log_cb(RETRO_LOG_ERROR, "pixel format not supported");       	
+           exit(0);
+        }
+
+        if(!emuThread && !mainThread)
+        {
+            mainThread = co_active();
+            emuThread = co_create(65536*sizeof(void*), retro_wrap_emulator);
+        }
+        //sprintf(retro_system_directory,"%s%c",retro_system_directory,slash);
+        //sprintf(retro_save_directory,"%s%c",retro_system_directory,slash);
 
 }
 

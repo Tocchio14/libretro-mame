@@ -26,7 +26,7 @@ const char core[] = "mame";
 const char core[] = "mess";
 #elif defined(WANT_UME)
 const char core[] = "ume";
-#endif 	
+#endif     
 
 #define M16B
 
@@ -49,9 +49,9 @@ const char core[] = "ume";
 //============================================================
 
 typedef struct joystate_t {
-	int button[MAX_BUTTONS];
-	int a1[2];
-	int a2[2];
+    int button[MAX_BUTTONS];
+    int a1[2];
+    int a2[2];
 }Joystate;
 
 // rendering target
@@ -118,21 +118,21 @@ int PARAMCOUNT=0;
 #define NB_OPTPATH 12
 
 static const char *dir_name[NB_OPTPATH]={
-	"cfg","nvram","hi"/*,"memcard"*/,"input",
-	"states" ,"snaps","diff","samples",
-	"artwork","cheat","ini","hash"
+    "cfg","nvram","hi"/*,"memcard"*/,"input",
+    "states" ,"snaps","diff","samples",
+    "artwork","cheat","ini","hash"
 };
 
 static const char *opt_name[NB_OPTPATH]={
-	"-cfg_directory","-nvram_directory","-hiscore_directory",/*"-memcard_directory",*/"-input_directory",
-	"-state_directory" ,"-snapshot_directory","-diff_directory","-samplepath",
-	"-artpath","-cheatpath","-inipath","-hashpath"
+    "-cfg_directory","-nvram_directory","-hiscore_directory",/*"-memcard_directory",*/"-input_directory",
+    "-state_directory" ,"-snapshot_directory","-diff_directory","-samplepath",
+    "-artpath","-cheatpath","-inipath","-hashpath"
 };
 
 int opt_type[NB_OPTPATH]={ // 0 for save_dir | 1 for system_dir
-	0,0/*,0*/,0,
-	0,0,0,1,
-	1,1,1,1,1
+    0,0/*,0*/,0,
+    0,0,0,1,
+    1,1,1,1,1
 };
 
 static void extract_basename(char *buf, const char *path, size_t size);
@@ -195,249 +195,249 @@ static void extract_directory(char *buf, const char *path, size_t size)
 }
 
 static int parsePath(char* path, char* gamePath, char* gameName) {
-	int i;
-	int slashIndex = -1;
-	int dotIndex = -1;
-	int len = strlen(path);
-	
-		
-	if (len < 1) {
-		return 0;
-	}
+    int i;
+    int slashIndex = -1;
+    int dotIndex = -1;
+    int len = strlen(path);
+    
+        
+    if (len < 1) {
+        return 0;
+    }
 
-	for (i = len - 1; i >=0; i--) {
-		if (path[i] == slash) {
-			slashIndex = i;
-			break;
-		} else
-		if (path[i] == '.') {
-			dotIndex = i;
-		}
-	}
-	if (slashIndex < 0 || dotIndex < 0) {
-		return 0;
-	}
+    for (i = len - 1; i >=0; i--) {
+        if (path[i] == slash) {
+            slashIndex = i;
+            break;
+        } else
+        if (path[i] == '.') {
+            dotIndex = i;
+        }
+    }
+    if (slashIndex < 0 || dotIndex < 0) {
+        return 0;
+    }
 
-	strncpy(gamePath, path, slashIndex);
-	gamePath[slashIndex] = 0;
-	strncpy(gameName, path + (slashIndex + 1), dotIndex - (slashIndex + 1));
-	gameName[dotIndex - (slashIndex + 1)] = 0;
+    strncpy(gamePath, path, slashIndex);
+    gamePath[slashIndex] = 0;
+    strncpy(gameName, path + (slashIndex + 1), dotIndex - (slashIndex + 1));
+    gameName[dotIndex - (slashIndex + 1)] = 0;
 
-	return 1;
+    return 1;
 }
 
 static int parseSystemName(char* path, char* systemName) {
-	int i;
-	int j=0;
-	int slashIndex[2]={-1,-1};
-	int len = strlen(path);
+    int i;
+    int j=0;
+    int slashIndex[2]={-1,-1};
+    int len = strlen(path);
 
-	if (len < 1) {
-		return 0;
-	}
+    if (len < 1) {
+        return 0;
+    }
 
-	for (i = len - 1; i >=0; i--) {
-		if (j<2)
-		{
-		   if (path[i] == slash) {
-			   slashIndex[j] = i;
-			   j++;
-		   } 
-		}
-		else
-		   break;
-	}
-	if (slashIndex[0] < 0 || slashIndex[1] < 0 ) {
-		return 0;
-	}
+    for (i = len - 1; i >=0; i--) {
+        if (j<2)
+        {
+           if (path[i] == slash) {
+               slashIndex[j] = i;
+               j++;
+           } 
+        }
+        else
+           break;
+    }
+    if (slashIndex[0] < 0 || slashIndex[1] < 0 ) {
+        return 0;
+    }
 
-	strncpy(systemName, path + (slashIndex[1] +1), slashIndex[0]-slashIndex[1]-1);
-	return 1;
+    strncpy(systemName, path + (slashIndex[1] +1), slashIndex[0]-slashIndex[1]-1);
+    return 1;
 }
 
 static int parseParentPath(char* path, char* parentPath) {
-	int i;
-	int j=0;
-	int slashIndex[2]={-1,-1};
-	int len = strlen(path);
+    int i;
+    int j=0;
+    int slashIndex[2]={-1,-1};
+    int len = strlen(path);
 
-	if (len < 1) {
-		return 0;
-	}
+    if (len < 1) {
+        return 0;
+    }
 
-	for (i = len - 1; i >=0; i--) {
-		if (j<2)
-		{
-		   if (path[i] == slash) {
-			   slashIndex[j] = i;
-			   j++;
-		   } 
-		}
-		else
-		   break;
-	}
-	if (slashIndex[0] < 0 || slashIndex[1] < 0 ) {
-		return 0;
-	}
+    for (i = len - 1; i >=0; i--) {
+        if (j<2)
+        {
+           if (path[i] == slash) {
+               slashIndex[j] = i;
+               j++;
+           } 
+        }
+        else
+           break;
+    }
+    if (slashIndex[0] < 0 || slashIndex[1] < 0 ) {
+        return 0;
+    }
 
-	strncpy(parentPath, path, slashIndex[1]);
-	return 1;
+    strncpy(parentPath, path, slashIndex[1]);
+    return 1;
 }
 
 static int getGameInfo(char* gameName, int* rotation, int* driverIndex,bool *Arcade) {
-	
-	int gameFound = 0;
-	int num=driver_list::find(gameName);
-	log_cb(RETRO_LOG_DEBUG, "Searching for driver %s\n",gameName);
-	
-	if (num != -1){		
-		if(driver_list::driver(num).flags& GAME_TYPE_ARCADE)
-		{
-			*Arcade=TRUE;
-			if (log_cb)
-				log_cb(RETRO_LOG_DEBUG, "System type: ARCADE\n");
-		}
-		else if(driver_list::driver(num).flags& GAME_TYPE_CONSOLE)
-		{
-			if (log_cb)
-				log_cb(RETRO_LOG_DEBUG, "System type: CONSOLE\n");
-		}
-		else if(driver_list::driver(num).flags& GAME_TYPE_COMPUTER)
-		{
-			if (log_cb)
-				log_cb(RETRO_LOG_DEBUG, "System type: COMPUTER\n");		
-		}
-		gameFound = 1;
-		
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "Game name: %s, Game description: %s\n",driver_list::driver(num).name, driver_list::driver(num).description);
-	}
-	else
-	{
-		if (log_cb)
-			log_cb(RETRO_LOG_WARN, "Driver %s not found %i\n",gameName,num);
-	}
-	
-	return gameFound;
+    
+    int gameFound = 0;
+    int num=driver_list::find(gameName);
+    log_cb(RETRO_LOG_DEBUG, "Searching for driver %s\n",gameName);
+    
+    if (num != -1){        
+        if(driver_list::driver(num).flags& GAME_TYPE_ARCADE)
+        {
+            *Arcade=TRUE;
+            if (log_cb)
+                log_cb(RETRO_LOG_DEBUG, "System type: ARCADE\n");
+        }
+        else if(driver_list::driver(num).flags& GAME_TYPE_CONSOLE)
+        {
+            if (log_cb)
+                log_cb(RETRO_LOG_DEBUG, "System type: CONSOLE\n");
+        }
+        else if(driver_list::driver(num).flags& GAME_TYPE_COMPUTER)
+        {
+            if (log_cb)
+                log_cb(RETRO_LOG_DEBUG, "System type: COMPUTER\n");        
+        }
+        gameFound = 1;
+        
+        if (log_cb)
+            log_cb(RETRO_LOG_INFO, "Game name: %s, Game description: %s\n",driver_list::driver(num).name, driver_list::driver(num).description);
+    }
+    else
+    {
+        if (log_cb)
+            log_cb(RETRO_LOG_WARN, "Driver %s not found %i\n",gameName,num);
+    }
+    
+    return gameFound;
 }
 
 
 void Extract_AllPath(char *srcpath){
 
-	int result = 0, result_value =0;
+    int result = 0, result_value =0;
 
-	//split the path to directory and the name without the zip extension
-	result = parsePath(srcpath, MgamePath, MgameName);
-	if (result == 0) {
-		strcpy(MgameName,srcpath);
-		result_value|=1;
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Error parsing game path: %s\n",srcpath);	
-	}
-	
-	//split the path to directory and the name without the zip extension
-	result = parseSystemName(srcpath, MsystemName);
-	if (result == 0) {
-		strcpy(MsystemName,srcpath );
-		result_value|=2;
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Error parsing system name: %s\n",srcpath);	
-	}
-	//get the parent path
-	result = parseParentPath(srcpath, MparentPath);
-	if (result == 0) {
-		strcpy(MparentPath,srcpath );
-		result_value|=4;
-		if (log_cb)
-			log_cb(RETRO_LOG_ERROR, "Error parsing parent path: %s\n",srcpath);
-	}
-	if (log_cb)
-	{
-		log_cb(RETRO_LOG_DEBUG, "Path extraction result: File name=%s\n",srcpath);
-		log_cb(RETRO_LOG_DEBUG, "Path extraction result: Game name=%s\n",MgameName);
-		log_cb(RETRO_LOG_DEBUG, "Path extraction result: System name=%s\n",MsystemName);
-		log_cb(RETRO_LOG_DEBUG, "Path extraction result: Game path=%s\n",MgamePath);
-		log_cb(RETRO_LOG_DEBUG, "Path extraction result: Parent path=%s\n",MparentPath);
-	}
-		
+    //split the path to directory and the name without the zip extension
+    result = parsePath(srcpath, MgamePath, MgameName);
+    if (result == 0) {
+        strcpy(MgameName,srcpath);
+        result_value|=1;
+        if (log_cb)
+            log_cb(RETRO_LOG_ERROR, "Error parsing game path: %s\n",srcpath);    
+    }
+    
+    //split the path to directory and the name without the zip extension
+    result = parseSystemName(srcpath, MsystemName);
+    if (result == 0) {
+        strcpy(MsystemName,srcpath );
+        result_value|=2;
+        if (log_cb)
+            log_cb(RETRO_LOG_ERROR, "Error parsing system name: %s\n",srcpath);    
+    }
+    //get the parent path
+    result = parseParentPath(srcpath, MparentPath);
+    if (result == 0) {
+        strcpy(MparentPath,srcpath );
+        result_value|=4;
+        if (log_cb)
+            log_cb(RETRO_LOG_ERROR, "Error parsing parent path: %s\n",srcpath);
+    }
+    if (log_cb)
+    {
+        log_cb(RETRO_LOG_DEBUG, "Path extraction result: File name=%s\n",srcpath);
+        log_cb(RETRO_LOG_DEBUG, "Path extraction result: Game name=%s\n",MgameName);
+        log_cb(RETRO_LOG_DEBUG, "Path extraction result: System name=%s\n",MsystemName);
+        log_cb(RETRO_LOG_DEBUG, "Path extraction result: Game path=%s\n",MgamePath);
+        log_cb(RETRO_LOG_DEBUG, "Path extraction result: Parent path=%s\n",MparentPath);
+    }
+        
 }
 
 void Add_Option(const char* option){
-	
-	static int first=0;
+    
+    static int first=0;
 
-	if(first==0){
-		PARAMCOUNT=0;	
-		first++;
-	}
-	
-	sprintf(XARGV[PARAMCOUNT++],"%s\0",option);
+    if(first==0){
+        PARAMCOUNT=0;    
+        first++;
+    }
+    
+    sprintf(XARGV[PARAMCOUNT++],"%s\0",option);
 }
 
 void Set_Default_Option(){
 
-	//some hardcoded default Options
+    //some hardcoded default Options
 
-	Add_Option(core);
-	if(throttle_enable)
-		Add_Option("-throttle");
-	else
-		Add_Option("-nothrottle");
-	Add_Option("-joystick");
-	Add_Option("-samplerate");
-	Add_Option("48000");	
-	if(cheats_enable)
-	   Add_Option("-cheat");
-	else
-	   Add_Option("-nocheat");
-	if(mouse_enable)
-	   Add_Option("-mouse");
-	else
-	   Add_Option("-nomouse");
-	if(hide_gameinfo)
-	   Add_Option("-skip_gameinfo");
-	else
-	   Add_Option("-noskip_gameinfo");
-	if(write_config_enable)
-		Add_Option("-writeconfig");
-	if(read_config_enable)
-		Add_Option("-readconfig");		
-	else
-		Add_Option("-noreadconfig");		
-	if(auto_save_enable)
-		Add_Option("-autosave");		
-	if(game_specific_saves_enable)
-	{
-		Add_Option("-statename");
-		char option[50];
-		sprintf(option,"%%g/%s",MgameName);
-		Add_Option(option);
-		
-	}
-	
-	
+    Add_Option(core);
+    if(throttle_enable)
+        Add_Option("-throttle");
+    else
+        Add_Option("-nothrottle");
+    Add_Option("-joystick");
+    Add_Option("-samplerate");
+    Add_Option("48000");    
+    if(cheats_enable)
+       Add_Option("-cheat");
+    else
+       Add_Option("-nocheat");
+    if(mouse_enable)
+       Add_Option("-mouse");
+    else
+       Add_Option("-nomouse");
+    if(hide_gameinfo)
+       Add_Option("-skip_gameinfo");
+    else
+       Add_Option("-noskip_gameinfo");
+    if(write_config_enable)
+        Add_Option("-writeconfig");
+    if(read_config_enable)
+        Add_Option("-readconfig");        
+    else
+        Add_Option("-noreadconfig");        
+    if(auto_save_enable)
+        Add_Option("-autosave");        
+    if(game_specific_saves_enable)
+    {
+        Add_Option("-statename");
+        char option[50];
+        sprintf(option,"%%g/%s",MgameName);
+        Add_Option(option);
+        
+    }
+    
+    
 }
 
 void Set_Path_Option(){
 
-	char tmp_dir[256];
+    char tmp_dir[256];
 
-	//Setup path Option according to retro (save/system) directory or current if NULL 
-	for(int i=0;i<NB_OPTPATH;i++){
+    //Setup path Option according to retro (save/system) directory or current if NULL
+    for(int i=0;i<NB_OPTPATH;i++){
 
-		Add_Option((char*)(opt_name[i]));
+        Add_Option((char*)(opt_name[i]));
 
-		if(opt_type[i]==0){
-			if(retro_save_directory!=NULL)sprintf(tmp_dir, "%s%c%s%c%s", retro_save_directory, slash, core, slash,dir_name[i]);	
-			else sprintf(tmp_dir, "%s%c%s%c%s", ".", slash, core, slash,dir_name[i]);
-		}
-		else {
-			if(retro_system_directory!=NULL)sprintf(tmp_dir, "%s%c%s%c%s", retro_system_directory, slash, core, slash,dir_name[i]);	
-			else sprintf(tmp_dir, "%s%c%s%c%s", ".", slash, core, slash,dir_name[i]);
-		}
+        if(opt_type[i]==0){
+            if(retro_save_directory!=NULL)sprintf(tmp_dir, "%s%c%c%s%c%s%c", retro_save_directory, slash, slash, core, slash,dir_name[i],slash);
+            else sprintf(tmp_dir, "%s%c%s%c%s%c", ".", slash, core, slash,dir_name[i],slash);
+        }
+        else {
+            if(retro_system_directory!=NULL)sprintf(tmp_dir, "%s%c%s%c%s%c", retro_system_directory, slash, core, slash,dir_name[i],slash);    
+            else sprintf(tmp_dir, "%s%c%s%c%s%c", ".", slash, core, slash,dir_name[i],slash);
+        }
 
-		Add_Option((char*)(tmp_dir));
-	}
+        Add_Option((char*)(tmp_dir));
+    }
 
 }
 
@@ -455,49 +455,49 @@ extern "C"
 #endif 
 int mmain(int argc, const char *argv)
 {
-	int result = 0;
-	
-	strcpy(gameName,argv);
+    int result = 0;
+    
+    strcpy(gameName,argv);
 
-	if(experimental_cmdline){
-  	
-		parse_cmdline(argv);
-			if (log_cb)
-				log_cb(RETRO_LOG_INFO, "Starting game from command line:%s\n",gameName);
+    if(experimental_cmdline){
+      
+        parse_cmdline(argv);
+            if (log_cb)
+                log_cb(RETRO_LOG_INFO, "Starting game from command line:%s\n",gameName);
 
-		result = executeGame_cmd(ARGUV[ARGUC-1]);
-	}
-	else
-	{
-		if (log_cb)
-			log_cb(RETRO_LOG_INFO, "Starting game:%s\n",gameName);
-		result = executeGame(gameName);
-	}
+        result = executeGame_cmd(ARGUV[ARGUC-1]);
+    }
+    else
+    {
+        if (log_cb)
+            log_cb(RETRO_LOG_INFO, "Starting game:%s\n",gameName);
+        result = executeGame(gameName);
+    }
 
-	if(result<0)return result;
-	
-	if (log_cb)
-		log_cb(RETRO_LOG_DEBUG, "Parameters:\n");
-	
-	for (int i = 0; i<PARAMCOUNT; i++){
-		xargv_cmd[i] = (char*)(XARGV[i]);
-		if (log_cb)
-			log_cb(RETRO_LOG_DEBUG, " %s\n",XARGV[i]);		
-	}
-
-
-//	osd_init_midi();
-
-	retro_osd_interface MRosd;
-	cli_options MRoptions;
-	MRosd.register_options(MRoptions);
-	cli_frontend frontend(MRoptions, MRosd);
-
-	result = frontend.execute(PARAMCOUNT, ( char **)xargv_cmd); 
-
-	xargv_cmd[PARAMCOUNT - 2] = NULL;
+    if(result<0)return result;
+    
+    if (log_cb)
+        log_cb(RETRO_LOG_DEBUG, "Parameters:\n");
+    
+    for (int i = 0; i<PARAMCOUNT; i++){
+        xargv_cmd[i] = (char*)(XARGV[i]);
+        if (log_cb)
+            log_cb(RETRO_LOG_DEBUG, " %s\n",XARGV[i]);        
+    }
 
 
-	return 1;
+//    osd_init_midi();
+
+    retro_osd_interface MRosd;
+    cli_options MRoptions;
+    MRosd.register_options(MRoptions);
+    cli_frontend frontend(MRoptions, MRosd);
+
+    result = frontend.execute(PARAMCOUNT, ( char **)xargv_cmd); 
+
+    xargv_cmd[PARAMCOUNT - 2] = NULL;
+
+
+    return 1;
 }
 
