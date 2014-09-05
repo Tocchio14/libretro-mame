@@ -23,11 +23,6 @@ public:
 		: driver_device(mconfig, type, tag),
 		tv_artifacts(0) { }
 
-	void a600xl_mmu(UINT8 new_mmu);
-
-	/* This is needed in MESS as well for Atari 8bit drivers */
-	void atari_machine_start();
-
 	virtual void video_start();
 	UINT32 screen_update_atari(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 
@@ -43,6 +38,10 @@ public:
 
 	DECLARE_READ8_MEMBER ( atari_antic_r );
 	DECLARE_WRITE8_MEMBER ( atari_antic_w );
+
+	POKEY_INTERRUPT_CB_MEMBER(interrupt_cb);
+	POKEY_KEYBOARD_CB_MEMBER(a5200_keypads);
+	POKEY_KEYBOARD_CB_MEMBER(a800_keyboard);
 
 private:
 	UINT32 tv_artifacts ;
@@ -60,12 +59,7 @@ private:
 	inline void LMS(int new_cmd);
 	void antic_scanline_dma(int param);
 	void generic_atari_interrupt(int button_count);
-
 };
-
-void atari_interrupt_cb(pokey_device *device, int mask);
-POKEY_KEYBOARD_HANDLER(atari_a800_keyboard);
-POKEY_KEYBOARD_HANDLER(atari_a5200_keypads);
 
 /* video */
 
@@ -564,6 +558,7 @@ struct ANTIC {
 
 extern ANTIC antic;
 
+void antic_start(running_machine &machine);
 void antic_reset(void);
 
 
@@ -612,5 +607,14 @@ ANTIC_RENDERER( antic_mode_e_48 );
 ANTIC_RENDERER( antic_mode_f_32 );
 ANTIC_RENDERER( antic_mode_f_40 );
 ANTIC_RENDERER( antic_mode_f_48 );
+ANTIC_RENDERER( gtia_mode_1_32 );
+ANTIC_RENDERER( gtia_mode_1_40 );
+ANTIC_RENDERER( gtia_mode_1_48 );
+ANTIC_RENDERER( gtia_mode_2_32 );
+ANTIC_RENDERER( gtia_mode_2_40 );
+ANTIC_RENDERER( gtia_mode_2_48 );
+ANTIC_RENDERER( gtia_mode_3_32 );
+ANTIC_RENDERER( gtia_mode_3_40 );
+ANTIC_RENDERER( gtia_mode_3_48 );
 
 #endif /* ATARI_H */
