@@ -37,11 +37,11 @@ extern "C" int mmain(int argc, const char *argv);
 extern bool draw_this_frame;
 
 #ifdef M16B
-	uint16_t videoBuffer[1600*1200];
-	#define LOG_PIXEL_BYTES 1
+    uint16_t videoBuffer[1600*1200];
+    #define LOG_PIXEL_BYTES 1
 #else
-	unsigned int videoBuffer[1600*1200];
-	#define LOG_PIXEL_BYTES 2*1
+    unsigned int videoBuffer[1600*1200];
+    #define LOG_PIXEL_BYTES 2*1
 #endif 
 
 retro_video_refresh_t video_cb = NULL;
@@ -81,44 +81,44 @@ void retro_set_environment(retro_environment_t cb)
    sprintf(option_nobuffer,"%s_%s",core,"nobuffer");
       
    static const struct retro_variable vars[] = {
-	//some ifdefs are redundant but I wanted to have these options in a logical order
-	//common for MAME/MESS/UME	
+    //some ifdefs are redundant but I wanted to have these options in a logical order
+    //common for MAME/MESS/UME	
 
-	{ option_read_config, "Read configuration; disabled|enabled" },
+    { option_read_config, "Read configuration; disabled|enabled" },
 
-	// ONLY FOR MESS/UME
+    // ONLY FOR MESS/UME
 #if !defined(WANT_MAME)
-	{ option_write_config, "Write configuration; disabled|enabled" },
-	{ option_saves, "Save state naming; game|system" },
+    { option_write_config, "Write configuration; disabled|enabled" },
+    { option_saves, "Save state naming; game|system" },
 #endif
-	
-	//common for MAME/MESS/UME	
-	{ option_auto_save, "Auto save/load states; disabled|enabled" },
-	{ option_mouse, "Enable in-game mouse; disabled|enabled" },
-	{ option_throttle, "Enable throttle; disabled|enabled" },
-	{ option_cheats, "Enable cheats; disabled|enabled" },
-	{ option_nobuffer, "Nobuffer patch; disabled|enabled" },	
-	{ option_nag, "Hide nag screen; disabled|enabled" },
-	{ option_info, "Hide gameinfo screen; disabled|enabled" },
-	{ option_warnings, "Hide warnings screen; disabled|enabled" },
-	{ option_renderer, "Alternate render method; disabled|enabled" },
 
-	// ONLY FOR MESS/UME
+    //common for MAME/MESS/UME	
+    { option_auto_save, "Auto save/load states; disabled|enabled" },
+    { option_mouse, "Enable in-game mouse; disabled|enabled" },
+    { option_throttle, "Enable throttle; disabled|enabled" },
+    { option_cheats, "Enable cheats; disabled|enabled" },
+    { option_nobuffer, "Nobuffer patch; disabled|enabled" },	
+    { option_nag, "Hide nag screen; disabled|enabled" },
+    { option_info, "Hide gameinfo screen; disabled|enabled" },
+    { option_warnings, "Hide warnings screen; disabled|enabled" },
+    { option_renderer, "Alternate render method; disabled|enabled" },
+
+    // ONLY FOR MESS/UME
 #if !defined(WANT_MAME) 
     { option_softlist, "Enable softlists; enabled|disabled" },
-	{ option_softlist_media, "Softlist automatic media type; enabled|disabled" },
+    { option_softlist_media, "Softlist automatic media type; enabled|disabled" },
 #if defined(WANT_MESS)
-	{ option_media, "Media type; cart|flop|cdrm|cass|hard|serl|prin" },
+    { option_media, "Media type; cart|flop|cdrm|cass|hard|serl|prin" },
 #elif defined(WANT_UME)
-	{ option_media, "Media type; rom|cart|flop|cdrm|cass|hard|serl|prin" },
-#endif	
-	{ option_bios, "Boot to BIOS; disabled|enabled" },
+    { option_media, "Media type; rom|cart|flop|cdrm|cass|hard|serl|prin" },
 #endif
-	
-	//common for MAME/MESS/UME	
-	{ option_osd, "Boot to OSD; disabled|enabled" },
-	{ option_cli, "Boot from CLI; disabled|enabled" },
-	{ NULL, NULL },
+    { option_bios, "Boot to BIOS; disabled|enabled" },
+#endif
+
+    //common for MAME/MESS/UME	
+    { option_osd, "Boot to OSD; disabled|enabled" },
+    { option_cli, "Boot from CLI; disabled|enabled" },
+    { NULL, NULL },
 
    };
 
@@ -225,13 +225,13 @@ static void check_variables(void)
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
       if (strcmp(var.value, "disabled") == 0)
-	  {
+      {
          alternate_renderer = false;	 
-	  }
+      }
       if (strcmp(var.value, "enabled") == 0)
-	  {
+      {
          alternate_renderer = true;
-	  }
+      }
    }
 
    var.key = option_osd;
@@ -341,7 +341,7 @@ unsigned retro_api_version(void)
 }
 
 void retro_get_system_info(struct retro_system_info *info)
-{   	
+{
    memset(info, 0, sizeof(*info));
 
 #if defined(WANT_MAME)
@@ -375,7 +375,7 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
    
    if (log_cb)
       log_cb(RETRO_LOG_INFO, "AV_INFO: max_width=%d max_height=%d\n",info->geometry.max_width,info->geometry.max_height);   
-	  
+
    info->geometry.aspect_ratio = rtaspect;
    
    if (log_cb)
@@ -457,12 +457,12 @@ void retro_init (void){
            retro_save_directory=retro_system_directory;
        }
        if (log_cb)
-           log_cb(RETRO_LOG_INFO, "SAVE_DIRECTORY: %s", retro_save_directory);                            
+           log_cb(RETRO_LOG_INFO, "SAVE_DIRECTORY: %s", retro_save_directory);
        
         if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
         {
            if (log_cb)
-              log_cb(RETRO_LOG_ERROR, "pixel format not supported");       	
+              log_cb(RETRO_LOG_ERROR, "pixel format not supported");
            exit(0);
         }
 
@@ -511,14 +511,14 @@ void retro_run (void)
       NEWGAME_FROM_OSD=0;
    }
 
-	retro_poll_mame_input();
+    retro_poll_mame_input();
 
-	if (draw_this_frame)
-      		video_cb(videoBuffer,rtwi, rthe, topw << LOG_PIXEL_BYTES);
+    if (draw_this_frame)
+            video_cb(videoBuffer,rtwi, rthe, topw << LOG_PIXEL_BYTES);
    	else
-      		video_cb(NULL,rtwi, rthe, topw << LOG_PIXEL_BYTES);
+            video_cb(NULL,rtwi, rthe, topw << LOG_PIXEL_BYTES);
 
-	co_switch(emuThread);
+    co_switch(emuThread);
 }
 
 void prep_retro_rotation(int rot)
@@ -529,32 +529,31 @@ void prep_retro_rotation(int rot)
 
 bool retro_load_game(const struct retro_game_info *info) 
 {
-	check_variables();
+    check_variables();
 
 #ifdef M16B
-	memset(videoBuffer,0,1600*1200*2);
+    memset(videoBuffer,0,1600*1200*2);
 #else
-	memset(videoBuffer,0,1600*1200*2*2);
+    memset(videoBuffer,0,1600*1200*2*2);
 #endif
-	char basename[256];
-	
-	extract_basename(basename, info->path, sizeof(basename));
-  	extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));
-	strcpy(RPATH,info->path);
+    char basename[256];
+    extract_basename(basename, info->path, sizeof(basename));
+    extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));
+    strcpy(RPATH,info->path);
 
-	co_switch(emuThread);
-	return 1;
+    co_switch(emuThread);
+    return 1;
 }
 
 void retro_unload_game(void)
 {
-	if(pauseg==0)
-   	{
-		pauseg=-1;				
-      		co_switch(emuThread);
-	}
+    if(pauseg==0)
+    {
+        pauseg=-1;
+            co_switch(emuThread);
+    }
 
-	LOGI("Retro unload_game\n");	
+    LOGI("Retro unload_game\n");
 }
 
 // Stubs
