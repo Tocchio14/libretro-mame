@@ -17,7 +17,7 @@ static char option_bios[50];
 static char option_softlist[50];
 static char option_softlist_media[50];
 static char option_media[50];
-static char option_read_config[50];     
+static char option_read_config[50];
 static char option_write_config[50];
 static char option_auto_save[50];
 static char option_throttle[50];
@@ -42,7 +42,7 @@ extern bool draw_this_frame;
 #else
     unsigned int videoBuffer[1600*1200];
     #define LOG_PIXEL_BYTES 2*1
-#endif 
+#endif
 
 retro_video_refresh_t video_cb = NULL;
 retro_environment_t environ_cb = NULL;
@@ -79,10 +79,9 @@ void retro_set_environment(retro_environment_t cb)
    sprintf(option_saves,"%s_%s",core,"saves");
    sprintf(option_throttle,"%s_%s",core,"throttle");
    sprintf(option_nobuffer,"%s_%s",core,"nobuffer");
-      
    static const struct retro_variable vars[] = {
     //some ifdefs are redundant but I wanted to have these options in a logical order
-    //common for MAME/MESS/UME	
+    //common for MAME/MESS/UME
 
     { option_read_config, "Read configuration; disabled|enabled" },
 
@@ -92,19 +91,19 @@ void retro_set_environment(retro_environment_t cb)
     { option_saves, "Save state naming; game|system" },
 #endif
 
-    //common for MAME/MESS/UME	
+    //common for MAME/MESS/UME
     { option_auto_save, "Auto save/load states; disabled|enabled" },
     { option_mouse, "Enable in-game mouse; disabled|enabled" },
     { option_throttle, "Enable throttle; disabled|enabled" },
     { option_cheats, "Enable cheats; disabled|enabled" },
-    { option_nobuffer, "Nobuffer patch; disabled|enabled" },	
+    { option_nobuffer, "Nobuffer patch; disabled|enabled" },
     { option_nag, "Hide nag screen; disabled|enabled" },
     { option_info, "Hide gameinfo screen; disabled|enabled" },
     { option_warnings, "Hide warnings screen; disabled|enabled" },
     { option_renderer, "Alternate render method; disabled|enabled" },
 
     // ONLY FOR MESS/UME
-#if !defined(WANT_MAME) 
+#if !defined(WANT_MAME)
     { option_softlist, "Enable softlists; enabled|disabled" },
     { option_softlist_media, "Softlist automatic media type; enabled|disabled" },
 #if defined(WANT_MESS)
@@ -115,7 +114,7 @@ void retro_set_environment(retro_environment_t cb)
     { option_bios, "Boot to BIOS; disabled|enabled" },
 #endif
 
-    //common for MAME/MESS/UME	
+    //common for MAME/MESS/UME
     { option_osd, "Boot to OSD; disabled|enabled" },
     { option_cli, "Boot from CLI; disabled|enabled" },
     { NULL, NULL },
@@ -139,9 +138,9 @@ static void check_variables(void)
       if (strcmp(var.value, "enabled") == 0)
          experimental_cmdline = true;
       if (strcmp(var.value, "disabled") == 0)
-         experimental_cmdline = false;       
-   }  
-   
+         experimental_cmdline = false;
+   }
+
    var.key = option_mouse;
    var.value = NULL;
 
@@ -152,7 +151,7 @@ static void check_variables(void)
       if (strcmp(var.value, "enabled") == 0)
          mouse_enable = true;
    }
-   
+
    var.key = option_throttle;
    var.value = NULL;
 
@@ -162,8 +161,8 @@ static void check_variables(void)
          throttle_enable = false;
       if (strcmp(var.value, "enabled") == 0)
          throttle_enable = true;
-   }   
-   
+   }
+
    var.key = option_nobuffer;
    var.value = NULL;
 
@@ -173,8 +172,8 @@ static void check_variables(void)
          nobuffer_enable = false;
       if (strcmp(var.value, "enabled") == 0)
          nobuffer_enable = true;
-   }   
-   
+   }
+
    var.key = option_cheats;
    var.value = NULL;
 
@@ -184,7 +183,7 @@ static void check_variables(void)
          cheats_enable = false;
       if (strcmp(var.value, "enabled") == 0)
          cheats_enable = true;
-   }   
+   }
 
    var.key = option_nag;
    var.value = NULL;
@@ -206,8 +205,8 @@ static void check_variables(void)
          hide_gameinfo = false;
       if (strcmp(var.value, "enabled") == 0)
          hide_gameinfo = true;
-   }   
-   
+   }
+
    var.key = option_warnings;
    var.value = NULL;
 
@@ -217,8 +216,8 @@ static void check_variables(void)
          hide_warnings = false;
       if (strcmp(var.value, "enabled") == 0)
          hide_warnings = true;
-   }      
-   
+   }
+
    var.key = option_renderer;
    var.value = NULL;
 
@@ -226,7 +225,7 @@ static void check_variables(void)
    {
       if (strcmp(var.value, "disabled") == 0)
       {
-         alternate_renderer = false;	 
+         alternate_renderer = false;
       }
       if (strcmp(var.value, "enabled") == 0)
       {
@@ -242,9 +241,9 @@ static void check_variables(void)
       if (strcmp(var.value, "enabled") == 0)
          boot_to_osd_enable = true;
       if (strcmp(var.value, "disabled") == 0)
-         boot_to_osd_enable = false;       
+         boot_to_osd_enable = false;
    }
-   
+
    var.key = option_read_config;
    var.value = NULL;
 
@@ -254,7 +253,7 @@ static void check_variables(void)
          read_config_enable = false;
       if (strcmp(var.value, "enabled") == 0)
          read_config_enable = true;
-   }   
+   }
 
    var.key = option_auto_save;
    var.value = NULL;
@@ -266,7 +265,7 @@ static void check_variables(void)
       if (strcmp(var.value, "enabled") == 0)
          auto_save_enable = true;
    }
-   
+
    var.key = option_saves;
    var.value = NULL;
 
@@ -276,7 +275,7 @@ static void check_variables(void)
          game_specific_saves_enable = true;
       if (strcmp(var.value, "system") == 0)
          game_specific_saves_enable = false;
-   }         
+   }
 
 #if !defined(WANT_MAME)
 
@@ -287,7 +286,7 @@ static void check_variables(void)
    {
       sprintf(mediaType,"-%s",var.value);
    }
-   
+
    var.key = option_softlist;
    var.value = NULL;
 
@@ -296,9 +295,9 @@ static void check_variables(void)
       if (strcmp(var.value, "enabled") == 0)
          softlist_enable = true;
       if (strcmp(var.value, "disabled") == 0)
-         softlist_enable = false;       
-   }      
-   
+         softlist_enable = false;
+   }
+
    var.key = option_softlist_media;
    var.value = NULL;
 
@@ -307,8 +306,8 @@ static void check_variables(void)
       if (strcmp(var.value, "enabled") == 0)
          softlist_auto = true;
       if (strcmp(var.value, "disabled") == 0)
-         softlist_auto = false;       
-   }       
+         softlist_auto = false;
+   }
 
    var.key = option_bios;
    var.value = NULL;
@@ -318,9 +317,9 @@ static void check_variables(void)
       if (strcmp(var.value, "enabled") == 0)
          boot_to_bios_enable = true;
       if (strcmp(var.value, "disabled") == 0)
-         boot_to_bios_enable = false;       
-   } 
-   
+         boot_to_bios_enable = false;
+   }
+
    var.key = option_write_config;
    var.value = NULL;
 
@@ -330,9 +329,9 @@ static void check_variables(void)
          write_config_enable = false;
       if (strcmp(var.value, "enabled") == 0)
          write_config_enable = true;
-   }      
-     
-#endif   
+   }
+
+#endif
 }
 
 unsigned retro_api_version(void)
@@ -352,54 +351,54 @@ void retro_get_system_info(struct retro_system_info *info)
    info->library_name = "UME 2014";
 #else
    info->library_name = "N/D";
-#endif 
+#endif
 
    info->library_version = "Git";
    info->valid_extensions = "zip|chd|7z";
-   info->need_fullpath = true;   
+   info->need_fullpath = true;
    info->block_extract = true;
 }
 
 void retro_get_system_av_info(struct retro_system_av_info *info)
 {
    check_variables();
-   
+
    info->geometry.base_width = rtwi;
    info->geometry.base_height = rthe;
-   
+
    if (log_cb)
       log_cb(RETRO_LOG_INFO, "AV_INFO: width=%d height=%d\n",info->geometry.base_width,info->geometry.base_height);
-      
+
    info->geometry.max_width = 1600;
    info->geometry.max_height = 1200;
-   
+
    if (log_cb)
       log_cb(RETRO_LOG_INFO, "AV_INFO: max_width=%d max_height=%d\n",info->geometry.max_width,info->geometry.max_height);   
 
    info->geometry.aspect_ratio = rtaspect;
-   
+
    if (log_cb)
-      log_cb(RETRO_LOG_INFO, "AV_INFO: aspect_ratio=%f\n",info->geometry.aspect_ratio);	  
-   
+      log_cb(RETRO_LOG_INFO, "AV_INFO: aspect_ratio=%f\n",info->geometry.aspect_ratio);
+
    info->timing.fps = 60;
    info->timing.sample_rate = 48000.0;
-   
+
    if (log_cb)
-      log_cb(RETRO_LOG_INFO, "AV_INFO: fps=%f sample_rate=%f\n",info->timing.fps,info->timing.sample_rate);	  
-   
+      log_cb(RETRO_LOG_INFO, "AV_INFO: fps=%f sample_rate=%f\n",info->timing.fps,info->timing.sample_rate);
+
 }
 
 static void retro_wrap_emulator()
-{    
+{
     mmain(1,RPATH);
 
     pauseg=-1;
 
-    environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, 0); 
+    environ_cb(RETRO_ENVIRONMENT_SHUTDOWN, 0);
 
     // Were done here
     co_switch(mainThread);
-        
+
     // Dead emulator, but libco says not to return
     while(true)
     {
@@ -408,13 +407,13 @@ static void retro_wrap_emulator()
     }
 }
 
-void retro_init (void){ 
+void retro_init (void){
 
        // initialize logger interface
        struct retro_log_callback log;
        if (environ_cb(RETRO_ENVIRONMENT_GET_LOG_INTERFACE, &log))
            log_cb = log.log;
-       else 
+       else
            log_cb = NULL;
 
 #ifndef M16B
@@ -424,17 +423,17 @@ void retro_init (void){
 #endif
 
        const char *system_dir = NULL;
-   
+
        if (environ_cb(RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &system_dir) && system_dir)
        {
             // if defined, use the system directory
-            retro_system_directory=system_dir;            
+            retro_system_directory=system_dir;
        }
        if (log_cb)
            log_cb(RETRO_LOG_INFO, "SYSTEM_DIRECTORY: %s", retro_system_directory);
-       
+
        const char *content_dir = NULL;
-   
+
        if (environ_cb(RETRO_ENVIRONMENT_GET_CONTENT_DIRECTORY, &content_dir) && content_dir)
        {
            // if defined, use the system directory
@@ -442,9 +441,9 @@ void retro_init (void){
        }
        if (log_cb)
            log_cb(RETRO_LOG_INFO, "CONTENT_DIRECTORY: %s", retro_content_directory);
-       
+
        const char *save_dir = NULL;
-   
+
        if (environ_cb(RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &save_dir) && save_dir)
        {
            // If save directory is defined use it, otherwise use system directory
@@ -458,7 +457,7 @@ void retro_init (void){
        }
        if (log_cb)
            log_cb(RETRO_LOG_INFO, "SAVE_DIRECTORY: %s", retro_save_directory);
-       
+
         if (!environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &fmt))
         {
            if (log_cb)
@@ -479,7 +478,7 @@ void retro_init (void){
 void retro_deinit(void)
 {
    if(emuThread)
-   { 
+   {
       co_delete(emuThread);
       emuThread = 0;
    }
@@ -515,7 +514,7 @@ void retro_run (void)
 
     if (draw_this_frame)
             video_cb(videoBuffer,rtwi, rthe, topw << LOG_PIXEL_BYTES);
-   	else
+    else
             video_cb(NULL,rtwi, rthe, topw << LOG_PIXEL_BYTES);
 
     co_switch(emuThread);
@@ -527,7 +526,7 @@ void prep_retro_rotation(int rot)
    environ_cb(RETRO_ENVIRONMENT_SET_ROTATION, &rot);
 }
 
-bool retro_load_game(const struct retro_game_info *info) 
+bool retro_load_game(const struct retro_game_info *info)
 {
     check_variables();
 
