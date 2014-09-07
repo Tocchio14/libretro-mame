@@ -27,6 +27,8 @@ public:
 	DECLARE_WRITE16_MEMBER( cop_dma_v1_w );
 	DECLARE_WRITE16_MEMBER( cop_dma_v2_w );
 	DECLARE_WRITE16_MEMBER( cop_scale_w );
+	DECLARE_WRITE16_MEMBER( cop_angle_target_w );
+	DECLARE_WRITE16_MEMBER( cop_angle_step_w );
 	DECLARE_WRITE16_MEMBER( cop_dma_adr_rel_w );
 	DECLARE_WRITE16_MEMBER( cop_dma_src_w );
 	DECLARE_WRITE16_MEMBER( cop_dma_size_w );
@@ -108,19 +110,22 @@ public:
 	UINT16 cop_func_mask[0x100/8];          /* function mask (?) */
 	UINT16 cop_program[0x100];              /* program "code" */
 	UINT16 cop_latch_addr, cop_latch_trigger, cop_latch_value, cop_latch_mask;
-	INT8 cop_angle_compare;
-	UINT8 cop_angle_mod_val;
+	UINT16 cop_angle_target;
+	UINT16 cop_angle_step;
 
 	DECLARE_WRITE16_MEMBER( sprite_prot_x_w );
 	DECLARE_WRITE16_MEMBER( sprite_prot_y_w );
 	DECLARE_WRITE16_MEMBER( sprite_prot_src_seg_w );
 	DECLARE_WRITE16_MEMBER( sprite_prot_src_w );
+	DECLARE_READ16_MEMBER( sprite_prot_src_seg_r );
 	DECLARE_READ16_MEMBER ( sprite_prot_dst1_r );
-	DECLARE_READ16_MEMBER( sprite_prot_dst2_r );
+	DECLARE_READ16_MEMBER( sprite_prot_maxx_r );
+	DECLARE_READ16_MEMBER( sprite_prot_unk_r );
 	DECLARE_WRITE16_MEMBER( sprite_prot_dst1_w );
-	DECLARE_WRITE16_MEMBER( sprite_prot_dst2_w );
+	DECLARE_WRITE16_MEMBER( sprite_prot_maxx_w );
+	DECLARE_WRITE16_MEMBER( sprite_prot_unk_w );
 
-	UINT16 sprite_prot_x,sprite_prot_y,dst1,dst2;
+	UINT16 sprite_prot_x,sprite_prot_y,dst1,cop_spr_maxx,cop_spr_unk;
 	UINT16 sprite_prot_src_addr[2];
 
 	struct
@@ -134,7 +139,7 @@ public:
 	UINT16 cop_hit_status;
 	INT16 cop_hit_val_x,cop_hit_val_y,cop_hit_val_z,cop_hit_val_unk;
 
-	void draw_sprites(bitmap_ind16 &bitmap, const rectangle &cliprect ,int pri_mask );
+	void draw_sprites(bitmap_ind16 &bitmap, bitmap_ind8 &priority, const rectangle &cliprect);
 	UINT8 cop_calculate_collsion_detection();
 	void cop_take_hit_box_params(UINT8 offs);
 

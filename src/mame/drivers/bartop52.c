@@ -30,6 +30,8 @@ public:
 		: atari_common_state(mconfig, type, tag),
 		m_maincpu(*this, "maincpu") { }
 
+	virtual void machine_start();
+	virtual void machine_reset();
 	required_device<cpu_device> m_maincpu;
 };
 
@@ -100,6 +102,25 @@ static INPUT_PORTS_START(bartop52)
 INPUT_PORTS_END
 
 
+void bartop52_state::machine_start()
+{
+	/* GTIA */
+	gtia_interface gtia_intf;
+	memset(&gtia_intf, 0, sizeof(gtia_intf));
+	gtia_init(machine(), &gtia_intf);	
+	
+	/* ANTIC */
+	antic_start(machine());
+}
+
+void bartop52_state::machine_reset()
+{
+	pokey_device *pokey = machine().device<pokey_device>("pokey");
+	pokey->write(15,0);
+	antic_reset();
+}
+
+
 static MACHINE_CONFIG_START( a5200, bartop52_state )
 	/* basic machine hardware */
 	MCFG_CPU_ADD("maincpu", M6502, FREQ_17_EXACT)
@@ -126,8 +147,8 @@ static MACHINE_CONFIG_START( a5200, bartop52_state )
 	MCFG_POKEY_POT1_R_CB(IOPORT("analog_1"))
 	MCFG_POKEY_POT2_R_CB(IOPORT("analog_2"))
 	MCFG_POKEY_POT3_R_CB(IOPORT("analog_3"))
-	MCFG_POKEY_KEYBOARD_HANDLER(atari_a5200_keypads)
-	MCFG_POKEY_INTERRUPT_HANDLER(atari_interrupt_cb)
+	MCFG_POKEY_KEYBOARD_CB(atari_common_state, a5200_keypads)
+	MCFG_POKEY_INTERRUPT_CB(atari_common_state, interrupt_cb)
 
 	MCFG_SOUND_ROUTE(ALL_OUTPUTS, "mono", 1.00)
 

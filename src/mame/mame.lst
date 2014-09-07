@@ -112,6 +112,7 @@ pacgal          // hack
 mspacpls        // hack
 ponpoko         // (c) 1982 Sigma Ent. Inc.
 ponpokov        // (c) 1982 Sigma Ent. Inc. + Venture Line license
+candory         // graphics hack of Ponpoko
 lizwiz          // (c) 1985 Techstar + "Sunn presents"
 alibaba         // (c) 1982 Sega
 alibabab        // Mustafa" and 40 Thieves (Ali Baba bootleg)
@@ -299,6 +300,7 @@ ckongis         //
 porter          // 1982 bootleg (Arcade TV Game List - P.98, Left, 15 from bottom)
 tdpgal          // 1983 Design Labs / Thomas Automatics
 guttangt
+spcwarpc        // 1983 Century Electronics UK LTD
 
 // Has some similarities with Moon Cresta but Board is very different
 rockclim        // (c)1981 Taito
@@ -802,6 +804,7 @@ grobda3         // (c) 1984
 gaplus          // (c) 1984
 gaplusa         // (c) 1984
 gaplusd         // (c) 1984
+gaplust 		// (c) 1984
 galaga3         // (c) 1984
 galaga3a        // (c) 1984
 galaga3b        // (c) 1984
@@ -2054,9 +2057,9 @@ bublbobl1       // A78 (c) 1986 Taito Corporation
 bublboblr       // A78 (c) 1986 Taito America Corporation + Romstar license
 bublboblr1      // A78 (c) 1986 Taito America Corporation + Romstar license
 boblbobl        // bootleg
-boblbobl2       // bootleg
-sboblboa        // bootleg
-sboblbob        // bootleg
+sboblbobl       // bootleg
+sboblbobla      // bootleg
+sboblboblb      // bootleg
 bub68705        // bootleg
 dland           // bootleg
 missb2          // bootleg on enhanced hardware
@@ -2559,6 +2562,7 @@ raiden3         // (c) 2005 Seibu Kaihatsu/Moss Ltd
 spicaadv        // (c) 2005 Taito Corporation
 usagiol         // (c) 2005 Taito Corporation/Warashi
 shikiga3        // (c) 2006 Alfa System/SKonec Entertainment
+wontmuch        // (c) 2006 Capcom
 raiden4         // (c) 2007 Seibu Kaihatsu/Moss Ltd
 kof98um         // (c) 2008 SNK
 trbwtchs        // (c) 2008 Adventure Planning Service/Studio SiestA
@@ -2658,7 +2662,7 @@ pzlbreak        // (c) 1997 SemiCom
 3in1semi        // (c) 1998 SemiCom
 moremore        // (c) 1999 SemiCom + Exit
 moremorp        // (c) 1999 SemiCom + Exit
-sohosung		// (c) 199? SemiCom
+suhosong		// (c) 199? SemiCom
 4in1boot        // (c) 2002 KISoft (includes hacks of Semicom games + Snowbros)
 
 // More Toaplan Games
@@ -4729,6 +4733,7 @@ pdriftj         // 1988.09 Power Drift (Japan)
 pdrift          // 1988.?? Power Drift (World)
 pdrifta         // 1988.?? Power Drift (World)
 pdrifte         // 1988.?? Power Drift (World)
+pdriftl
 gloc            // 1990.04 G-LOC Air Battle (US)
 				// 1990.05 G-LOC Air Battle (Japan)
 glocr360        // 1990.?? G-LOC (R360, World?)
@@ -4790,7 +4795,7 @@ arabfgt         // 1992.?? Arabian Fight (World)
 arabfgtu        // 1992.03 Arabian Fight (US)
 arabfgtj        // 1992.03 Arabian Fight (Japan)
 arescue         // 1992.03 Air Rescue (US)
-				// 1992.04 Air Rescue (Japan)
+arescuej        // 1992.04 Air Rescue (Japan)
 ga2             // 1992.?? Golden Axe II (World)
 ga2u            // 1992.09 Golden Axe II (US)
 ga2j            // 1992.10 Golden Axe Death Adder no Fukusyuu (Japan)
@@ -6185,6 +6190,7 @@ ropeman         // (c) 1983 bootleg
 circusc         // GX380 (c) 1984
 circusc2        // GX380 (c) 1984
 circusc3        // GX380 (c) 1984
+circusc4        // GX380 (c) 1984
 circuscc        // GX380 (c) 1984 + Centuri license
 circusce        // GX380 (c) 1984 + Centuri license
 tp84            // GX388 (c) 1984
@@ -6323,6 +6329,7 @@ simpsons        // GX072 (c) 1991
 simpsons4pa     // GX072 (c) 1991
 simpsons2p      // GX072 (c) 1991
 simpsons2p2     // GX072 (c) 1991
+simpsons2p3		// GX072 (c) 1991
 simpsons2pa     // GX072 (c) 1991 (Asia)
 simpsons2pj     // GX072 (c) 1991 (Japan)
 esckids         // GX975 (c) 1991 (Asia)
@@ -6860,7 +6867,7 @@ temptube        // (hack)
 spacduel        // 136006           (c) 1980
 gravitar        // 136010           (c) 1982
 gravitar2       // 136010           (c) 1982
-gravp           // (proto)          (c) 1982
+gravitar1       // 136010           (c) 1982
 lunarbat        // (proto)          (c) 1982
 lunarba1        // (proto)          (c) 1982
 quantum         // 136016           (c) 1982        // made by Gencomp
@@ -6882,8 +6889,9 @@ tomcat          // (proto)          (c) 1985
 // Atari "Centipede hardware" games
 warlords        // 037153-037159    (c) 1980
 centiped        // 136001           (c) 1980
+centiped3       // 136001           (c) 1980
 centiped2       // 136001           (c) 1980
-centtime        // 136001           (c) 1980
+centiped1       // 136001           (c) 1980
 centipdb        // (bootleg)
 centipdd        // hack by Two Bit Score
 caterplr        // (bootleg)
@@ -7204,7 +7212,6 @@ roadrioto       // 136089           (c) 1991
 offtwall        // 136090           (c) 1991
 offtwallc       // 136090           (c) 1991
 guardian        // 136092           (c) 1992
-dangerex        // (proto)          (c) 1992
 relief          // 136093           (c) 1992
 relief2         // 136093           (c) 1992
 relief3         // 136093           (c) 1992
@@ -9177,6 +9184,7 @@ fantasia        // (c) 1994 Comad & New Japan System
 fantasiaa       // (c) 1994 Comad & New Japan System
 fantasiab       // (c) 1994 Comad & New Japan System
 supmodel        // (c) 1994 Comad & New Japan System
+fantasian		//
 newfant         // (c) 1994 Comad & New Japan System
 newfanta        // (c) 1995 Comad & New Japan System
 fantsy95        // (c) 1995 Hi-max Technology Inc.
@@ -9335,7 +9343,7 @@ grasspin        // (c) 1983 Jaleco (Zilec / Ashby programmer names in sound rom)
 
 // Fuuki FG-2 games
 gogomile        // (c) 1995
-gogomilej       // (c) 1995 (Japan)
+gogomileo       // (c) 1995 (Japan)
 pbancho         // (c) 1996 (Japan)
 
 // Fuuki FG-3 games
@@ -10264,7 +10272,9 @@ eggventr7       // (c) 1997 The Game Room
 eggventr2       // (c) 1997 The Game Room
 eggventra       // (c) 1997 The Game Room (Allied Leisure license)
 eggventrd       // (c) 1997 The Game Room
+hostinv			// (c) 1998 The Game Room
 calchase        // (c) 1999 The Game Room
+eggsplc			// (c) 2002 The Game Room
 ripribit        // (c) 1997 LAI Games
 cfarm           // (c) 1999 LAI Games
 cclownz         // (c) 1999 LAI Games
@@ -10292,6 +10302,8 @@ toyland         // (c) 2001 Semicom
 misncrft        // (c) 2000 Sun
 misncrfta       // (c) 2000 Sun
 mrdig           // (c) 2000 Sun
+yorizori        // (c)
+
 hidnctch        // (c) 1998 Eolith
 linkypip        // (c) 1998 Eolith
 ironfort        // (c) 1998 Eolith
@@ -10314,6 +10326,7 @@ klondkp         // (c) 1999 Eolith
 hidctch3        // (c) 2000 Eolith
 crazywar        // (c) 2002 Eolith
 bballoon        // (c) 2003 Eolith
+
 hapytour        // (c) 2005 GAV Company (on Eolith's Ghost hardware)
 touryuu         // (c) 200? Yuki Enterprise
 funkball        // (c) 1998 dgPIX Entertainment Inc
@@ -12665,18 +12678,18 @@ cgunship
 mead4in1
 
 // Misc TTL + roms
-tv21            // (c) 197? A-1 Supply
-tv21_3          // (c) 197? A-1 Supply
-tvpoker         // (c) 197? A-1 Supply
+tv21          // (c) 197? A-1 Supply
+tv21_3        // (c) 197? A-1 Supply
+tvpoker       // (c) 197? A-1 Supply
 sburners      // (c) 1975 Allied Leisure
-fun4             // (c) 1976 Bailey
-fun4a            // (c) 1976 Bailey
+fun4          // (c) 1976 Bailey
+fun4a         // (c) 1976 Bailey
 destdrby      // (c) 1976 Chicago Coin
 avenger       // (c) 1975 Electra
 attckexd      // (c) 1977 Exidy
 deathrac      // (c) 1976 Exidy
-biplane4         // (c) 1976 Fun Games
-take5            // (c) 1975 Fun Games
+biplane4      // (c) 1976 Fun Games
+take5         // (c) 1975 Fun Games
 bballrmt      // (c) 1974 Ramtek
 cleanswp      // (c) 1974 Ramtek
 vollyrmt      // (c) 1973 Ramtek
@@ -12685,6 +12698,8 @@ ramtek3       // (c) 197? Ramtek
 monacogp      // (c) 1980 Sega
 monacogpa     // (c) 1980 Sega
 gunman        // (c) 1977 Taito
+bazooka       // (c) 1977 PSE
+bazookabr     // (c) 1977 Taito do Brasil
 ttblock       // (c) 1977 Taito
 zzblock       // (c) 1979 Taito
 

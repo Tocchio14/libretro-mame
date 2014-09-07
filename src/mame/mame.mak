@@ -441,6 +441,7 @@ MACHINES += M6M80011AP
 MACHINES += MATSUCD
 MACHINES += MB14241
 MACHINES += MB3773
+MACHINES += MB8421
 MACHINES += MB87078
 #MACHINES += MB8795
 #MACHINES += MB89352
@@ -2646,6 +2647,8 @@ $(DRIVERS)/icecold.o:   $(LAYOUT)/icecold.lh
 $(DRIVERS)/igspoker.o:  $(LAYOUT)/igspoker.lh
 
 $(DRIVERS)/imolagp.o:   $(LAYOUT)/imolagp.lh
+
+$(DRIVERS)/inder.o:     $(LAYOUT)/inder.lh
 
 $(DRIVERS)/jankenmn.o:  $(LAYOUT)/jankenmn.lh
 
