@@ -69,6 +69,10 @@ void web_engine::close()
 {
 }
 
+void web_engine::serve()
+{
+}
+
 
 void web_engine::push_message(const char *message)
 {
