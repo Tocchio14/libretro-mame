@@ -493,7 +493,7 @@ void device_scheduler::timeslice()
 					exec->m_totalcycles += ran;
 
 					// update the local time for this CPU
-					attotime delta = attotime(0, exec->m_attoseconds_per_cycle * ran);
+					attotime delta(0, exec->m_attoseconds_per_cycle * ran);
 					assert(delta >= attotime::zero);
 					exec->m_localtime += delta;
 					LOG(("         %d ran, %d total, time = %s\n", ran, (INT32)exec->m_totalcycles, exec->m_localtime.as_string(PRECISION)));
@@ -814,7 +814,7 @@ void device_scheduler::rebuild_execute_list()
 emu_timer &device_scheduler::timer_list_insert(emu_timer &timer)
 {
 	// disabled timers sort to the end
-	attotime expire = timer.m_enabled ? timer.m_expire : attotime::never;
+	const attotime &expire = timer.m_enabled ? timer.m_expire : attotime::never;
 
 	// loop over the timer list
 	emu_timer *prevtimer = NULL;

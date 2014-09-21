@@ -146,6 +146,8 @@ CPUS += ES5510
 CPUS += SCUDSP
 CPUS += IE15
 CPUS += 8X300
+CPUS += ALTO2
+#CPUS += W65816
 
 #-------------------------------------------------
 # specify available sound cores
@@ -513,7 +515,6 @@ MACHINES += SATURN
 MACHINES += SCSI
 MACHINES += SCUDSP
 #MACHINES += SECFLASH
-MACHINES += SEIBU_COP
 MACHINES += SERFLASH
 MACHINES += SMC91C9X
 MACHINES += SMPC
@@ -1516,6 +1517,7 @@ $(MAMEOBJ)/namco.a: \
 	$(MACHINE)/namco51.o \
 	$(MACHINE)/namco53.o \
 	$(MACHINE)/namco62.o \
+	$(MACHINE)/namcomcu.o \
 	$(AUDIO)/namco52.o \
 	$(AUDIO)/namco54.o \
 	$(VIDEO)/c116.o \
@@ -1764,6 +1766,7 @@ $(MAMEOBJ)/seibu.a: \
 	$(DRIVERS)/panicr.o \
 	$(DRIVERS)/raiden.o $(VIDEO)/raiden.o \
 	$(DRIVERS)/raiden2.o $(MACHINE)/r2crypt.o \
+	$(MACHINE)/raiden2cop.o \
 	$(DRIVERS)/r2dx_v33.o \
 	$(DRIVERS)/seibuspi.o $(MACHINE)/seibuspi.o $(VIDEO)/seibuspi.o \
 	$(DRIVERS)/sengokmj.o \

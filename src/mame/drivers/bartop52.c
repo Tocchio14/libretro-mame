@@ -27,11 +27,13 @@ class bartop52_state : public atari_common_state
 {
 public:
 	bartop52_state(const machine_config &mconfig, device_type type, const char *tag)
-		: atari_common_state(mconfig, type, tag),
-		m_maincpu(*this, "maincpu") { }
+		: atari_common_state(mconfig, type, tag)
+		{ }
+
+	TIMER_DEVICE_CALLBACK_MEMBER( bartop_interrupt );
 
 	virtual void machine_reset();
-	required_device<cpu_device> m_maincpu;
+	//required_device<cpu_device> m_maincpu;	// maincpu is already contained in atari_common_state
 };
 
 
@@ -48,38 +50,38 @@ ADDRESS_MAP_END
 #define JOYSTICK_SENSITIVITY    200
 
 static INPUT_PORTS_START(bartop52)
-	PORT_START("djoy_b")    /* IN3 digital joystick buttons (GTIA button bits) */
+	PORT_START("djoy_b")
 	PORT_BIT(0x01, 0x01, IPT_BUTTON1) PORT_CODE(JOYCODE_BUTTON1) PORT_PLAYER(1)
-	PORT_BIT(0x02, 0x02, IPT_BUTTON1) PORT_CODE(JOYCODE_BUTTON2) PORT_PLAYER(2)
+	PORT_BIT(0x02, 0x02, IPT_BUTTON1) PORT_CODE(JOYCODE_BUTTON1) PORT_PLAYER(2)
 	PORT_BIT(0x04, 0x04, IPT_UNUSED)
 	PORT_BIT(0x08, 0x08, IPT_UNUSED)
-	PORT_BIT(0x10, 0x10, IPT_BUTTON2) PORT_CODE(JOYCODE_BUTTON1) PORT_PLAYER(1)
+	PORT_BIT(0x10, 0x10, IPT_BUTTON2) PORT_CODE(JOYCODE_BUTTON2) PORT_PLAYER(1)
 	PORT_BIT(0x20, 0x20, IPT_BUTTON2) PORT_CODE(JOYCODE_BUTTON2) PORT_PLAYER(2)
 	PORT_BIT(0x40, 0x40, IPT_UNUSED)
 	PORT_BIT(0x80, 0x80, IPT_UNUSED)
 
-	PORT_START("keypad_0")
+	PORT_START("keypad.0")
 	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_NAME("(Break)") PORT_CODE(KEYCODE_PAUSE)    // is this correct?
 	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_NAME("Wind-Up") PORT_CODE(KEYCODE_ENTER_PAD)
 	PORT_BIT(0x04, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_NAME("[0]") PORT_CODE(KEYCODE_0_PAD)
 	PORT_BIT(0x08, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_NAME("No Wind-Up") PORT_CODE(KEYCODE_PLUS_PAD)
 	PORT_BIT(0xf0, IP_ACTIVE_HIGH, IPT_UNUSED)
 
-	PORT_START("keypad_1")
+	PORT_START("keypad.1")
 	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_NAME("Reset") PORT_CODE(KEYCODE_F3)
 	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_NAME("Fast Ball Low") PORT_CODE(KEYCODE_9_PAD)
 	PORT_BIT(0x04, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_NAME("Change-Up Low") PORT_CODE(KEYCODE_8_PAD)
 	PORT_BIT(0x08, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_NAME("Curve Low") PORT_CODE(KEYCODE_7_PAD)
 	PORT_BIT(0xf0, IP_ACTIVE_HIGH, IPT_UNUSED)
 
-	PORT_START("keypad_2")
+	PORT_START("keypad.2")
 	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_NAME(DEF_STR(Pause)) PORT_CODE(KEYCODE_F2)
 	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_NAME("Fast Ball Med.") PORT_CODE(KEYCODE_6_PAD)
 	PORT_BIT(0x04, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_NAME("Change-Up Med.") PORT_CODE(KEYCODE_5_PAD)
 	PORT_BIT(0x08, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_NAME("Curve Med") PORT_CODE(KEYCODE_4_PAD)
 	PORT_BIT(0xf0, IP_ACTIVE_HIGH, IPT_UNUSED)
 
-	PORT_START("keypad_3")
+	PORT_START("keypad.3")
 	PORT_BIT(0x01, IP_ACTIVE_HIGH, IPT_START)    PORT_NAME("Start")
 	PORT_BIT(0x02, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_NAME("Fast Ball High") PORT_CODE(KEYCODE_3_PAD)
 	PORT_BIT(0x04, IP_ACTIVE_HIGH, IPT_KEYPAD) PORT_NAME("Change-Up High") PORT_CODE(KEYCODE_2_PAD)
@@ -107,12 +109,21 @@ void bartop52_state::machine_reset()
 	pokey->write(15,0);
 }
 
+TIMER_DEVICE_CALLBACK_MEMBER( bartop52_state::bartop_interrupt )
+{
+	m_antic->generic_interrupt(4);
+}
 
 static MACHINE_CONFIG_START( a5200, bartop52_state )
 	/* basic machine hardware */
 	MCFG_CPU_ADD("maincpu", M6502, FREQ_17_EXACT)
 	MCFG_CPU_PROGRAM_MAP(a5200_mem)
-	MCFG_TIMER_DRIVER_ADD_SCANLINE("scantimer", atari_common_state, a5200_interrupt, "screen", 0, 1)
+	MCFG_TIMER_DRIVER_ADD_SCANLINE("scantimer", bartop52_state, bartop_interrupt, "screen", 0, 1)
+
+	MCFG_DEVICE_ADD("gtia", ATARI_GTIA, 0)
+
+	MCFG_DEVICE_ADD("antic", ATARI_ANTIC, 0)
+	MCFG_ANTIC_GTIA("gtia")
 
 	MCFG_DEVICE_ADD("gtia", ATARI_GTIA, 0)
 

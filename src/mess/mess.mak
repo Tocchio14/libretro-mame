@@ -96,6 +96,7 @@ CPUS += TLCS90
 CPUS += TLCS900
 CPUS += MB88XX
 CPUS += MB86233
+CPUS += MB86235
 CPUS += SSP1601
 CPUS += APEXC
 CPUS += CP1610
@@ -585,6 +586,7 @@ BUSES += EP64
 BUSES += EPSON_SIO
 BUSES += GAMEBOY
 BUSES += GBA
+BUSES += GENERIC
 BUSES += IEEE488
 BUSES += IMI7000
 BUSES += IQ151
@@ -2001,7 +2003,7 @@ $(MESSOBJ)/vidbrain.a:          \
 
 $(MESSOBJ)/videoton.a:          \
 	$(MESS_DRIVERS)/tvc.o       \
-	$(MESS_AUDIO)/tvc.o         \
+	$(MESS_AUDIO)/tvc_snd.o     \
 
 $(MESSOBJ)/visual.a:            \
 	$(MESS_DRIVERS)/v1050.o     \

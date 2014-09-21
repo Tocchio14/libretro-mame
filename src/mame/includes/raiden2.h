@@ -1,4 +1,6 @@
 #include "audio/seibu.h"
+#include "machine/raiden2cop.h"
+#include "video/seibu_crtc.h"
 
 class raiden2_state : public driver_device
 {
@@ -16,32 +18,66 @@ public:
 		  m_seibu_sound(*this, "seibu_sound"),
 		  m_gfxdecode(*this, "gfxdecode"),
 		  m_palette(*this, "palette"),
+		
+		  bg_bank(0),
+		  fg_bank(0),
+		  mid_bank(0),
+		  tx_bank(0),
+		  raiden2_tilemap_enable(0),
+		  prg_bank(0),
+		  cop_bank(0),
+		  cop_itoa(0),
+		  cop_status(0),
+		  cop_scale(0),
+		  cop_itoa_digit_count(0),
+		  cop_angle(0),
+		  cop_dist(0),
+		  cop_latch_addr(0),
+		  cop_latch_trigger(0),
+		  cop_latch_value(0),
+		  cop_latch_mask(0),
+		  cop_angle_target(0),
+		  cop_angle_step(0),
+		  sprite_prot_x(0),
+		  sprite_prot_y(0),
+		  dst1(0),
+		  cop_spr_maxx(0),
+		  cop_spr_off(0),
+		  cop_hit_status(0),
+		  cop_hit_baseadr(0),
+		  cop_sort_ram_addr(0),
+		  cop_sort_lookup(0),
+		  cop_sort_param(0),
 		  tile_buffer(320, 256),
-		  sprite_buffer(320, 256)
-	{ }
+		  sprite_buffer(320, 256),
+		  m_raiden2cop(*this, "raiden2cop")
+	{
+		  memset(scrollvals, 0, sizeof(UINT16)*6);
+		  memset(cop_regs, 0, sizeof(UINT32)*8);
+		  memset(cop_itoa_digits, 0, sizeof(UINT8)*10);
 
-	UINT16 *back_data, *fore_data, *mid_data, *text_data;
+		  memset(cop_func_trigger, 0, sizeof(UINT16)*(0x100/8));
+		  memset(cop_func_value, 0, sizeof(UINT16)*(0x100/8));
+		  memset(cop_func_mask, 0, sizeof(UINT16)*(0x100/8));
+		  memset(cop_program, 0, sizeof(UINT16)*(0x100));
+		  memset(sprite_prot_src_addr, 0, sizeof(UINT16)*2);
+		  memset(cop_collision_info, 0, sizeof(colinfo)*2);
+	}
+
+	UINT16 *back_data, *fore_data, *mid_data, *text_data; // private buffers, allocated in init
 	required_shared_ptr<UINT16> sprites;
 	required_device<cpu_device> m_maincpu;
-	required_device<seibu_sound_device> m_seibu_sound;
+	optional_device<seibu_sound_device> m_seibu_sound;
 	required_device<gfxdecode_device> m_gfxdecode;
 	required_device<palette_device> m_palette;
 
 	DECLARE_WRITE16_MEMBER( cop_itoa_low_w );
 	DECLARE_WRITE16_MEMBER( cop_itoa_high_w );
 	DECLARE_WRITE16_MEMBER( cop_itoa_digit_count_w );
-	DECLARE_WRITE16_MEMBER( cop_dma_v1_w );
-	DECLARE_WRITE16_MEMBER( cop_dma_v2_w );
 	DECLARE_WRITE16_MEMBER( cop_scale_w );
 	DECLARE_WRITE16_MEMBER( cop_angle_target_w );
 	DECLARE_WRITE16_MEMBER( cop_angle_step_w );
-	DECLARE_WRITE16_MEMBER( cop_dma_adr_rel_w );
-	DECLARE_WRITE16_MEMBER( cop_dma_src_w );
-	DECLARE_WRITE16_MEMBER( cop_dma_size_w );
-	DECLARE_WRITE16_MEMBER( cop_dma_dst_w );
-	DECLARE_READ16_MEMBER( cop_dma_mode_r );
-	DECLARE_WRITE16_MEMBER( cop_dma_mode_w );
-	DECLARE_WRITE16_MEMBER( cop_pal_brightness_val_w );
+
 	DECLARE_READ16_MEMBER ( cop_reg_high_r );
 	DECLARE_WRITE16_MEMBER( cop_reg_high_w );
 	DECLARE_READ16_MEMBER ( cop_reg_low_r );
@@ -54,10 +90,8 @@ public:
 	DECLARE_WRITE16_MEMBER( cop_cmd_w );
 	DECLARE_READ16_MEMBER ( cop_itoa_digits_r );
 	DECLARE_READ16_MEMBER ( cop_collision_status_r );
-	DECLARE_READ16_MEMBER (cop_collision_status_y_r);
-	DECLARE_READ16_MEMBER (cop_collision_status_x_r);
-	DECLARE_READ16_MEMBER (cop_collision_status_z_r);
-	DECLARE_READ16_MEMBER (cop_collision_status_unk_r);
+	DECLARE_READ16_MEMBER (cop_collision_status_val_r);
+	DECLARE_READ16_MEMBER (cop_collision_status_stat_r);
 
 	DECLARE_READ16_MEMBER ( cop_status_r );
 	DECLARE_READ16_MEMBER ( cop_dist_r );
@@ -65,7 +99,6 @@ public:
 	DECLARE_WRITE16_MEMBER( cop_angle_compare_w );
 	DECLARE_WRITE16_MEMBER( cop_angle_mod_val_w );
 
-	DECLARE_WRITE16_MEMBER ( cop_dma_trigger_w );
 	DECLARE_WRITE16_MEMBER ( raiden2_bank_w );
 	DECLARE_READ16_MEMBER ( cop_tile_bank_2_r );
 	DECLARE_WRITE16_MEMBER ( cop_tile_bank_2_w );
@@ -98,19 +131,24 @@ public:
 
 	void common_reset();
 
+	static UINT16 const raiden_blended_colors[];
+	static UINT16 const xsedae_blended_colors[];
+	static UINT16 const zeroteam_blended_colors[];
+
+	bool blend_active[0x800]; // cfg
+
 	tilemap_t *background_layer,*midground_layer,*foreground_layer,*text_layer;
-	int bg_bank, fg_bank, mid_bank;
+	
+	
+	int bg_bank, fg_bank, mid_bank, tx_bank;
 	UINT16 raiden2_tilemap_enable;
-	UINT8 prg_bank,prot_data;
+	UINT8 prg_bank;
 	UINT16 cop_bank;
 
 	UINT16 scrollvals[6];
 	UINT32 cop_regs[8], cop_itoa;
 	UINT16 cop_status, cop_scale, cop_itoa_digit_count, cop_angle, cop_dist;
 	UINT8 cop_itoa_digits[10];
-	UINT16 cop_dma_mode, cop_dma_src[0x200], cop_dma_dst[0x200], cop_dma_size[0x200], cop_dma_v1, cop_dma_v2, cop_dma_adr_rel;
-	UINT16 sprites_cur_start;
-	UINT16 pal_brightness_val;
 
 	UINT16 cop_func_trigger[0x100/8];       /* function trigger */
 	UINT16 cop_func_value[0x100/8];         /* function value (?) */
@@ -120,14 +158,13 @@ public:
 	UINT16 cop_angle_target;
 	UINT16 cop_angle_step;
 
-	bitmap_ind16 tile_buffer, sprite_buffer;
 
 	DECLARE_WRITE16_MEMBER( sprite_prot_x_w );
 	DECLARE_WRITE16_MEMBER( sprite_prot_y_w );
 	DECLARE_WRITE16_MEMBER( sprite_prot_src_seg_w );
 	DECLARE_WRITE16_MEMBER( sprite_prot_src_w );
 	DECLARE_READ16_MEMBER( sprite_prot_src_seg_r );
-	DECLARE_READ16_MEMBER ( sprite_prot_dst1_r );
+	DECLARE_READ16_MEMBER( sprite_prot_dst1_r );
 	DECLARE_READ16_MEMBER( sprite_prot_maxx_r );
 	DECLARE_READ16_MEMBER( sprite_prot_off_r );
 	DECLARE_WRITE16_MEMBER( sprite_prot_dst1_w );
@@ -137,17 +174,24 @@ public:
 	UINT16 sprite_prot_x,sprite_prot_y,dst1,cop_spr_maxx,cop_spr_off;
 	UINT16 sprite_prot_src_addr[2];
 
-	struct {
-		int x, y, z;
-		int min_x, min_y, min_z, max_x, max_y, max_z;
-	} cop_collision_info[2];
+	struct colinfo {
+		INT16 pos[3];
+		INT8 dx[3];
+		UINT8 size[3];
+		bool allow_swap;
+		UINT16 flags_swap;
+		UINT32 spradr;
+	};
+
+	colinfo cop_collision_info[2];
 
 	UINT16 cop_hit_status, cop_hit_baseadr;
-	INT16 cop_hit_val_x, cop_hit_val_y, cop_hit_val_z, cop_hit_val_unk;
+	INT16 cop_hit_val[3];
+	UINT16 cop_hit_val_stat;
 
 	void draw_sprites(const rectangle &cliprect);
 
-	void cop_collision_read_xy(address_space &space, int slot, UINT32 spradr);
+	void cop_collision_read_pos(address_space &space, int slot, UINT32 spradr, bool allow_swap);
 	void cop_collision_update_hitbox(address_space &space, int slot, UINT32 hitadr);
 
 	DECLARE_WRITE16_MEMBER(cop_hitbox_baseadr_w);
@@ -160,7 +204,7 @@ public:
 
 	UINT32 cop_sort_ram_addr, cop_sort_lookup;
 	UINT16 cop_sort_param;
-	const int *cur_spri;
+	const int *cur_spri; // cfg
 
 	DECLARE_DRIVER_INIT(raidendx);
 	DECLARE_DRIVER_INIT(xsedae);
@@ -179,13 +223,19 @@ public:
 	INTERRUPT_GEN_MEMBER(raiden2_interrupt);
 	UINT16 rps();
 	UINT16 rpc();
-	const UINT8 fade_table(int v);
 	void combine32(UINT32 *val, int offset, UINT16 data, UINT16 mem_mask);
 	void sprcpt_init(void);
 
 	void blend_layer(bitmap_rgb32 &bitmap, const rectangle &cliprect, bitmap_ind16 &source, int layer);
 	void tilemap_draw_and_blend(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect, tilemap_t *tilemap);
 
+	void init_blending(const UINT16 *table);
+
+	bitmap_ind16 tile_buffer, sprite_buffer;
+	optional_device<raiden2cop_device> m_raiden2cop;
+
+protected:
+	virtual void machine_start();
 };
 
 /*----------- defined in machine/r2crypt.c -----------*/

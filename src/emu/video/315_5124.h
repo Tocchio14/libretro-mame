@@ -114,6 +114,7 @@ protected:
 	UINT8            m_reg[16];                  /* All the registers */
 	UINT8            m_status;                   /* Status register */
 	UINT8            m_pending_status;           /* Pending status flags */
+	UINT8            m_reg6copy;                 /* Internal copy of register 6 (Sprite Patterns) */
 	UINT8            m_reg8copy;                 /* Internal copy of register 8 (X-Scroll) */
 	UINT8            m_reg9copy;                 /* Internal copy of register 9 (Y-Scroll) */
 	UINT8            m_addrmode;                 /* Type of VDP action */

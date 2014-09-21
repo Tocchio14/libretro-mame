@@ -44,8 +44,8 @@ int osd_num_processors = 0;
 //  PARAMETERS
 //============================================================
 
-#define SDLENV_PROCESSORS               "OSDPROCESSORS"
-#define SDLENV_CPUMASKS                 "OSDCPUMASKS"
+#define ENV_PROCESSORS               "OSDPROCESSORS"
+#define ENV_WORKQUEUEMAXTHREADS      "OSDWORKQUEUEMAXTHREADS"
 
 #define INFINITE                (osd_ticks_per_second() *  (osd_ticks_t) 10000)
 #define SPIN_LOOP_TIME          (osd_ticks_per_second() / 10000)
@@ -137,7 +137,6 @@ int osd_num_processors = 0;
 //============================================================
 
 static int effective_num_processors(void);
-static UINT32 effective_cpu_mask(int index);
 static void * worker_thread_entry(void *param);
 static void worker_thread_process(osd_work_queue *queue, work_thread_info *thread);
 
@@ -151,6 +150,7 @@ osd_work_queue *osd_work_queue_alloc(int flags)
 	int numprocs = effective_num_processors();
 	osd_work_queue *queue;
 	int threadnum;
+	char *osdworkqueuemaxthreads = osd_getenv("OSDWORKQUEUEMAXTHREADS");
 
 	// allocate a new queue
 	queue = (osd_work_queue *)osd_malloc(sizeof(*queue));
@@ -180,6 +180,10 @@ osd_work_queue *osd_work_queue_alloc(int flags)
 	// on an n-CPU system, create (n-1) threads for multi queues, and 1 thread for everything else
 	else
 		queue->threads = (flags & WORK_QUEUE_FLAG_MULTI) ? (numprocs - 1) : 1;
+
+	if (osdworkqueuemaxthreads != NULL && sscanf(osdworkqueuemaxthreads, "%d", &threadnum) == 1 && queue->threads > threadnum)
+		queue->threads = threadnum;
+
 
 	// clamp to the maximum
 	queue->threads = MIN(queue->threads, WORK_MAX_THREADS);
@@ -214,14 +218,6 @@ osd_work_queue *osd_work_queue_alloc(int flags)
 			osd_thread_adjust_priority(thread->handle, 1);
 		else
 			osd_thread_adjust_priority(thread->handle, 0);
-
-		// Bind main thread to cpu 0
-		osd_thread_cpu_affinity(NULL, effective_cpu_mask(0));
-
-		if (flags & WORK_QUEUE_FLAG_IO)
-			osd_thread_cpu_affinity(thread->handle, effective_cpu_mask(1));
-		else
-			osd_thread_cpu_affinity(thread->handle, effective_cpu_mask(2+threadnum) );
 	}
 
 	// start a timer going for "waittime" on the main thread
@@ -564,17 +560,21 @@ void osd_work_item_release(osd_work_item *item)
 
 static int effective_num_processors(void)
 {
-	char *procsoverride;
-	int numprocs = 0;
 	int physprocs = osd_get_num_processors();
 
 	// osd_num_processors == 0 for 'auto'
 	if (osd_num_processors > 0)
+	{
 		return MIN(4 * physprocs, osd_num_processors);
+	}
 	else
 	{
+		char *procsoverride;
+		int numprocs = 0;
+
 		// if the OSDPROCESSORS environment variable is set, use that value if valid
-		procsoverride = osd_getenv(SDLENV_PROCESSORS);
+		// note that we permit more than the real number of processors for testing
+		procsoverride = osd_getenv(ENV_PROCESSORS);
 		if (procsoverride != NULL && sscanf(procsoverride, "%d", &numprocs) == 1 && numprocs > 0)
 			return MIN(4 * physprocs, numprocs);
 
@@ -583,43 +583,6 @@ static int effective_num_processors(void)
 	}
 }
 
-//============================================================
-//  effective_cpu_mask
-//============================================================
-
-static UINT32 effective_cpu_mask(int index)
-{
-	char    *s;
-	char    buf[5];
-	UINT32  mask = 0xFFFF;
-
-	s = osd_getenv(SDLENV_CPUMASKS);
-	if (s != NULL && strcmp(s,"none"))
-	{
-		if (!strcmp(s,"auto"))
-		{
-			if (index<2)
-				mask = 0x01; /* main thread and io threads on cpu #0 */
-			else
-				mask = (1 << (((index - 1) % (osd_get_num_processors() - 1)) + 1));
-		}
-		else
-		{
-			if (strlen(s) % 4 != 0 || strlen(s) < (index+1)*4)
-			{
-				fprintf(stderr,"Invalid cpu mask @index %d: %s\n", index, s);
-			}
-			else
-			{
-				memcpy(buf,s+4*index,4);
-				buf[4] = 0;
-				if (sscanf(buf, "%04x", &mask) != 1)
-					fprintf(stderr,"Invalid cpu mask element %d: %s\n", index, buf);
-			}
-		}
-	}
-	return mask;
-}
 
 //============================================================
 //  worker_thread_entry

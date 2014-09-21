@@ -983,6 +983,14 @@ ROM_START( gl5005x )
 	ROM_CART_LOAD( "cart", 0, 0x40000, 0 )
 ROM_END
 
+ROM_START( glpn )
+	ROM_REGION( 0x200000, "bios", 0 )
+	ROM_LOAD( "27-5755-01.u1", 0x00000, 0x80000, CRC(dc28346b) SHA1(148fe664bef5b2f68c6702c74462802b76900ca0) )
+
+	ROM_REGION( 0x80000, "cart", ROMREGION_ERASEFF )
+	ROM_CART_LOAD( "cart", 0, 0x80000, 0 )
+ROM_END
+
 ROM_START( gmtt )
 	ROM_REGION(0x100000, "bios", 0)
 	ROM_LOAD( "27-6154-00.u4", 0x000000, 0x100000, CRC(e908262d) SHA1(a7964c9f9d304b6b2cce61822e8c6151b50388be) )
@@ -1007,9 +1015,25 @@ ROM_START( gln ) // not Z80 code
 	ROM_CART_LOAD( "cart", 0, 0x40000, 0 )
 ROM_END
 
+ROM_START( pc1000 )
+	ROM_REGION( 0x20000, "bios", 0 )
+	ROM_LOAD( "27-00780-002-002.u4", 0x000000, 0x020000, CRC(705170ae) SHA1(825ce0ff2c7d0a7b1e2577d1465a37f7e8da383b))
+
+	ROM_REGION( 0x40000, "cart", ROMREGION_ERASEFF )
+	ROM_CART_LOAD( "cart", 0, 0x40000, 0 )
+ROM_END
+
 ROM_START( misterx )
 	ROM_REGION( 0x20000, "bios", 0 )
 	ROM_LOAD( "27-00882-001.bin", 0x000000, 0x020000, CRC(30e0dc94) SHA1(2f4675746a41399b3d9e3e8001a9b4a0dcc5b620))
+
+	ROM_REGION( 0x40000, "cart", ROMREGION_ERASEFF )
+	ROM_CART_LOAD( "cart", 0, 0x40000, 0 )
+ROM_END
+
+ROM_START( lexipcm )
+	ROM_REGION( 0x200000, "bios", 0 )
+	ROM_LOAD( "epoxy.u3", 0x00000, 0x100000, CRC(0a410790) SHA1(be04d5f74208a2f3b200daed75e04e966f64b545) )
 
 	ROM_REGION( 0x40000, "cart", ROMREGION_ERASEFF )
 	ROM_CART_LOAD( "cart", 0, 0x40000, 0 )
@@ -1019,6 +1043,7 @@ ROM_END
 /* Driver */
 
 /*    YEAR  NAME     PARENT  COMPAT   MACHINE    INPUT   CLASS          INIT    COMPANY   FULLNAME       FLAGS */
+COMP( 1988, pc1000,   0,       0,     misterx,   pc1000, driver_device,   0,  "Video Technology", "PreComputer 1000", GAME_NOT_WORKING)
 COMP( 1988, misterx,  0,       0,     misterx,   pc1000, driver_device,   0,  "Video Technology / Yeno", "MisterX", GAME_NOT_WORKING)
 COMP( 1993, pc2000,   0,       0,     pc2000,    pc2000, driver_device,   0,  "Video Technology", "PreComputer 2000", GAME_NOT_WORKING)
 COMP( 1993, gl2000,   0,       0,     gl2000,    pc2000, driver_device,   0,  "Video Technology", "Genius Leader 2000", GAME_NOT_WORKING)
@@ -1029,6 +1054,8 @@ COMP( 1994, gl4000,   0,       0,     gl4000,    pc2000, driver_device,   0,  "V
 COMP( 1996, gl4004,   0,       0,     gl4000,    pc2000, driver_device,   0,  "Video Technology", "Genius Leader 4004 Quadro L (Germany)", GAME_NOT_WORKING)
 COMP( 1997, gl5000,   0,       0,     pc2000,    pc2000, driver_device,   0,  "Video Technology", "Genius Leader 5000 (Germany)", GAME_IS_SKELETON)
 COMP( 1997, gl5005x,  0,       0,     pc2000,    pc2000, driver_device,   0,  "Video Technology", "Genius Leader 5005X (Germany)", GAME_IS_SKELETON)
+COMP( 1997, glpn,     0,       0,     gl4000,    pc2000, driver_device,   0,  "Video Technology", "Genius Leader Power Notebook (Germany)", GAME_IS_SKELETON)
 COMP( 1998, gmtt ,    0,       0,     gl4000,    pc2000, driver_device,   0,  "Video Technology", "Genius Master Table Top (Germany)", GAME_IS_SKELETON)
 COMP( 2001, gbs5505x, 0,       0,     pc2000,    pc2000, driver_device,   0,  "Video Technology", "Genius BrainStation 5505X (Germany)", GAME_IS_SKELETON)
 COMP( 1993, gln,      0,       0,     pc2000,    pc2000, driver_device,   0,  "Video Technology", "Genius Leader Notebook", GAME_IS_SKELETON)
+COMP( 1999, lexipcm,  0,       0,     pc2000,    pc2000, driver_device,   0,  "Lexibook",         "LexiPC Mega 2000 (Germany)",   GAME_IS_SKELETON)

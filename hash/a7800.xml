@@ -34,7 +34,7 @@ Touchdown Football - NTSC only    CX7823
 One-on-One Basketball             CX7824
 Sky Fox                           CX7825 (Not Released)
 Summer Games - NTSC only          CX7826
-GATO                  CX7827 (Prototype)
+GATO                              CX7827 (Prototype)
 Super Huey UH-IX                  CX7828
 Hat Trick                         CX7829
 Sarge                             CX7830 (Not Released)
@@ -81,7 +81,7 @@ Ninja Golf                        CX7870
                                   CX7871
                                   CX7872
                                   CX7873
-Electrocop                        CX7874
+Electrocop                        CX7874 (Not Released)
 Meltdown                          CX7875
                                   CX7876
                                   CX7877
@@ -558,7 +558,7 @@ type of rom dumps.  Effort will be made at a later date to split them and docume
 	<software name="crackedu" cloneof="cracked">
 		<description>Crack'ed (NTSC)</description>
 		<year>1987</year>
-		<publisher>Atari / Data East</publisher>
+		<publisher>Atari</publisher>
 		<info name="serial" value="CX7836"/>
 		<sharedfeat name="compatibility" value="NTSC"/>
 		<part name="cart" interface="a7800_cart">
@@ -573,7 +573,7 @@ type of rom dumps.  Effort will be made at a later date to split them and docume
 	<software name="cracked">
 		<description>Crack'ed (PAL)</description>
 		<year>1987</year>
-		<publisher>Atari / Data East</publisher>
+		<publisher>Atari</publisher>
 		<info name="serial" value="CX7836"/>
 		<sharedfeat name="compatibility" value="PAL"/>
 		<part name="cart" interface="a7800_cart">
@@ -882,7 +882,7 @@ type of rom dumps.  Effort will be made at a later date to split them and docume
 	<software name="fightnu" cloneof="fightn">
 		<description>Fight Night (NTSC)</description>
 		<year>1988</year>
-		<publisher>Accolde</publisher>
+		<publisher>Atari / Accolade</publisher>
 		<info name="serial" value="CX7851"/>
 		<sharedfeat name="compatibility" value="NTSC"/>
 		<part name="cart" interface="a7800_cart">
@@ -897,7 +897,7 @@ type of rom dumps.  Effort will be made at a later date to split them and docume
 	<software name="fightn">
 		<description>Fight Night (PAL)</description>
 		<year>1988</year>
-		<publisher>Accolde</publisher>
+		<publisher>Atari / Accolade</publisher>
 		<info name="serial" value="CX7851"/>
 		<sharedfeat name="compatibility" value="PAL"/>
 		<part name="cart" interface="a7800_cart">
@@ -942,7 +942,7 @@ type of rom dumps.  Effort will be made at a later date to split them and docume
 	<software name="galagau" cloneof="galaga">
 		<description>Galaga (NTSC)</description>
 		<year>1984</year>
-		<publisher>Atari</publisher>
+		<publisher>Atari / Namco</publisher>
 		<info name="serial" value="CX7805"/>
 		<sharedfeat name="compatibility" value="NTSC"/>
 		<part name="cart" interface="a7800_cart">
@@ -957,7 +957,7 @@ type of rom dumps.  Effort will be made at a later date to split them and docume
 	<software name="galaga">
 		<description>Galaga (PAL)</description>
 		<year>1984</year>
-		<publisher>Atari</publisher>
+		<publisher>Atari / Namco</publisher>
 		<info name="serial" value="CX7805"/>
 		<sharedfeat name="compatibility" value="PAL"/>
 		<part name="cart" interface="a7800_cart">
@@ -1141,7 +1141,7 @@ type of rom dumps.  Effort will be made at a later date to split them and docume
 	<software name="ikariu" cloneof="ikari">
 		<description>Ikari Warriors (NTSC)</description>
 		<year>1990</year>
-		<publisher>Atari</publisher>
+		<publisher>Atari / SNK</publisher>
 		<info name="serial" value="CX7862"/>
 		<sharedfeat name="compatibility" value="NTSC"/>
 		<part name="cart" interface="a7800_cart">
@@ -1180,6 +1180,8 @@ type of rom dumps.  Effort will be made at a later date to split them and docume
 			<dataarea name="rom" size="131072">
 				<rom name="impssble.bin" size="131072" crc="3b1f2f47" sha1="5437c0efb63a349953ec047efe6ec24144ed6914" offset="0" />
 			</dataarea>
+			<dataarea name="ram" size="16384">
+			</dataarea>
 		</part>
 	</software>
 
@@ -1194,6 +1196,8 @@ type of rom dumps.  Effort will be made at a later date to split them and docume
 			<feature name="slot" value="a78_sg_ram" />
 			<dataarea name="rom" size="131072">
 				<rom name="impssbeu.bin" size="131072" crc="994af6e0" sha1="9770b61472510aba1cf3ea35ceca1859c3493676" offset="0" />
+			</dataarea>
+			<dataarea name="ram" size="16384">
 			</dataarea>
 		</part>
 	</software>
@@ -1210,6 +1214,8 @@ type of rom dumps.  Effort will be made at a later date to split them and docume
 			<dataarea name="rom" size="131072">
 				<rom name="jinks.bin" size="131072" crc="0818d8cd" sha1="472bc12c437b015a9e317bac092529f3295033b8" offset="0" />
 			</dataarea>
+			<dataarea name="ram" size="16384">
+			</dataarea>
 		</part>
 	</software>
 
@@ -1224,6 +1230,8 @@ type of rom dumps.  Effort will be made at a later date to split them and docume
 			<feature name="slot" value="a78_sg_ram" />
 			<dataarea name="rom" size="131072">
 				<rom name="jinkseu.bin" size="131072" crc="9207ed3b" sha1="eb16de0c3d5c4e769ae2314ba21c4dd3bca33c88" offset="0" />
+			</dataarea>
+			<dataarea name="ram" size="16384">
 			</dataarea>
 		</part>
 	</software>
@@ -1309,11 +1317,18 @@ the buttons not work in emulators.
 		</part>
 	</software>
 
+<!--
+The code has some race conditions for NMIs (related to input readings) 
+and often fails to boot on real systems too. To successfully start the 
+game, you can keep pressed Button 1 during Atari logo (thanks to Mike
+Saarna for debugging the problem)
+-->
 	<software name="klax">
 		<description>Klax (NTSC, Prototype)</description>
 		<year>1992</year>
 		<publisher>Atari</publisher>
 		<info name="serial" value="CX7888"/>
+		<info name="usage" value="Keep Button 1 pressed during Atari logo"/>
 		<sharedfeat name="compatibility" value="NTSC"/>
 		<part name="cart" interface="a7800_cart">
 			<feature name="pcb_type" value="TYPE-2" />
@@ -1767,7 +1782,7 @@ almost nothing like the prototype.
 
 	<software name="pitfight">
 		<description>Pit Fighter (Prototype)</description>
-		<year>198?</year>
+		<year>199?</year>
 		<publisher>Atari</publisher>
 		<info name="serial" value="CX7891"/>
 		<part name="cart" interface="a7800_cart">
@@ -1818,6 +1833,8 @@ almost nothing like the prototype.
 			<feature name="slot" value="a78_sg_ram" />
 			<dataarea name="rom" size="131072">
 				<rom name="plutos.bin" size="131072" crc="2f211f7f" sha1="fa55d6a366b237917f18487fc51817394839a3bc" offset="0" />
+			</dataarea>
+			<dataarea name="ram" size="16384">
 			</dataarea>
 		</part>
 	</software>
@@ -1894,6 +1911,8 @@ almost nothing like the prototype.
 			<feature name="slot" value="a78_sg_ram" />
 			<dataarea name="rom" size="32768">
 				<rom name="rescuefr.bin" size="32768" crc="9a74fbf2" sha1="6653022f38e553d475896a918850158eaf8f77ff" offset="0" />
+			</dataarea>
+			<dataarea name="ram" size="16384">
 			</dataarea>
 		</part>
 	</software>
@@ -2014,6 +2033,8 @@ almost nothing like the prototype.
 			<dataarea name="rom" size="131072">
 				<rom name="sirius.bin" size="131072" crc="65ae616e" sha1="cd9f6dea96f102262065d7472e73121b67f9e244" offset="0" />
 			</dataarea>
+			<dataarea name="ram" size="16384">
+			</dataarea>
 		</part>
 	</software>
 
@@ -2111,6 +2132,8 @@ almost nothing like the prototype.
 			<feature name="slot" value="a78_sg_ram" />
 			<dataarea name="rom" size="131072">
 				<rom name="smmrgame.bin" size="131072" crc="65c6df3f" sha1="31d46b32a2aa8d5bd6028cff1f41037426b22409" offset="0" />
+			</dataarea>
+			<dataarea name="ram" size="16384">
 			</dataarea>
 		</part>
 	</software>
@@ -2276,6 +2299,8 @@ almost nothing like the prototype.
 			<dataarea name="rom" size="65536">
 				<rom name="twrtpllr.bin" size="65536" crc="4407ba04" sha1="53976013986e0ad3694ab9c021420b8172465de7" offset="0" />
 			</dataarea>
+			<dataarea name="ram" size="16384">
+			</dataarea>
 		</part>
 	</software>
 
@@ -2290,6 +2315,8 @@ almost nothing like the prototype.
 			<feature name="slot" value="a78_sg_ram" />
 			<dataarea name="rom" size="65536">
 				<rom name="twrtpleu.bin" size="65536" crc="0f87fd7b" sha1="56e1b795e80382edb376e4536d1dee539d4ac548" offset="0" />
+			</dataarea>
+			<dataarea name="ram" size="16384">
 			</dataarea>
 		</part>
 	</software>
@@ -2335,6 +2362,8 @@ almost nothing like the prototype.
 			<dataarea name="rom" size="131072">
 				<rom name="wntrgame.bin" size="131072" crc="8981b531" sha1="b3725d6f0834c68ac62ce13eb9eb0d01d1124e5e" offset="0" />
 			</dataarea>
+			<dataarea name="ram" size="16384">
+			</dataarea>
 		</part>
 	</software>
 
@@ -2371,7 +2400,7 @@ almost nothing like the prototype.
 	<software name="xeviousu" cloneof="xevious">
 		<description>Xevious (NTSC)</description>
 		<year>1984</year>
-		<publisher>Atari</publisher>
+		<publisher>Atari / Namco</publisher>
 		<info name="serial" value="CX7810"/>
 		<sharedfeat name="compatibility" value="NTSC"/>
 		<part name="cart" interface="a7800_cart">
@@ -2386,7 +2415,7 @@ almost nothing like the prototype.
 	<software name="xevious">
 		<description>Xevious (PAL)</description>
 		<year>1984</year>
-		<publisher>Atari</publisher>
+		<publisher>Atari / Namco</publisher>
 		<info name="serial" value="CX7810"/>
 		<sharedfeat name="compatibility" value="PAL"/>
 		<part name="cart" interface="a7800_cart">
@@ -2410,6 +2439,8 @@ almost nothing like the prototype.
 			<dataarea name="rom" size="4096">
 				<rom name="highscre.bin" size="4096" crc="9be408d3" sha1="a3af676991391a6dd716c79022d4947206b78164" offset="0" />
 			</dataarea>
+			<dataarea name="nvram" size="2048">
+			</dataarea>
 		</part>
 	</software>
 
@@ -2423,10 +2454,12 @@ almost nothing like the prototype.
 			<dataarea name="rom" size="1">
 				<!-- this entry behaves just as passthrough, even if in fact the chips shall be socketed on the PCB! -->
 			</dataarea>
+			<dataarea name="ram" size="131072">
+			</dataarea>
 		</part>
 	</software>
 
-<!-- Chip adding 128K of RAM + POKEY+HighScore onboard -->
+<!-- Chip adding 128K of RAM + POKEY + HighScore onboard -->
 	<software name="xm">
 		<description>XM Expansion Module</description>
 		<year>2015?</year>
@@ -2435,6 +2468,10 @@ almost nothing like the prototype.
 			<feature name="slot" value="a78_xm" />
 			<dataarea name="rom" size="4096">
 				<rom name="highscre.bin" size="4096" crc="9be408d3" sha1="a3af676991391a6dd716c79022d4947206b78164" offset="0" />
+			</dataarea>
+			<dataarea name="ram" size="131072">
+			</dataarea>
+			<dataarea name="nvram" size="2048">
 			</dataarea>
 		</part>
 	</software>

@@ -270,6 +270,7 @@ OBJDIRS += $(BUSOBJ)/dmv
 BUSOBJS += $(BUSOBJ)/dmv/dmvbus.o
 BUSOBJS += $(BUSOBJ)/dmv/k220.o
 BUSOBJS += $(BUSOBJ)/dmv/k230.o
+BUSOBJS += $(BUSOBJ)/dmv/k233.o
 BUSOBJS += $(BUSOBJ)/dmv/k806.o
 BUSOBJS += $(BUSOBJ)/dmv/ram.o
 endif
@@ -308,6 +309,20 @@ ifneq ($(filter EP64,$(BUSES)),)
 OBJDIRS += $(BUSOBJ)/ep64
 BUSOBJS += $(BUSOBJ)/ep64/exp.o
 BUSOBJS += $(BUSOBJ)/ep64/exdos.o
+endif
+
+
+#-------------------------------------------------
+#
+#@src/emu/bus/generic/slot.h,BUSES += GENERIC
+#-------------------------------------------------
+
+ifneq ($(filter GENERIC,$(BUSES)),)
+OBJDIRS += $(BUSOBJ)/generic
+BUSOBJS += $(BUSOBJ)/generic/slot.o
+BUSOBJS += $(BUSOBJ)/generic/carts.o
+BUSOBJS += $(BUSOBJ)/generic/ram.o
+BUSOBJS += $(BUSOBJ)/generic/rom.o
 endif
 
 
@@ -380,6 +395,7 @@ BUSOBJS += $(BUSOBJ)/isa/mufdc.o
 BUSOBJS += $(BUSOBJ)/isa/finalchs.o
 BUSOBJS += $(BUSOBJ)/isa/gblaster.o
 BUSOBJS += $(BUSOBJ)/isa/gus.o
+BUSOBJS += $(BUSOBJ)/isa/sb16.o
 BUSOBJS += $(BUSOBJ)/isa/hdc.o
 BUSOBJS += $(BUSOBJ)/isa/ibm_mfc.o
 BUSOBJS += $(BUSOBJ)/isa/mpu401.o
@@ -407,6 +423,7 @@ BUSOBJS += $(BUSOBJ)/isa/pc1640_iga.o
 BUSOBJS += $(BUSOBJ)/isa/3c503.o
 BUSOBJS += $(BUSOBJ)/isa/ne1000.o
 BUSOBJS += $(BUSOBJ)/isa/ne2000.o
+BUSOBJS += $(BUSOBJ)/isa/3c505.o
 BUSOBJS += $(BUSOBJ)/isa/lpt.o
 BUSOBJS += $(BUSOBJ)/isa/p1_fdc.o
 BUSOBJS += $(BUSOBJ)/isa/p1_hdc.o
@@ -415,7 +432,6 @@ BUSOBJS += $(BUSOBJ)/isa/mc1502_fdc.o
 BUSOBJS += $(BUSOBJ)/isa/mc1502_rom.o
 BUSOBJS += $(BUSOBJ)/isa/xsu_cards.o
 BUSOBJS += $(BUSOBJ)/isa/sc499.o
-BUSOBJS += $(BUSOBJ)/isa/3c505.o
 BUSOBJS += $(BUSOBJ)/isa/aga.o
 BUSOBJS += $(BUSOBJ)/isa/svga_trident.o
 endif
@@ -878,6 +894,7 @@ BUSOBJS += $(BUSOBJ)/nes/cne.o
 BUSOBJS += $(BUSOBJ)/nes/cony.o
 BUSOBJS += $(BUSOBJ)/nes/datach.o
 BUSOBJS += $(BUSOBJ)/nes/discrete.o
+BUSOBJS += $(BUSOBJ)/nes/disksys.o
 BUSOBJS += $(BUSOBJ)/nes/event.o
 BUSOBJS += $(BUSOBJ)/nes/ggenie.o
 BUSOBJS += $(BUSOBJ)/nes/henggedianzi.o
