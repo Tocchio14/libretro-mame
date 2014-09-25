@@ -50,13 +50,17 @@ UINT32 trident_vga_device::READPIXEL32(INT16 x, INT16 y)
 void trident_vga_device::WRITEPIXEL8(INT16 x, INT16 y, UINT8 data)
 {
 	if((x & 0xfff)<tri.accel_dest_x_clip && (y & 0xfff)<tri.accel_dest_y_clip)
+	{
+		data = handle_rop(data,READPIXEL8(x,y)) & 0xff;
 		vga.memory[((y & 0xfff)*offset() + (x & 0xfff)) % vga.svga_intf.vram_size] = data;
+	}
 }
 
 void trident_vga_device::WRITEPIXEL15(INT16 x, INT16 y, UINT16 data)
 {
 	if((x & 0xfff)<tri.accel_dest_x_clip && (y & 0xfff)<tri.accel_dest_y_clip)
 	{
+		data = handle_rop(data,READPIXEL8(x,y)) & 0x7fff;
 		vga.memory[((y & 0xfff)*offset() + (x & 0xfff)*2) % vga.svga_intf.vram_size] = data & 0x00ff;
 		vga.memory[((y & 0xfff)*offset() + ((x & 0xfff)*2)+1) % vga.svga_intf.vram_size] = (data & 0x7f00) >> 8;
 	}
@@ -66,6 +70,7 @@ void trident_vga_device::WRITEPIXEL16(INT16 x, INT16 y, UINT16 data)
 {
 	if((x & 0xfff)<tri.accel_dest_x_clip && (y & 0xfff)<tri.accel_dest_y_clip)
 	{
+		data = handle_rop(data,READPIXEL8(x,y)) & 0xffff;
 		vga.memory[((y & 0xfff)*offset() + (x & 0xfff)*2) % vga.svga_intf.vram_size] = data & 0x00ff;
 		vga.memory[((y & 0xfff)*offset() + ((x & 0xfff)*2)+1) % vga.svga_intf.vram_size] = (data & 0xff00) >> 8;
 	}
@@ -75,11 +80,33 @@ void trident_vga_device::WRITEPIXEL32(INT16 x, INT16 y, UINT32 data)
 {
 	if((x & 0xfff)<tri.accel_dest_x_clip && (y & 0xfff)<tri.accel_dest_y_clip)
 	{
+		data = handle_rop(data,READPIXEL8(x,y));
 		vga.memory[((y & 0xfff)*offset() + (x & 0xfff)*4) % vga.svga_intf.vram_size] = data & 0x000000ff;
 		vga.memory[((y & 0xfff)*offset() + ((x & 0xfff)*4)+1) % vga.svga_intf.vram_size] = (data & 0x0000ff00) >> 8;
 		vga.memory[((y & 0xfff)*offset() + ((x & 0xfff)*4)+2) % vga.svga_intf.vram_size] = (data & 0x00ff0000) >> 16;
 		vga.memory[((y & 0xfff)*offset() + ((x & 0xfff)*4)+3) % vga.svga_intf.vram_size] = (data & 0xff000000) >> 24;
 	}
+}
+
+UINT32 trident_vga_device::handle_rop(UINT32 src, UINT32 dst)
+{
+	switch(tri.accel_fmix)  // TODO: better understand this register
+	{
+	case 0xf0:  // PAT
+	case 0xcc:  // SRC
+		break;  // pass data through
+	case 0x00:  // 0
+		src = 0;
+		break;
+	case 0xff:  // 1
+		src = 0xffffffff;
+		break;
+	case 0x66:  // XOR
+	case 0x5a:  // XOR PAT
+		src = dst ^ src;
+		break;
+	}
+	return src;
 }
 
 UINT32 trident_vga_device::READPIXEL(INT16 x,INT16 y)
@@ -1043,6 +1070,7 @@ void trident_vga_device::accel_command()
 		break;
 	case 0x04:
 		if(LOG) logerror("Trident: Command: Bresenham Line (Source %i,%i Dest %i,%i Size %i,%i)\n",tri.accel_source_x,tri.accel_source_y,tri.accel_dest_x,tri.accel_dest_y,tri.accel_dim_x,tri.accel_dim_y);
+		if(LOG) logerror("BLine: Drawflags = %08x FMIX = %02x\n",tri.accel_drawflags,tri.accel_fmix);
 		accel_line();
 		break;
 	case 0x05:
@@ -1106,9 +1134,6 @@ void trident_vga_device::accel_bitblt()
 	}
 	sy = tri.accel_source_y;
 
-//	printf("BitBLT: flags=%08x source %i, %i dest %i, %i size %i, %i dir %i,%i\n",
-//			tri.accel_drawflags,tri.accel_source_x,tri.accel_source_y,tri.accel_dest_x,tri.accel_dest_y,
-//			tri.accel_dim_x,tri.accel_dim_y,xdir,ydir);
 	for(y=ystart;y!=yend;y+=ydir,sy+=ydir)
 	{
 		sx = tri.accel_source_x;
@@ -1128,20 +1153,17 @@ void trident_vga_device::accel_bitblt()
 
 void trident_vga_device::accel_line()
 {
-	UINT8 col = tri.accel_fgcolour & 0xff;
+	UINT32 col = tri.accel_fgcolour;
 //    TGUI_SRC_XY(dmin-dmaj,dmin);
 //    TGUI_DEST_XY(x,y);
 //    TGUI_DIM_XY(dmin+e,len);
-	INT16 dx = abs(tri.accel_source_x);
+	INT16 dx = abs(tri.accel_source_x - tri.accel_source_y);
 	INT16 dy = abs(tri.accel_source_y);
-	INT16 err = tri.accel_dim_x - tri.accel_source_y;
+	INT16 err = (tri.accel_dim_x - tri.accel_source_y);
 	int sx = (tri.accel_drawflags & 0x0200) ? -1 : 1;
 	int sy = (tri.accel_drawflags & 0x0100) ? -1 : 1;
 	int count = 0;
 	INT16 temp;
-
-//	if(LOG_8514) logerror("8514/A: Command (%04x) - Line (Bresenham) - %i,%i  Axial %i, Diagonal %i, Error %i, Major Axis %i, Minor Axis %i\n",ibm8514.current_cmd,
-//		ibm8514.curr_x,ibm8514.curr_y,ibm8514.line_axial_step,ibm8514.line_diagonal_step,ibm8514.line_errorterm,ibm8514.rect_width,ibm8514.rect_height);
 
 	if(tri.accel_drawflags & 0x0400)
 	{
@@ -1168,22 +1190,29 @@ void trident_vga_device::accel_line()
 // feed data written to VRAM to an active BitBLT command
 void trident_vga_device::accel_data_write(UINT32 data)
 {
+	int xdir = 1,ydir = 1;
+
+	if(tri.accel_drawflags & 0x0200)  // XNEG
+		xdir = -1;
+	if(tri.accel_drawflags & 0x0100)  // YNEG
+		ydir = -1;
+
 	for(int x=31;x>=0;x--)
 	{
-		if(tri.accel_mem_x <= tri.accel_dest_x+tri.accel_dim_x)
+		if(tri.accel_mem_x <= tri.accel_dest_x+tri.accel_dim_x && tri.accel_mem_x >= tri.accel_dest_x-tri.accel_dim_x)
 		{
 			if(((data >> x) & 0x01) != 0)
 				WRITEPIXEL(tri.accel_mem_x,tri.accel_mem_y,tri.accel_fgcolour);
 			else
 				WRITEPIXEL(tri.accel_mem_x,tri.accel_mem_y,tri.accel_bgcolour);
 		}
-		tri.accel_mem_x++;
+		tri.accel_mem_x+=xdir;
 	}
-	if(tri.accel_mem_x > tri.accel_dest_x+tri.accel_dim_x)
+	if(tri.accel_mem_x > tri.accel_dest_x+tri.accel_dim_x || tri.accel_mem_x < tri.accel_dest_x-tri.accel_dim_x)
 	{
 		tri.accel_mem_x = tri.accel_dest_x;
-		tri.accel_mem_y++;
-		if(tri.accel_mem_y > tri.accel_dest_y+tri.accel_dim_y)
+		tri.accel_mem_y+=ydir;
+		if(tri.accel_mem_y > tri.accel_dest_y+tri.accel_dim_y || tri.accel_mem_y < tri.accel_dest_y-tri.accel_dim_y)
 			tri.accel_memwrite_active = false;  // completed
 	}
 }

@@ -90,47 +90,76 @@ WRITE16_MEMBER(legionna_state::sound_comms_w)
 }
 
 static ADDRESS_MAP_START( legionna_cop_mem, AS_PROGRAM, 16, legionna_state )
-//	AM_RANGE(0x10041c, 0x10041d) AM_WRITE(cop_angle_target_w) // angle target (for 0x6200 COP macro)
-//	AM_RANGE(0x10041e, 0x10041f) AM_WRITE(cop_angle_step_w)   // angle step   (for 0x6200 COP macro)
-//	AM_RANGE(0x100420, 0x100421) AM_WRITE(cop_itoa_low_w)
-//	AM_RANGE(0x100422, 0x100423) AM_WRITE(cop_itoa_high_w)
-//	AM_RANGE(0x100424, 0x100425) AM_WRITE(cop_itoa_digit_count_w)
+	AM_RANGE(0x100400, 0x100401) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_sprite_dma_param_lo_w) // grainbow
+	AM_RANGE(0x100402, 0x100403) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_sprite_dma_param_hi_w) // grainbow
+	AM_RANGE(0x10040c, 0x10040d) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_sprite_dma_size_w) // grainbow
+	AM_RANGE(0x100410, 0x100411) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_sprite_dma_inc_w) // grainbow
+	AM_RANGE(0x100412, 0x100413) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_sprite_dma_src_hi_w) // grainbow
+	AM_RANGE(0x100414, 0x100415) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_sprite_dma_src_lo_w) // grainbow
+
+	AM_RANGE(0x10041c, 0x10041d) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_angle_target_w) // angle target (for 0x6200 COP macro)
+	AM_RANGE(0x10041e, 0x10041f) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_angle_step_w)   // angle step   (for 0x6200 COP macro)
+
+	AM_RANGE(0x100420, 0x100421) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_itoa_low_w)
+	AM_RANGE(0x100422, 0x100423) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_itoa_high_w)
+	AM_RANGE(0x100424, 0x100425) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_itoa_digit_count_w)
 	AM_RANGE(0x100428, 0x100429) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_dma_v1_w)
 	AM_RANGE(0x10042a, 0x10042b) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_dma_v2_w)
+	AM_RANGE(0x10042c, 0x10042d) AM_DEVREADWRITE("raiden2cop", raiden2cop_device, cop_prng_maxvalue_r, cop_prng_maxvalue_w)
+	
 	AM_RANGE(0x100432, 0x100433) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_pgm_data_w)
 	AM_RANGE(0x100434, 0x100435) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_pgm_addr_w)
-//	AM_RANGE(0x100436, 0x100437) AM_WRITE(cop_hitbox_baseadr_w)
+	AM_RANGE(0x100436, 0x100437) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_hitbox_baseadr_w)
 	AM_RANGE(0x100438, 0x100439) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_pgm_value_w)
 	AM_RANGE(0x10043a, 0x10043b) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_pgm_mask_w)
 	AM_RANGE(0x10043c, 0x10043d) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_pgm_trigger_w)
-//	AM_RANGE(0x100444, 0x100445) AM_WRITE(cop_scale_w)
-//	AM_RANGE(0x100450, 0x100451) AM_WRITE(cop_sort_ram_addr_hi_w)
-//	AM_RANGE(0x100452, 0x100453) AM_WRITE(cop_sort_ram_addr_lo_w)
-//	AM_RANGE(0x100454, 0x100455) AM_WRITE(cop_sort_lookup_hi_w)
-//	AM_RANGE(0x100456, 0x100457) AM_WRITE(cop_sort_lookup_lo_w)
-//	AM_RANGE(0x100458, 0x100459) AM_WRITE(cop_sort_param_w)
+	//AM_RANGE(0x10043e, 0x10043f) AM_DEVWRITE("raiden2cop", raiden2cop_device,)	/*	0 in all 68k based games, 	0xffff in raiden2 / raidendx, 	0x2000 in zeroteam / xsedae , it's always set up just before the 0x474 register */
+
+	AM_RANGE(0x100444, 0x100445) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_scale_w)
+	AM_RANGE(0x100446, 0x100447) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_rom_addr_unk_w) // 68k
+	AM_RANGE(0x100448, 0x100449) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_rom_addr_lo_w) // 68k
+	AM_RANGE(0x10044a, 0x10044b) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_rom_addr_hi_w) // 68k
+	
+	AM_RANGE(0x100450, 0x100451) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_sort_ram_addr_hi_w)
+	AM_RANGE(0x100452, 0x100453) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_sort_ram_addr_lo_w)
+	AM_RANGE(0x100454, 0x100455) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_sort_lookup_hi_w)
+	AM_RANGE(0x100456, 0x100457) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_sort_lookup_lo_w)
+	AM_RANGE(0x100458, 0x100459) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_sort_param_w)
 	AM_RANGE(0x10045a, 0x10045b) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_pal_brightness_val_w) //palette DMA brightness val, used by X Se Dae / Zero Team
 	AM_RANGE(0x10045c, 0x10045d) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_pal_brightness_mode_w)  //palette DMA brightness mode, used by X Se Dae / Zero Team (sets to 5)
-//	AM_RANGE(0x100470, 0x100471) AM_READWRITE(cop_tile_bank_2_r,cop_tile_bank_2_w)
 
+//	AM_RANGE(0x100470, 0x100471) AM_READWRITE(cop_tile_bank_2_r,cop_tile_bank_2_w)
+//	AM_RANGE(0x100474, 0x100475) AM_DEVWRITE("raiden2cop", raiden2cop_device,) // this gets set to a pointer to spriteram (relative to start of ram) on all games excecpt raiden 2, where it isn't set
 	AM_RANGE(0x100476, 0x100477) AM_DEVWRITE("raiden2cop", raiden2cop_device, cop_dma_adr_rel_w)
 	AM_RANGE(0x100478, 0x100479) AM_DEVWRITE("raiden2cop", raiden2cop_device,cop_dma_src_w)
 	AM_RANGE(0x10047a, 0x10047b) AM_DEVWRITE("raiden2cop", raiden2cop_device,cop_dma_size_w)
 	AM_RANGE(0x10047c, 0x10047d) AM_DEVWRITE("raiden2cop", raiden2cop_device,cop_dma_dst_w)
 	AM_RANGE(0x10047e, 0x10047f) AM_DEVREADWRITE("raiden2cop", raiden2cop_device, cop_dma_mode_r, cop_dma_mode_w)
-//	AM_RANGE(0x1004a0, 0x1004a9) AM_READWRITE(cop_reg_high_r, cop_reg_high_w)
-//	AM_RANGE(0x1004c0, 0x1004c9) AM_READWRITE(cop_reg_low_r, cop_reg_low_w)
-//	AM_RANGE(0x100500, 0x100505) AM_WRITE(cop_cmd_w)
-//	AM_RANGE(0x100580, 0x100581) AM_READ(cop_collision_status_r)
-//	AM_RANGE(0x100582, 0x100587) AM_READ(cop_collision_status_val_r)
-//	AM_RANGE(0x100588, 0x100589) AM_READ(cop_collision_status_stat_r)
-//	AM_RANGE(0x100590, 0x100599) AM_READ(cop_itoa_digits_r)
-//	AM_RANGE(0x1005b0, 0x1005b1) AM_READ(cop_status_r)
-//	AM_RANGE(0x1005b2, 0x1005b3) AM_READ(cop_dist_r)
-//	AM_RANGE(0x1005b4, 0x1005b5) AM_READ(cop_angle_r)
+
+	AM_RANGE(0x10048c, 0x10048d) AM_DEVWRITE("raiden2cop", raiden2cop_device,cop_sprite_dma_abs_y_w) // 68k
+	AM_RANGE(0x10048e, 0x10048f) AM_DEVWRITE("raiden2cop", raiden2cop_device,cop_sprite_dma_abs_x_w) // 68k
+
+	AM_RANGE(0x1004a0, 0x1004ad) AM_DEVREADWRITE("raiden2cop", raiden2cop_device, cop_reg_high_r, cop_reg_high_w)
+	AM_RANGE(0x1004c0, 0x1004cd) AM_DEVREADWRITE("raiden2cop", raiden2cop_device, cop_reg_low_r, cop_reg_low_w)
+
+//	AM_RANGE(0x100500, 0x100505) AM_WRITE(cop_cmd_w) // ADD ME
+	AM_RANGE(0x100500, 0x100505) AM_DEVWRITE("raiden2cop", raiden2cop_device,LEGACY_cop_cmd_w) // REMOVE ME
+
+	AM_RANGE(0x100580, 0x100581) AM_DEVREAD("raiden2cop", raiden2cop_device, cop_collision_status_r)
+	AM_RANGE(0x100582, 0x100587) AM_DEVREAD("raiden2cop", raiden2cop_device, cop_collision_status_val_r)
+
+
+	AM_RANGE(0x100588, 0x100589) AM_DEVREAD("raiden2cop", raiden2cop_device, cop_collision_status_stat_r)
+	AM_RANGE(0x100590, 0x100599) AM_DEVREAD("raiden2cop", raiden2cop_device, cop_itoa_digits_r)
+
+	AM_RANGE(0x1005a0, 0x1005a7) AM_DEVREAD("raiden2cop", raiden2cop_device, cop_prng_r)
+
+	AM_RANGE(0x1005b0, 0x1005b1) AM_DEVREAD("raiden2cop", raiden2cop_device, cop_status_r)
+	AM_RANGE(0x1005b2, 0x1005b3) AM_DEVREAD("raiden2cop", raiden2cop_device, cop_dist_r)
+	AM_RANGE(0x1005b4, 0x1005b5) AM_DEVREAD("raiden2cop", raiden2cop_device, cop_angle_r)
 
 	AM_RANGE(0x1006fc, 0x1006fd) AM_DEVWRITE("raiden2cop", raiden2cop_device,cop_dma_trigger_w)
-//	AM_RANGE(0x1006fe, 0x1006ff) AM_WRITE(cop_sort_dma_trig_w) // sort-DMA trigger
+	AM_RANGE(0x1006fe, 0x1006ff) AM_DEVWRITE("raiden2cop", raiden2cop_device,cop_sort_dma_trig_w) // sort-DMA trigger
 ADDRESS_MAP_END
 
 
@@ -140,7 +169,10 @@ static ADDRESS_MAP_START( legionna_map, AS_PROGRAM, 16, legionna_state )
 	AM_RANGE(0x100000, 0x1003ff) AM_RAM
 	AM_RANGE(0x100600, 0x10063f) AM_DEVREADWRITE("crtc", seibu_crtc_device, read, write)
 	AM_RANGE(0x100700, 0x10071f) AM_READWRITE(sound_comms_r,sound_comms_w)
-	AM_RANGE(0x100400, 0x1007ff) AM_DEVREADWRITE("seibucop", seibu_cop_legacy_device, legionna_mcu_r, legionna_mcu_w) AM_SHARE("cop_mcu_ram")    /* COP mcu */
+	AM_RANGE(0x100740, 0x100741) AM_READ_PORT("DSW1")
+	AM_RANGE(0x100744, 0x100745) AM_READ_PORT("PLAYERS12")
+	AM_RANGE(0x100748, 0x100749) AM_READ_PORT("PLAYERS34")
+	AM_RANGE(0x10074c, 0x10074d) AM_READ_PORT("SYSTEM")
 	AM_RANGE(0x101000, 0x1017ff) AM_RAM // _WRITE(legionna_background_w) AM_SHARE("back_data")
 	AM_RANGE(0x101800, 0x101fff) AM_RAM // _WRITE(legionna_foreground_w) AM_SHARE("fore_data")
 	AM_RANGE(0x102000, 0x1027ff) AM_RAM // _WRITE(legionna_midground_w) AM_SHARE("mid_data")
@@ -156,9 +188,13 @@ static ADDRESS_MAP_START( heatbrl_map, AS_PROGRAM, 16, legionna_state )
 	AM_IMPORT_FROM( legionna_cop_mem )
 	AM_RANGE(0x000000, 0x07ffff) AM_ROM
 	AM_RANGE(0x100000, 0x1003ff) AM_RAM
+	AM_RANGE(0x100470, 0x100471) AM_WRITE(heatbrl_setgfxbank)
 	AM_RANGE(0x100640, 0x10068f) AM_DEVREADWRITE("crtc", seibu_crtc_device, read, write)
+	AM_RANGE(0x100740, 0x100741) AM_READ_PORT("DSW1")
+	AM_RANGE(0x100744, 0x100745) AM_READ_PORT("PLAYERS12")
+	AM_RANGE(0x100748, 0x100749) AM_READ_PORT("PLAYERS34")
+	AM_RANGE(0x10074c, 0x10074d) AM_READ_PORT("SYSTEM")
 	AM_RANGE(0x1007c0, 0x1007df) AM_READWRITE(sound_comms_r,sound_comms_w)
-	AM_RANGE(0x100400, 0x1007ff) AM_DEVREADWRITE("seibucop", seibu_cop_legacy_device, heatbrl_mcu_r, heatbrl_mcu_w) AM_SHARE("cop_mcu_ram")  /* COP mcu */
 	AM_RANGE(0x100800, 0x100fff) AM_RAM // _WRITE(legionna_background_w) AM_SHARE("back_data")
 	AM_RANGE(0x101000, 0x1017ff) AM_RAM // _WRITE(legionna_foreground_w) AM_SHARE("fore_data")
 	AM_RANGE(0x101800, 0x101fff) AM_RAM // _WRITE(legionna_midground_w) AM_SHARE("mid_data")
@@ -172,9 +208,13 @@ static ADDRESS_MAP_START( godzilla_map, AS_PROGRAM, 16, legionna_state )
 	AM_IMPORT_FROM( legionna_cop_mem )
 	AM_RANGE(0x000000, 0x07ffff) AM_ROM
 	AM_RANGE(0x100000, 0x1003ff) AM_RAM
+	AM_RANGE(0x100470, 0x100471) AM_WRITE(denjinmk_setgfxbank)
 	AM_RANGE(0x100600, 0x10063f) AM_DEVREADWRITE("crtc", seibu_crtc_device, read, write)
 	AM_RANGE(0x100700, 0x10071f) AM_READWRITE(sound_comms_r,sound_comms_w)
-	AM_RANGE(0x100400, 0x1007ff) AM_DEVREADWRITE("seibucop", seibu_cop_legacy_device, godzilla_mcu_r, godzilla_mcu_w) AM_SHARE("cop_mcu_ram")    /* COP mcu */
+	AM_RANGE(0x100740, 0x100741) AM_READ_PORT("DSW1")
+	AM_RANGE(0x100744, 0x100745) AM_READ_PORT("PLAYERS12")
+	AM_RANGE(0x100748, 0x100749) AM_READ_PORT("PLAYERS34")
+	AM_RANGE(0x10074c, 0x10074d) AM_READ_PORT("SYSTEM")
 	AM_RANGE(0x100800, 0x100fff) AM_RAM
 	AM_RANGE(0x101000, 0x1017ff) AM_RAM // _WRITE(legionna_background_w) AM_SHARE("back_data")
 	AM_RANGE(0x101800, 0x101fff) AM_RAM // _WRITE(legionna_foreground_w) AM_SHARE("fore_data")
@@ -202,9 +242,14 @@ static ADDRESS_MAP_START( denjinmk_map, AS_PROGRAM, 16, legionna_state )
 	AM_IMPORT_FROM( legionna_cop_mem )
 	AM_RANGE(0x000000, 0x0fffff) AM_ROM
 	AM_RANGE(0x100000, 0x1003ff) AM_RAM
+	AM_RANGE(0x100470, 0x100471) AM_WRITE(denjinmk_setgfxbank)
 	AM_RANGE(0x100600, 0x10063f) AM_DEVREADWRITE("crtc", seibu_crtc_device, read, write)
 	AM_RANGE(0x100700, 0x10071f) AM_READWRITE(sound_comms_r,sound_comms_w)
-	AM_RANGE(0x100400, 0x1007ff) AM_DEVREADWRITE("seibucop", seibu_cop_legacy_device, denjinmk_mcu_r, denjinmk_mcu_w) AM_SHARE("cop_mcu_ram")    /* COP mcu */
+	AM_RANGE(0x100740, 0x100741) AM_READ_PORT("DSW1")
+	AM_RANGE(0x100744, 0x100745) AM_READ_PORT("PLAYERS12")
+	AM_RANGE(0x100748, 0x100749) AM_READ_PORT("PLAYERS34")
+	AM_RANGE(0x10074c, 0x10074d) AM_READ_PORT("SYSTEM")
+	AM_RANGE(0x10075c, 0x10075d) AM_READ_PORT("DSW2")
 	AM_RANGE(0x100800, 0x100fff) AM_RAM
 	AM_RANGE(0x101000, 0x1017ff) AM_RAM // _WRITE(legionna_background_w) AM_SHARE("back_data")
 	AM_RANGE(0x101800, 0x101fff) AM_RAM // _WRITE(legionna_foreground_w) AM_SHARE("fore_data")
@@ -224,7 +269,11 @@ static ADDRESS_MAP_START( grainbow_map, AS_PROGRAM, 16, legionna_state )
 	AM_RANGE(0x100000, 0x1003ff) AM_RAM
 	AM_RANGE(0x100600, 0x10063f) AM_DEVREADWRITE("crtc", seibu_crtc_device, read, write)
 	AM_RANGE(0x100700, 0x10071f) AM_READWRITE(sound_comms_r,sound_comms_w)
-	AM_RANGE(0x100400, 0x1007ff) AM_DEVREADWRITE("seibucop", seibu_cop_legacy_device, grainbow_mcu_r, grainbow_mcu_w) AM_SHARE("cop_mcu_ram")    /* COP mcu */
+	AM_RANGE(0x100740, 0x100741) AM_READ_PORT("DSW1")
+	AM_RANGE(0x100744, 0x100745) AM_READ_PORT("PLAYERS12")
+	AM_RANGE(0x100748, 0x100749) AM_READ_PORT("PLAYERS34")
+	AM_RANGE(0x10074c, 0x10074d) AM_READ_PORT("SYSTEM")
+	AM_RANGE(0x10075c, 0x10075d) AM_READ_PORT("DSW2")
 	AM_RANGE(0x100800, 0x100fff) AM_RAM // _WRITE(legionna_background_w) AM_SHARE("back_data")
 	AM_RANGE(0x101000, 0x1017ff) AM_RAM // _WRITE(legionna_foreground_w) AM_SHARE("fore_data")
 	AM_RANGE(0x101800, 0x101fff) AM_RAM // _WRITE(legionna_midground_w) AM_SHARE("mid_data")
@@ -243,7 +292,11 @@ static ADDRESS_MAP_START( cupsoc_mem, AS_PROGRAM, 16, legionna_state )
 	AM_RANGE(0x100000, 0x1003ff) AM_RAM
 	AM_RANGE(0x100600, 0x10063f) AM_DEVREADWRITE("crtc", seibu_crtc_device, read, write)
 	AM_RANGE(0x100700, 0x10071f) AM_READWRITE(sound_comms_r,sound_comms_w)
-	AM_RANGE(0x100400, 0x1007ff) AM_DEVREADWRITE("seibucop", seibu_cop_legacy_device, cupsoc_mcu_r,cupsoc_mcu_w) AM_SHARE("cop_mcu_ram")
+	AM_RANGE(0x100740, 0x100741) AM_READ_PORT("DSW1")
+	AM_RANGE(0x100744, 0x100745) AM_READ_PORT("PLAYERS12")
+	AM_RANGE(0x100748, 0x100749) AM_READ_PORT("PLAYERS34")
+	AM_RANGE(0x10074c, 0x10074d) AM_READ_PORT("SYSTEM")
+	AM_RANGE(0x10075c, 0x10075d) AM_READ_PORT("DSW2")
 	AM_RANGE(0x100800, 0x100fff) AM_RAM // _WRITE(legionna_background_w) AM_SHARE("back_data")
 	AM_RANGE(0x101000, 0x1017ff) AM_RAM // _WRITE(legionna_foreground_w) AM_SHARE("fore_data")
 	AM_RANGE(0x101800, 0x101fff) AM_RAM // _WRITE(legionna_midground_w) AM_SHARE("mid_data")
@@ -265,8 +318,12 @@ static ADDRESS_MAP_START( cupsocs_mem, AS_PROGRAM, 16, legionna_state )
 	AM_RANGE(0x100000, 0x1003ff) AM_RAM
 	AM_RANGE(0x100600, 0x10060f) AM_DEVREADWRITE("crtc", seibu_crtc_device, read, write)//?
 	AM_RANGE(0x100640, 0x10067f) AM_DEVREADWRITE("crtc", seibu_crtc_device, read, write)
+	AM_RANGE(0x100700, 0x100701) AM_READ_PORT("DSW1")
+	AM_RANGE(0x100704, 0x100705) AM_READ_PORT("PLAYERS12")
+	AM_RANGE(0x100708, 0x100709) AM_READ_PORT("PLAYERS34")
+	AM_RANGE(0x10070c, 0x10070d) AM_READ_PORT("SYSTEM")
+	AM_RANGE(0x10071c, 0x10071d) AM_READ_PORT("DSW2")
 	AM_RANGE(0x100740, 0x10075f) AM_READWRITE(sound_comms_r,sound_comms_w)
-	AM_RANGE(0x100400, 0x1007ff) AM_DEVREADWRITE("seibucop", seibu_cop_legacy_device, cupsocs_mcu_r,cupsocs_mcu_w) AM_SHARE("cop_mcu_ram")
 	AM_RANGE(0x100800, 0x100fff) AM_RAM // _WRITE(legionna_background_w) AM_SHARE("back_data")
 	AM_RANGE(0x101000, 0x1017ff) AM_RAM // _WRITE(legionna_foreground_w) AM_SHARE("fore_data")
 	AM_RANGE(0x101800, 0x101fff) AM_RAM // _WRITE(legionna_midground_w) AM_SHARE("mid_data")
@@ -288,7 +345,11 @@ static ADDRESS_MAP_START( cupsocbl_mem, AS_PROGRAM, 16, legionna_state )
 	//AM_RANGE(0x100000, 0x1003ff) AM_RAM
 	AM_RANGE(0x100600, 0x10060f) AM_DEVREADWRITE("crtc", seibu_crtc_device, read, write)//?
 	AM_RANGE(0x100640, 0x10067f) AM_DEVREADWRITE("crtc", seibu_crtc_device, read, write)
-	AM_RANGE(0x100000, 0x1007ff) AM_DEVREADWRITE("seibucop", seibu_cop_legacy_device, copdxbl_0_r,copdxbl_0_w) AM_SHARE("cop_mcu_ram")
+	AM_RANGE(0x100700, 0x100701) AM_READ_PORT("DSW1")
+	AM_RANGE(0x100704, 0x100705) AM_READ_PORT("PLAYERS12")
+	AM_RANGE(0x100708, 0x100709) AM_READ_PORT("PLAYERS34")
+	AM_RANGE(0x10070c, 0x10070d) AM_READ_PORT("SYSTEM")
+	AM_RANGE(0x100000, 0x1007ff) AM_DEVREADWRITE("seibucop_boot", seibu_cop_bootleg_device, copdxbl_0_r,copdxbl_0_w) AM_SHARE("cop_mcu_ram")
 	AM_RANGE(0x100800, 0x100fff) AM_RAM // _WRITE(legionna_background_w) AM_SHARE("back_data")
 	AM_RANGE(0x101000, 0x1017ff) AM_RAM // _WRITE(legionna_foreground_w) AM_SHARE("fore_data")
 	AM_RANGE(0x101800, 0x101fff) AM_RAM // _WRITE(legionna_midground_w) AM_SHARE("mid_data")
@@ -410,7 +471,7 @@ static INPUT_PORTS_START( legionna )
 	PORT_DIPSETTING(      0x0000, DEF_STR( Off ) )
 	PORT_DIPSETTING(      0x8000, DEF_STR( On ) )
 
-	PORT_START("UNK")
+	PORT_START("PLAYERS34")
 	PORT_BIT( 0xffff, IP_ACTIVE_LOW, IPT_UNKNOWN )
 INPUT_PORTS_END
 
@@ -600,6 +661,9 @@ static INPUT_PORTS_START( godzilla )
 	PORT_DIPNAME( 0x8000, 0x8000, DEF_STR( Free_Play ) )
 	PORT_DIPSETTING(      0x8000, DEF_STR( Off ) )
 	PORT_DIPSETTING(      0x0000, DEF_STR( On ) )
+
+	PORT_START("PLAYERS34")
+	PORT_BIT( 0xffff, IP_ACTIVE_LOW, IPT_UNKNOWN )
 INPUT_PORTS_END
 
 static INPUT_PORTS_START( grainbow )
@@ -1145,8 +1209,7 @@ static MACHINE_CONFIG_START( legionna, legionna_state )
 
 	SEIBU_SOUND_SYSTEM_CPU(14318180/4)
 
-	MCFG_SEIBU_COP_ADD("seibucop")
-	MCFG_RAIDEN2COP_ADD("raiden2cop")
+	MCFG_LEGIONNACOP_ADD("raiden2cop")
 	MCFG_RAIDEN2COP_VIDEORAM_OUT_CB(WRITE16(legionna_state, videowrite_cb_w))
 
 	/* video hardware */
@@ -1182,8 +1245,7 @@ static MACHINE_CONFIG_START( heatbrl, legionna_state )
 
 	SEIBU_SOUND_SYSTEM_CPU(14318180/4)
 
-	MCFG_SEIBU_COP_ADD("seibucop")
-	MCFG_RAIDEN2COP_ADD("raiden2cop")
+	MCFG_LEGIONNACOP_ADD("raiden2cop")
 	MCFG_RAIDEN2COP_VIDEORAM_OUT_CB(WRITE16(legionna_state, videowrite_cb_w))
 
 	/* video hardware */
@@ -1220,8 +1282,7 @@ static MACHINE_CONFIG_START( godzilla, legionna_state )
 
 	SEIBU2_SOUND_SYSTEM_CPU(14318180/4)
 
-	MCFG_SEIBU_COP_ADD("seibucop")
-	MCFG_RAIDEN2COP_ADD("raiden2cop")
+	MCFG_LEGIONNACOP_ADD("raiden2cop")
 	MCFG_RAIDEN2COP_VIDEORAM_OUT_CB(WRITE16(legionna_state, videowrite_cb_w))
 
 	/* video hardware */
@@ -1259,8 +1320,7 @@ static MACHINE_CONFIG_START( denjinmk, legionna_state )
 
 	SEIBU2_SOUND_SYSTEM_CPU(14318180/4)
 
-	MCFG_SEIBU_COP_ADD("seibucop")
-	MCFG_RAIDEN2COP_ADD("raiden2cop")
+	MCFG_LEGIONNACOP_ADD("raiden2cop")
 	MCFG_RAIDEN2COP_VIDEORAM_OUT_CB(WRITE16(legionna_state, videowrite_cb_w))
 
 	/* video hardware */
@@ -1297,8 +1357,7 @@ static MACHINE_CONFIG_START( grainbow, legionna_state )
 
 	SEIBU2_SOUND_SYSTEM_CPU(14318180/4)
 
-	MCFG_SEIBU_COP_ADD("seibucop")
-	MCFG_RAIDEN2COP_ADD("raiden2cop")
+	MCFG_LEGIONNACOP_ADD("raiden2cop")
 	MCFG_RAIDEN2COP_VIDEORAM_OUT_CB(WRITE16(legionna_state, videowrite_cb_w))
 
 	/* video hardware */
@@ -1336,8 +1395,7 @@ static MACHINE_CONFIG_START( cupsoc, legionna_state )
 
 	SEIBU_SOUND_SYSTEM_CPU(14318180/4)
 
-	MCFG_SEIBU_COP_ADD("seibucop")
-	MCFG_RAIDEN2COP_ADD("raiden2cop")
+	MCFG_LEGIONNACOP_ADD("raiden2cop")
 	MCFG_RAIDEN2COP_VIDEORAM_OUT_CB(WRITE16(legionna_state, videowrite_cb_w))
 
 	/* video hardware */
@@ -1377,8 +1435,8 @@ static MACHINE_CONFIG_START( cupsocbl, legionna_state )
 	MCFG_CPU_PROGRAM_MAP(cupsocbl_mem)
 	MCFG_CPU_VBLANK_INT_DRIVER("screen", legionna_state,  irq4_line_hold) /* VBL */
 
-	MCFG_SEIBU_COP_ADD("seibucop")
-	MCFG_RAIDEN2COP_ADD("raiden2cop")
+	MCFG_SEIBU_COP_ADD("seibucop_boot")
+	MCFG_LEGIONNACOP_ADD("raiden2cop")
 	MCFG_RAIDEN2COP_VIDEORAM_OUT_CB(WRITE16(legionna_state, videowrite_cb_w))
 
 

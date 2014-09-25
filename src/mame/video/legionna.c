@@ -43,24 +43,22 @@ WRITE16_MEMBER(legionna_state::tile_scroll_w)
 		tm->set_scrollx(0, data);
 }
 
-void heatbrl_setgfxbank(running_machine &machine, UINT16 data)
+WRITE16_MEMBER(legionna_state::heatbrl_setgfxbank)
 {
-	legionna_state *state = machine.driver_data<legionna_state>();
-	state->m_back_gfx_bank = (data &0x4000) >> 2;
+	m_back_gfx_bank = (data &0x4000) >> 2;
 }
 
 /*xxx- --- ---- ---- banking*/
-void denjinmk_setgfxbank(running_machine &machine, UINT16 data)
+WRITE16_MEMBER(legionna_state::denjinmk_setgfxbank)
 {
-	legionna_state *state = machine.driver_data<legionna_state>();
-	state->m_fore_gfx_bank = (data &0x2000) >> 1;//???
-	state->m_back_gfx_bank = (data &0x4000) >> 2;
-	state->m_mid_gfx_bank  = (data &0x8000) >> 3;//???
+	m_fore_gfx_bank = (data &0x2000) >> 1;//???
+	m_back_gfx_bank = (data &0x4000) >> 2;
+	m_mid_gfx_bank  = (data &0x8000) >> 3;//???
 
-	state->m_background_layer->mark_all_dirty();
-	state->m_foreground_layer->mark_all_dirty();
-	state->m_midground_layer->mark_all_dirty();
-	state->m_text_layer->mark_all_dirty();
+	m_background_layer->mark_all_dirty();
+	m_foreground_layer->mark_all_dirty();
+	m_midground_layer->mark_all_dirty();
+	m_text_layer->mark_all_dirty();
 }
 
 WRITE16_MEMBER(legionna_state::videowrite_cb_w)
@@ -492,6 +490,8 @@ UINT32 legionna_state::screen_update_legionna(screen_device &screen, bitmap_ind1
 
 	draw_sprites(screen,bitmap,cliprect);
 
+	if (machine().input().code_pressed_once(KEYCODE_Z))
+		if (m_raiden2cop) m_raiden2cop->dump_table();
 
 	return 0;
 }
@@ -511,6 +511,10 @@ UINT32 legionna_state::screen_update_godzilla(screen_device &screen, bitmap_ind1
 	if (!(m_layer_disable&0x0008)) m_text_layer->draw(screen, bitmap, cliprect, 0,2);
 
 	draw_sprites(screen,bitmap,cliprect);
+
+	if (machine().input().code_pressed_once(KEYCODE_Z))
+		if (m_raiden2cop) m_raiden2cop->dump_table();
+
 
 	return 0;
 }
@@ -535,6 +539,9 @@ UINT32 legionna_state::screen_update_grainbow(screen_device &screen, bitmap_ind1
 		m_text_layer->draw(screen, bitmap, cliprect, 0,8);
 
 	draw_sprites(screen,bitmap,cliprect);
+
+	if (machine().input().code_pressed_once(KEYCODE_Z))
+		if (m_raiden2cop) m_raiden2cop->dump_table();
 
 	return 0;
 }

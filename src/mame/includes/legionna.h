@@ -19,7 +19,8 @@ public:
 		m_oki(*this, "oki"),
 		m_gfxdecode(*this, "gfxdecode"),
 		m_palette(*this, "palette"),
-		m_wordswapram(*this, "wordswapram")
+		m_wordswapram(*this, "wordswapram"),
+		m_raiden2cop(*this, "raiden2cop")
 	{ 
 		memset(scrollvals, 0, sizeof(UINT16)*6);
 	}
@@ -54,6 +55,9 @@ public:
 	DECLARE_WRITE8_MEMBER(okim_rombank_w);
 	DECLARE_READ16_MEMBER(sound_comms_r);
 	DECLARE_WRITE16_MEMBER(sound_comms_w);
+	DECLARE_WRITE16_MEMBER(denjinmk_setgfxbank);
+	DECLARE_WRITE16_MEMBER(heatbrl_setgfxbank);
+
 	DECLARE_DRIVER_INIT(legiongfx);
 	DECLARE_DRIVER_INIT(cupsoc_debug);
 	DECLARE_DRIVER_INIT(cupsoc);
@@ -84,9 +88,8 @@ public:
 	required_device<gfxdecode_device> m_gfxdecode;
 	required_device<palette_device> m_palette;
 	optional_shared_ptr<UINT16> m_wordswapram;
+	optional_device<raiden2cop_device> m_raiden2cop;
 
 };
 
-/*----------- defined in video/legionna.c -----------*/
-void heatbrl_setgfxbank(running_machine &machine, UINT16 data);
-void denjinmk_setgfxbank(running_machine &machine, UINT16 data);
+

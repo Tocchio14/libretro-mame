@@ -1315,6 +1315,7 @@ void a7800_state::machine_start()
 	save_item(NAME(m_maria_flag));
 	
 	// install additional handlers, if needed
+	if (m_cartslot->exists())
 	switch (m_cartslot->get_cart_type())
 	{
 		case A78_HSC:

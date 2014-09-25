@@ -1735,6 +1735,7 @@ READ8_MEMBER(a400_state::read_d5xx)
 
 WRITE8_MEMBER(a400_state::disable_cart)
 {
+	if (m_cartslot->exists())
 	switch (m_cartslot->get_cart_type())
 	{
 		case A800_PHOENIX:
@@ -1834,6 +1835,7 @@ void a400_state::setup_cart(a800_cart_slot_device *slot)
 	m_cart_disabled = 0;
 	m_last_offs = -1;
 
+	if (slot->exists())
 	switch (slot->get_cart_type())
 	{
 		case A800_8K:
