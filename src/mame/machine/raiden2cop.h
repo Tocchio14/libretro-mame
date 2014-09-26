@@ -173,9 +173,7 @@ public:
 	void LEGACY_execute_130e(address_space &space, int offset, UINT16 data);
 	void LEGACY_execute_130e_cupsoc(address_space &space, int offset, UINT16 data);
 	void LEGACY_execute_3b30(address_space &space, int offset, UINT16 data);
-	void LEGACY_execute_a100(address_space &space, int offset, UINT16 data);
 	void LEGACY_execute_b100(address_space &space, int offset, UINT16 data);
-	void LEGACY_execute_a900(address_space &space, int offset, UINT16 data);
 	void LEGACY_execute_b900(address_space &space, int offset, UINT16 data);
 	void LEGACY_execute_42c2(address_space &space, int offset, UINT16 data);
 	void LEGACY_execute_e30e(address_space &space, int offset, UINT16 data);
@@ -233,25 +231,17 @@ public:
 	struct LEGACY_collision_info
 	{
 		LEGACY_collision_info():
-		x(0),
-		y(0),
 		min_x(0),
 		min_y(0),
 		max_x(0),
-		max_y(0),
-		hitbox(0),
-		hitbox_x(0),
-		hitbox_y(0) {}
+		max_y(0)
+		 {}
 
-		int x,y;
 		INT16 min_x,min_y,max_x,max_y;
-		UINT16 hitbox;
-		UINT16 hitbox_x,hitbox_y;
 	};
 
 	struct LEGACY_collision_info m_LEGACY_cop_collision_info[2];
-	void LEGACY_cop_take_hit_box_params(UINT8 offs);
-	UINT8 LEGACY_cop_calculate_collsion_detection();
+	void  LEGACY_cop_collision_update_hitbox(address_space &space, int slot, UINT32 hitadr);
 
 	// endian stuff?
 	int m_cpu_is_68k;
