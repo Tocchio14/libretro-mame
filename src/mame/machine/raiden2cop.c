@@ -13,6 +13,13 @@
 // use Z to dump out table info
 //#define TABLE_DUMPER
 
+
+#define LOG_CMDS 0
+
+#define seibu_cop_log \
+	if (LOG_CMDS) logerror
+
+
 const device_type RAIDEN2COP = &device_creator<raiden2cop_device>;
 
 raiden2cop_device::raiden2cop_device(const machine_config &mconfig, const char *tag, device_t *owner, UINT32 clock)
@@ -336,8 +343,8 @@ WRITE16_MEMBER(raiden2cop_device::cop_pgm_trigger_w)
 	cop_latch_trigger = data;
 }
 
-#define seibu_cop_log logerror
-#define LOG_CMDS 1
+
+
 
 // currently only used by legionna.c implementation
 int raiden2cop_device::find_trigger_match(UINT16 triggerval, UINT16 mask)
@@ -352,11 +359,92 @@ int raiden2cop_device::find_trigger_match(UINT16 triggerval, UINT16 mask)
 
 	for (int i = 0; i < 32; i++)
 	{
-		if ((triggerval & mask) == (cop_func_trigger[i] & mask))
+		// technically 'command' could equal cop_func_trigger[i] >> 11, but there is that odd entry in zero team where that doesn't appear to be true (search 'TABLENOTE1')
+
+		if ((triggerval & mask) == (cop_func_trigger[i] & mask) && cop_func_trigger[i] != 0) /* cop_func_trigger[i] != 0 is just being used to prevent matching against empty / unused slots */
 		{
-#if LOG_CMDS
+			int otherlog = 1;
+			
+			// just some per-game debug code so that we have a record of exactly which triggers each game is known to use
+			if (!strcmp(machine().system().name, "legionna"))
+			{
+				if (triggerval == 0x0205 || triggerval == 0x0905 || 
+					triggerval == 0x8100 || triggerval == 0x8900 || /* sin / cos */
+					triggerval == 0x138e || // atan?
+					triggerval == 0x3bb0 || // distance?
+					triggerval == 0x42c2 || // distance?
+					triggerval == 0xa180 || triggerval == 0xa980 || triggerval == 0xb100 || triggerval == 0xb900) /* collisions */
+					otherlog = 0;
+			}
+			else if (!strcmp(machine().system().name, "cupsoc"))
+			{
+				if (triggerval == 0x0204 || triggerval == 0x0205 || triggerval == 0x0905 ||
+					triggerval == 0x130e || triggerval == 0x138e || triggerval == 0x118e ||
+					triggerval == 0x3bb0 ||
+					triggerval == 0x42c2 ||
+					triggerval == 0x5105 || triggerval == 0x5905 ||
+					triggerval == 0x6200 ||
+					triggerval == 0xd104 ||
+					triggerval == 0xdde5 ||
+					triggerval == 0xe30e || triggerval == 0xe18e ||
+					triggerval == 0xf105 ||
+					triggerval == 0x8100 || triggerval == 0x8900) /* sin / cos */
+					otherlog = 0;
+			}
+			else if (!strcmp(machine().system().name, "heatbrl"))
+			{
+				// note, stage 2 end boss (fire breather) will sometimes glitch, also shows 'divide by zero' from MAME when it fires (and homing missile stg3 - they don't home in properly either?)
+				// stage 2+3 priority of boaters is wrong
+				// game eventually crashes with address error (happened in stage 4 for me)
+
+				if (triggerval == 0x0205 ||
+					triggerval == 0x8100 || triggerval == 0x8900 || /* sin / cos */
+					triggerval == 0x138e || 
+					triggerval == 0x3bb0 ||
+					triggerval == 0x42c2 ||
+					triggerval == 0xa100 || triggerval == 0xa900 || triggerval == 0xb080 || triggerval == 0xb880) /* collisions */
+					otherlog = 0;
+			}
+			else if (!strcmp(machine().system().name, "godzilla"))
+			{
+				// only uses collisions? - possible this one already 'works' apart from prio problems, haven't managed to test beyond 1 level tho
+
+				if (triggerval == 0xa180 || triggerval == 0xa980 || triggerval == 0xb100 || triggerval == 0xb900) /* collisions */
+					otherlog = 0;
+			}
+			else if (!strcmp(machine().system().name, "grainbow"))
+			{
+				// path 3 (caves) midboss has wrong tiles
+				// doesn't like our BCD / Number conversion - not command related
+				// stage 4 (after 3 selectable stages) has sprite glitches bottom left
+				// fade logic is wrong (palettes for some layers shouldn't fade) - DMA operation related, not command related
+
+
+				if (triggerval == 0x0205 ||
+					triggerval == 0x8100 || triggerval == 0x8900 || /* sin / cos */
+					triggerval == 0x138e ||
+					triggerval == 0x3bb0 ||
+
+					triggerval == 0xa180 || triggerval == 0xa980 || triggerval == 0xb100 || triggerval == 0xb900 || /* collisions */
+					triggerval == 0xc480 ||
+					triggerval == 0x6200 ||
+					triggerval == 0x6980)
+					otherlog = 0;
+
+			}
+			else if (!strcmp(machine().system().name, "denjinmk"))
+			{
+				// never calls any programs
+			}
+			else
+			{
+				otherlog = 0;
+			}
+
 			seibu_cop_log("    Cop Command %04x found in slot %02x with other params %04x %04x\n", triggerval, i, cop_func_value[i], cop_func_mask[i]);
-#endif
+
+			if (otherlog == 1) printf("used command %04x\n", triggerval);
+
 			command = i;
 			matched++;
 		}
@@ -378,10 +466,11 @@ int raiden2cop_device::find_trigger_match(UINT16 triggerval, UINT16 mask)
 	else if (matched == 0)
 	{
 		seibu_cop_log("    Cop Command %04x NOT IN TABLE!\n", triggerval);
+		printf("Command Not Found!\n");
 		return -1;
 	}
 
-	printf("multiple matches found with mask passed in! (bad!)\n");
+	printf("multiple matches found with mask passed in! (bad!) (%04x %04x)\n", triggerval, mask); // this should never happen with the uploaded tables
 	return -1;
 
 }
@@ -763,6 +852,7 @@ READ16_MEMBER(raiden2cop_device::cop_itoa_digits_r)
 /* Main COP functionality */
 
 // notes about tables:
+// (TABLENOTE1)
 // in all but one case the upload table position (5-bits) is the SAME as the upper 5-bits of the 'trigger value'
 // the exception to this rule is program 0x18 uploads on zeroteam
 //  in this case you can see that the 'trigger' value upper bits are 0x0f, this makes it a potentially interesting case (if it gets used)
@@ -1342,7 +1432,7 @@ void raiden2cop_device::execute_b100(address_space &space, int offset, UINT16 da
 
 void raiden2cop_device::LEGACY_execute_b100(address_space &space, int offset, UINT16 data)
 {
-	LEGACY_cop_collision_update_hitbox(space, 0, cop_regs[2]);
+	LEGACY_cop_collision_update_hitbox(space, data, 0, cop_regs[2]);
 }
 
 /*
@@ -1357,7 +1447,7 @@ void raiden2cop_device::execute_b900(address_space &space, int offset, UINT16 da
 
 void raiden2cop_device::LEGACY_execute_b900(address_space &space, int offset, UINT16 data)
 {
-	LEGACY_cop_collision_update_hitbox(space, 1, cop_regs[3]);
+	LEGACY_cop_collision_update_hitbox(space, data, 1, cop_regs[3]);
 }
 
 /*
@@ -1612,71 +1702,68 @@ Y = collides between 0xd0 and 0x30 (not inclusive)
 0x588 bits 2 & 3 = 0x580 bits 0 & 1
 */
 
-void  raiden2cop_device::LEGACY_cop_collision_update_hitbox(address_space &space, int slot, UINT32 hitadr)
+void  raiden2cop_device::LEGACY_cop_collision_update_hitbox(address_space &space, UINT16 data, int slot, UINT32 hitadr)
 {
 	UINT32 hitadr2 = space.read_word(hitadr) | (cop_hit_baseadr << 16); // DON'T use cop_read_word here, doesn't need endian fixing?!
-	UINT16 hithoxy = space.read_word(hitadr2);
-	UINT16 hitboxx = space.read_word(hitadr2 + 2);
+	int num_axis = 2;
 
-	INT16 start_x,start_y,height,width;
+	// guess, heatbrl doesn't have this set and clearly only wants 2 axis to be checked (otherwise it reads bad params into the 3rd)
+	// everything else has it set, and legionna clearly wants 3 axis for jumping attacks to work
+	if (data & 0x0100) num_axis = 3;
 
-	{
-		height = UINT8(hithoxy >> 8);
-		start_y = INT8(hithoxy);
-		width = UINT8(hitboxx >> 8);
-		start_x = INT8(hitboxx);
+	int i;
+
+	for(i=0; i<3; i++) {
+		cop_collision_info[slot].dx[i] = 0;
+		cop_collision_info[slot].size[i] = 0;
 	}
+
+	for(i=0; i<num_axis; i++) {
+		cop_collision_info[slot].dx[i] = space.read_byte(1^ (hitadr2++));
+		cop_collision_info[slot].size[i] = space.read_byte(1^ (hitadr2++));
+	}
+
+	INT16 dx[3],size[3];
+
+	for (i = 0; i < num_axis; i++)
+	{
+		size[i] = UINT8(cop_collision_info[slot].size[i]);
+		dx[i] = INT8(cop_collision_info[slot].dx[i]);
+	}
+
+	//printf("%02x %02x %02x %02x %02x %02x\n", (UINT8)size[i], (UINT8)dx[i], (UINT8)size[1], (UINT8)dx[1], (UINT8)size[2], (UINT8)dx[2]);
 
 	int j = slot;
+	
+	UINT8 res;
+
+	if (num_axis==3) res = 7;
+	else res = 3;
 
 	//for (j = 0; j < 2; j++)
+	for (i = 0; i < num_axis;i++)
 	{
-		if (cop_collision_info[j].allow_swap && (cop_collision_info[j].flags_swap & (1 << 1)))
+		if (cop_collision_info[j].allow_swap && (cop_collision_info[j].flags_swap & (1 << i)))
 		{
-			m_LEGACY_cop_collision_info[j].max_x = (cop_collision_info[j].pos[1]) - start_x;
-			m_LEGACY_cop_collision_info[j].min_x = m_LEGACY_cop_collision_info[j].max_x - width;
+			m_LEGACY_cop_collision_info[j].max[i] = (cop_collision_info[j].pos[i]) - dx[i];
+			m_LEGACY_cop_collision_info[j].min[i] = m_LEGACY_cop_collision_info[j].max[i] - size[i];
 		}
 		else
 		{
-			m_LEGACY_cop_collision_info[j].min_x = (cop_collision_info[j].pos[1]) + start_x;
-			m_LEGACY_cop_collision_info[j].max_x = m_LEGACY_cop_collision_info[j].min_x + width;
+			m_LEGACY_cop_collision_info[j].min[i] = (cop_collision_info[j].pos[i]) + dx[i];
+			m_LEGACY_cop_collision_info[j].max[i] = m_LEGACY_cop_collision_info[j].min[i] + size[i];
 		}
 
-		if (cop_collision_info[j].allow_swap && (cop_collision_info[j].flags_swap & (1 << 0)))
-		{
-			m_LEGACY_cop_collision_info[j].max_y = (cop_collision_info[j].pos[0]) - start_y;
-			m_LEGACY_cop_collision_info[j].min_y = m_LEGACY_cop_collision_info[j].max_y - height;
-		}
-		else
-		{
-			m_LEGACY_cop_collision_info[j].min_y = (cop_collision_info[j].pos[0]) + start_y;
-			m_LEGACY_cop_collision_info[j].max_y = m_LEGACY_cop_collision_info[j].min_y + height;
-		}
+		if(m_LEGACY_cop_collision_info[0].max[i] >= m_LEGACY_cop_collision_info[1].min[i] && m_LEGACY_cop_collision_info[0].min[i] <= m_LEGACY_cop_collision_info[1].max[i])
+			res &= ~(1 << i);
+
+		if(m_LEGACY_cop_collision_info[1].max[i] >= m_LEGACY_cop_collision_info[0].min[i] && m_LEGACY_cop_collision_info[1].min[i] <= m_LEGACY_cop_collision_info[0].max[i])
+			res &= ~(1 << i);
+
+		cop_hit_val[i] = (cop_collision_info[0].pos[i] - cop_collision_info[1].pos[i]);
 	}
-	static UINT8 res;
 
-	res = 3;
-
-	/* outbound X check */
-	if(m_LEGACY_cop_collision_info[0].max_x >= m_LEGACY_cop_collision_info[1].min_x && m_LEGACY_cop_collision_info[0].min_x <= m_LEGACY_cop_collision_info[1].max_x)
-		res &= ~2;
-
-	if(m_LEGACY_cop_collision_info[1].max_x >= m_LEGACY_cop_collision_info[0].min_x && m_LEGACY_cop_collision_info[1].min_x <= m_LEGACY_cop_collision_info[0].max_x)
-		res &= ~2;
-
-	/* outbound Y check */
-	if(m_LEGACY_cop_collision_info[0].max_y >= m_LEGACY_cop_collision_info[1].min_y && m_LEGACY_cop_collision_info[0].min_y <= m_LEGACY_cop_collision_info[1].max_y)
-		res &= ~1;
-
-	if(m_LEGACY_cop_collision_info[1].max_y >= m_LEGACY_cop_collision_info[0].min_y && m_LEGACY_cop_collision_info[1].min_y <= m_LEGACY_cop_collision_info[0].max_y)
-		res &= ~1;
-
-	cop_hit_val[1] = (cop_collision_info[0].pos[1] - cop_collision_info[1].pos[1]);
-	cop_hit_val[0] = (cop_collision_info[0].pos[0] - cop_collision_info[1].pos[0]);
-	cop_hit_val[2] = 1;
 	cop_hit_val_stat = res; // TODO: there's also bit 2 and 3 triggered in the tests, no known meaning
-
-
 	cop_hit_status = res;
 }
 
@@ -1993,12 +2080,12 @@ WRITE16_MEMBER(raiden2cop_device::cop_sprite_dma_abs_x_w)
 WRITE16_MEMBER(raiden2cop_device::LEGACY_cop_cmd_w)
 {
 	int command;
+	
+
+	seibu_cop_log("%06x: COPX execute table macro command %04x | regs %08x %08x %08x %08x %08x\n", space.device().safe_pc(), data,  cop_regs[0], cop_regs[1], cop_regs[2], cop_regs[3], cop_regs[4]);
 
 
-	logerror("%06x: COPX execute table macro command %04x | regs %08x %08x %08x %08x %08x\n", space.device().safe_pc(), data,  cop_regs[0], cop_regs[1], cop_regs[2], cop_regs[3], cop_regs[4]);
-
-
-	command = find_trigger_match(data, 0xff00);
+	command = find_trigger_match(data, 0xf800);
 
 
 	if (command == -1)
@@ -2238,7 +2325,7 @@ WRITE16_MEMBER(raiden2cop_device::LEGACY_cop_cmd_w)
 	}
 
 	if (executed == 0)
-		if (data!=0xf105) printf("did not execute %04x\n", data); // cup soccer triggers this a lot (and others)
+		printf("did not execute %04x\n", data); // cup soccer triggers this a lot (and others)
 }
 
 
