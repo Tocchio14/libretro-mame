@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <string.h>
-
+ 
 #include "osdepend.h"
 
 #include "emu.h"
@@ -28,11 +28,16 @@ const char core[] = "mess";
 const char core[] = "ume";
 #endif
 
+#if !defined(HAVE_GL) && !defined(HAVE_RGB32)
 #define M16B
+#endif
 
 #include "render.c"
+#ifndef HAVE_GL
 #include "rendersw.inc"
-
+#else 
+static int init3d=1;
+#endif
 //============================================================
 //  CONSTANTS
 //============================================================
@@ -477,7 +482,6 @@ int mmain(int argc, const char *argv)
         if (log_cb)
             log_cb(RETRO_LOG_DEBUG, " %s\n",XARGV[i]);
     }
-
 
 //    osd_init_midi();
 

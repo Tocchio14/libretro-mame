@@ -47,6 +47,10 @@ extern bool draw_this_frame;
 retro_video_refresh_t video_cb = NULL;
 retro_environment_t environ_cb = NULL;
 
+#if defined(HAVE_GL)
+#include "retroogl.c"
+#endif
+
 static retro_input_state_t input_state_cb = NULL;
 /*static*/ retro_audio_sample_batch_t audio_batch_cb = NULL;
 
@@ -512,10 +516,14 @@ void retro_run (void)
 
     retro_poll_mame_input();
 
+#ifdef HAVE_GL
+do_glflush();
+#else
     if (draw_this_frame)
             video_cb(videoBuffer,rtwi, rthe, topw << LOG_PIXEL_BYTES);
     else
             video_cb(NULL,rtwi, rthe, topw << LOG_PIXEL_BYTES);
+#endif
 
     co_switch(emuThread);
 }
@@ -535,6 +543,24 @@ bool retro_load_game(const struct retro_game_info *info)
 #else
     memset(videoBuffer,0,1600*1200*2*2);
 #endif
+
+#if defined(HAVE_GL)
+#ifdef GLES
+   hw_render.context_type = RETRO_HW_CONTEXT_OPENGLES2;
+#else
+   hw_render.context_type = RETRO_HW_CONTEXT_OPENGL;
+#endif
+   hw_render.context_reset = context_reset;
+   hw_render.context_destroy = context_destroy;
+/*
+   hw_render.depth = true;
+   hw_render.stencil = true;
+   hw_render.bottom_left_origin = true;
+*/
+   if (!environ_cb(RETRO_ENVIRONMENT_SET_HW_RENDER, &hw_render))
+      return false;
+#endif
+
     char basename[256];
     extract_basename(basename, info->path, sizeof(basename));
     extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));

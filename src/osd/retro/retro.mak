@@ -67,6 +67,14 @@ OSDCOREOBJS := \
 #-------------------------------------------------
 OSDOBJS = $(LIBCOOBJ)/libco.o 
 
+ifeq ($(VRENDER),opengl)
+OSDOBJS += $(MINIOBJ)/glsym/rglgen.o
+ifeq ($(GLES), 1)
+OSDOBJS += $(MINIOBJ)/glsym/glsym_es2.o
+else
+OSDOBJS += $(MINIOBJ)/glsym/glsym_gl.o
+endif
+endif
 #-------------------------------------------------
 # rules for building the libaries
 #-------------------------------------------------

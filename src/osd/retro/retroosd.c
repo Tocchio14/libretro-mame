@@ -88,8 +88,6 @@ bool draw_this_frame;
 
 void retro_osd_interface::update(bool skip_redraw)
 {
-	//const render_primitive_list *primlist;
-	UINT8 *surfptr;
 
    if (mame_reset == 1)
    {
@@ -161,14 +159,17 @@ void retro_osd_interface::update(bool skip_redraw)
       // lock them, and then render them
       primlist.acquire_lock();
 
-      surfptr = (UINT8 *) videoBuffer;
-
+#ifdef	HAVE_GL
+		gl_draw_primitives(primlist,rtwi,rthe);
+#else
+	  UINT8 *surfptr = (UINT8 *) videoBuffer;
 #ifdef M16B
 software_renderer<UINT16, 3,2,3, 11,5,0>::draw_primitives(primlist, surfptr, minwidth, minheight,minwidth );
 #else
 software_renderer<UINT32, 0,0,0, 16,8,0>::draw_primitives(primlist, surfptr, minwidth, minheight,minwidth );
 #endif
-      
+
+#endif    
 
       primlist.release_lock();
    } 

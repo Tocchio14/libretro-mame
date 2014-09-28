@@ -97,6 +97,7 @@ BUILD_JPEGLIB = 1
 
 # uncomment next line to build PortMidi as part of MAME/MESS build
 #BUILD_MIDILIB = 1
+VRENDER ?= soft
 
 ifeq ($(platform), unix)
    TARGETLIB := $(TARGET_NAME)_libretro.so
@@ -105,6 +106,10 @@ ifeq ($(platform), unix)
    SHARED := -shared -Wl,--version-script=src/osd/retro/link.T -Wl,--no-undefined
 	CCOMFLAGS += $(fpic) -fsigned-char -finline  -fno-common -fno-builtin -fweb -frename-registers -falign-functions=16
 	PLATCFLAGS +=  -DALIGN_INTS -DALIGN_SHORTS -fstrict-aliasing -fno-merge-constants  $(fpic)
+ifeq ($(VRENDER),opengl)  
+	PLATCFLAGS += -DHAVE_GL
+	LIBS += -lGL
+endif
 	LDFLAGS +=  $(fpic) $(SHARED)
 	NATIVELD = g++
 	NATIVELDFLAGS = -Wl,--warn-common -lstdc++ -Wl,--no-undefined
@@ -143,6 +148,11 @@ armplatform := 1
 	FORCE_DRC_C_BACKEND = 1
 	CCOMFLAGS += -fPIC -mstructure-size-boundary=32 -mthumb-interwork -falign-functions=16 -fsigned-char -finline  -fno-common -fno-builtin -fweb -frename-registers -falign-functions=16
 	PLATCFLAGS += -march=armv7-a -mfloat-abi=softfp -DRETRO_AND -DALIGN_INTS -DALIGN_SHORTS -DLSB_FIRST -fstrict-aliasing -fno-merge-constants -DSDLMAME_NO64BITIO -DANDTIME -DRANDPATH -DANDROID_BUILD -DUSE_ARM_HACK -DRETRO_SETJMP_HACK
+ifeq ($(VRENDER),opengl)  
+	PLATCFLAGS += -DHAVE_GL
+	LIBS += -lGLESv2
+	GLES = 1
+endif
 	LDFLAGS += -Wl,--fix-cortex-a8 -llog $(fpic) $(SHARED)
 	NATIVELD = g++
 	NATIVELDFLAGS = -Wl,--warn-common -lstdc++
@@ -306,6 +316,10 @@ else ifeq ($(platform), wincross)
 	SHARED := -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=src/osd/retro/link.T
    	CCOMFLAGS += -D__WIN32__ 
 	LDFLAGS +=   $(SHARED)
+ifeq ($(VRENDER),opengl)  
+	CCOMFLAGS += -DHAVE_GL
+	LIBS += -lopengl32
+endif
 	EXE = .exe
 	#LIBS += -lpthread
 	DEFS = -DCRLF=3
@@ -322,6 +336,10 @@ else
 	SHARED := -shared -static-libgcc -static-libstdc++ -s -Wl,--version-script=src/osd/retro/link.T
 	CCOMFLAGS += -D__WIN32__
 	LDFLAGS +=   $(SHARED)
+ifeq ($(VRENDER),opengl)  
+	CCOMFLAGS += -DHAVE_GL
+	LIBS += -lopengl32
+endif
 	EXE = .exe
 	LIBS += -lws2_32
 	DEFS = -DCRLF=3
