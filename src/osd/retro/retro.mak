@@ -47,7 +47,12 @@ MINISRC = $(SRC)/osd/$(OSD)
 MINIOBJ = $(OBJ)/osd/$(OSD)
 LIBCOOBJ = $(OBJ)/osd/$(OSD)/libco
 
-OBJDIRS += $(MINIOBJ) $(LIBCOOBJ)
+OBJDIRS += $(MINIOBJ) $(LIBCOOBJ) 
+
+ifeq ($(VRENDER),opengl)
+GLOBJ = $(OBJ)/osd/$(OSD)/glsym
+OBJDIRS += $(GLOBJ)
+endif
 
 #-------------------------------------------------
 # OSD core library
@@ -65,16 +70,18 @@ OSDCOREOBJS := \
 #-------------------------------------------------
 # OSD mini library
 #-------------------------------------------------
+
 OSDOBJS = $(LIBCOOBJ)/libco.o 
 
 ifeq ($(VRENDER),opengl)
-OSDOBJS += $(MINIOBJ)/glsym/rglgen.o
+OSDOBJS += $(GLOBJ)/rglgen.o
 ifeq ($(GLES), 1)
-OSDOBJS += $(MINIOBJ)/glsym/glsym_es2.o
+OSDOBJS += $(GLOBJ)/glsym_es2.o
 else
-OSDOBJS += $(MINIOBJ)/glsym/glsym_gl.o
+OSDOBJS += $(GLOBJ)/glsym_gl.o
 endif
 endif
+
 #-------------------------------------------------
 # rules for building the libaries
 #-------------------------------------------------
@@ -82,5 +89,4 @@ endif
 $(LIBOCORE): $(OSDCOREOBJS)
 
 #$(LIBOSD): $(OSDOBJS)
-
 
