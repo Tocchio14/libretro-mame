@@ -1,12 +1,11 @@
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 static struct retro_hw_render_callback hw_render;
-
+#warning ogl experimental
 #include "glsym/glsym.h"
 
 int vloc,cloc,tloc,utloc;
-int last_blendmode;
 
-static GLuint tex;
+//static GLuint tex;
 static GLuint prog;
 static GLuint vbo;
 
@@ -58,84 +57,49 @@ static const char *fragment_shader[] = {
    "}",
 };
 
-static void compile_program(void)
+#ifdef PTR64
+typedef UINT64 HashT;
+#else
+typedef UINT32 HashT;
+#endif
+
+#define HASH_SIZE       ((1<<10)+1)
+#define OVERFLOW_SIZE   (1<<10)
+
+struct texture_info;
+
+/* texture_info holds information about a texture */
+struct texture_info
 {
-	prog = glCreateProgram();
-   	GLuint vert = glCreateShader(GL_VERTEX_SHADER);
-   	GLuint frag = glCreateShader(GL_FRAGMENT_SHADER);
+	HashT               hash;               // hash value for the texture (must be >= pointer size)
+	UINT32              flags;              // rendering flags
+	render_texinfo      texinfo;            // copy of the texture info
+	UINT32              texture;            // OpenGL texture "name"/ID
+	GLenum              texTarget;          // OpenGL texture target
+	UINT32              *data;                  // pixels for the texture
+	bool 				data_own;
+};
 
-   	glShaderSource(vert, ARRAY_SIZE(vertex_shader), vertex_shader, 0);
-   	glShaderSource(frag, ARRAY_SIZE(fragment_shader), fragment_shader, 0);
-   	glCompileShader(vert);
-   	glCompileShader(frag);
-	
-	glAttachShader(prog, vert);
-   	glAttachShader(prog, frag);
-
-   	glLinkProgram(prog);
-
-   	glDeleteShader(vert);
-   	glDeleteShader(frag);
-}
-
-static void setup_vao(void)
+struct retro_info
 {
-   	glUseProgram(prog);
-	
-	//setup_loc
-   	glUniform1i(glGetUniformLocation(prog, "sTex0"), 0);
-   	vloc = glGetAttribLocation(prog, "aVertex");
-   	tloc = glGetAttribLocation(prog, "aTexCoord");
-   	cloc = glGetAttribLocation(prog, "aColor");
-	utloc= glGetUniformLocation(prog, "uUseTexture");
+	// 3D info (GL mode only)
+	texture_info *  texhash[HASH_SIZE + OVERFLOW_SIZE];
+	int             last_blendmode;     // previous blendmode
+};
 
-	//setup_texture
-      	glGenTextures(1, &tex);
+retro_info *retro;
 
-      	glBindTexture(GL_TEXTURE_2D, tex);
-      	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1600, 1200, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,NULL );
-
-	//setup_vbo
-   	glGenBuffers(1, &vbo);
-
-   	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-   	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data, GL_STREAM_DRAW);
-   	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-   	glBindTexture(GL_TEXTURE_2D, 0);
-
-   	glUseProgram(0);
-}
-
-static void context_reset(void)
+INLINE HashT texture_compute_hash(const render_texinfo *texture, UINT32 flags)
 {
-   	fprintf(stderr, "Context reset!\n");
-   	rglgen_resolve_symbols(hw_render.get_proc_address);
-   	compile_program();
-   	setup_vao(); 
-
-   	glDisable(GL_DEPTH_TEST);
+	HashT h = (HashT)texture->base ^ (flags & (PRIMFLAG_BLENDMODE_MASK | PRIMFLAG_TEXFORMAT_MASK));
+	//printf("hash %d\n", (int) h % HASH_SIZE);
+	return (h >> 8) % HASH_SIZE;
 }
-
-static void context_destroy(void)
-{
-   	fprintf(stderr, "Context destroy!\n");
-
-   	glDeleteBuffers(1,&vbo);
-   	vbo = 0;
-   	glDeleteProgram(prog);
-   	prog = 0;   
-}
-
 
 INLINE void set_blendmode(int blendmode)
 {
 	// try to minimize texture state changes
-	if (blendmode != last_blendmode)
+	if (blendmode != retro->last_blendmode)
 	{
 		switch (blendmode)
 		{
@@ -156,55 +120,9 @@ INLINE void set_blendmode(int blendmode)
 				break;
 		}
 
-		last_blendmode = blendmode;
+		retro->last_blendmode = blendmode;
 	}
 }
-
-INLINE float round_nearest(float f)
-{
-	return floor(f + 0.5f);
-}
-
-static void do_glflush(){  
-
-	glUseProgram(0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	video_cb(RETRO_HW_FRAME_BUFFER_VALID, rtwi, rthe, 0);
-}
-
-
-//#define DBG_QUAD 1
-#ifdef DBG_QUAD
-#define PRINTQUAD() \
-if (prim->texture.base){\
-		printf("w:%d h:%d rwpx:%d ",prim->texture.width,prim->texture.height,prim->texture.rowpixels);\
-		printf("uv1(%f,%f) ",prim->texcoords.tl.u,prim->texcoords.tl.v);\
-		printf("uv2(%f,%f) ",prim->texcoords.tr.u,prim->texcoords.tr.v);\
-		printf("uv3(%f,%f) ",prim->texcoords.bl.u,prim->texcoords.bl.v);\
-		printf("uv4(%f,%f) ",prim->texcoords.br.u,prim->texcoords.br.v);\
-}\
-		printf("c(%f,%f,%f,%f) ",prim->color.r,prim->color.g,prim->color.b,prim->color.a);\
-		printf("p1(%f,%f) ",prim->bounds.x0,prim->bounds.y1);\
-		printf("p2(%f,%f) ",prim->bounds.x1,prim->bounds.y1);\
-		printf("p3(%f,%f) ",prim->bounds.x0,prim->bounds.y0);\
-		printf("p4(%f,%f) ",prim->bounds.x1,prim->bounds.y0);\
-		printf("flag:%d ",prim->flags & (PRIMFLAG_TEXFORMAT_MASK | PRIMFLAG_BLENDMODE_MASK));\
-		printf("\n");
-#else
-#define PRINTQUAD()
-#endif
-
-#define prep_vertex_attrib()\
-			glBindBuffer(GL_ARRAY_BUFFER, vbo);\
-   			glVertexAttribPointer(vloc, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);\
-   			glEnableVertexAttribArray(vloc);\
-   			glVertexAttribPointer(cloc, 4, GL_FLOAT, GL_FALSE, 0, (void*)(8 * sizeof(GLfloat)));\
-   			glEnableVertexAttribArray(cloc);\
-   			glVertexAttribPointer(tloc, 2, GL_FLOAT, GL_FALSE, 0,  (void*)(24 * sizeof(GLfloat)) );\
-   			glEnableVertexAttribArray(tloc);\
-   			glBindBuffer(GL_ARRAY_BUFFER, 0);\
-   			glUniform1f(utloc,UseTexture );
-
 
 //============================================================
 //  copyline_palette16
@@ -227,8 +145,6 @@ INLINE void copyline_palette16(UINT32 *dst, const UINT16 *src, int width, const 
 		*dst++ = 0xff000000 | palette[*--src];
 }
 
-
-
 //============================================================
 //  copyline_palettea16
 //============================================================
@@ -249,8 +165,6 @@ INLINE void copyline_palettea16(UINT32 *dst, const UINT16 *src, int width, const
 	if (xborderpix)
 		*dst++ = palette[*--src];
 }
-
-
 
 //============================================================
 //  copyline_rgb32
@@ -474,26 +388,333 @@ INLINE void copyline_yuy16_to_argb(UINT32 *dst, const UINT16 *src, int width, co
 	}
 }
 
-static void gl_draw_primitives(const render_primitive_list &primlst,int minwidth,int minheight){  
+static texture_info *texture_create(const render_texinfo *texsource, UINT32 flags)
+{	
+	texture_info *texture;
 
+	// allocate a new texture
+	texture = (texture_info *) malloc(sizeof(*texture));
+	memset(texture, 0, sizeof(*texture));
+
+	// fill in the core data
+	texture->hash = texture_compute_hash(texsource, flags);
+	texture->flags = flags;
+	texture->texinfo = *texsource;
+	texture->texinfo.seqid = -1; // force set data
+	texture->texTarget = GL_TEXTURE_2D;
+
+		// get a name for this texture
+		glGenTextures(1, (GLuint *)&texture->texture);
+
+		glEnable(texture->texTarget);
+
+		// make sure we're operating on *this* texture
+		glBindTexture(texture->texTarget, texture->texture);
+
+		// this doesn't actually upload, it just sets up the PBO's parameters
+		glTexImage2D(texture->texTarget, 0, GL_RGBA8,
+				texsource->width,texsource->height,
+				//texture->rawwidth_create, texture->rawheight_create,
+				 0,
+				GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
+		// TODO: video_config.filter
+		if ((PRIMFLAG_GET_SCREENTEX(flags)) /*&& video_config.filter*/)
+		{
+			// screen textures get the user's choice of filtering
+			glTexParameteri(texture->texTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(texture->texTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		}
+		else
+		{
+			// non-screen textures will never be filtered
+			glTexParameteri(texture->texTarget, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(texture->texTarget, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		}
 	
+			// set wrapping mode appropriately
+			if (texture->flags & PRIMFLAG_TEXWRAP_MASK)
+			{
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			}
+			else
+			{
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+			}
+
+	texture->data = (UINT32 *) malloc(texsource->width*texsource->height* sizeof(UINT32));
+	texture->data_own=TRUE;
+
+	// add us to the texture list
+	if (retro->texhash[texture->hash] == NULL)
+		retro->texhash[texture->hash] = texture;
+	else
+	{
+		int i;
+		for (i = HASH_SIZE; i < HASH_SIZE + OVERFLOW_SIZE; i++)
+			if (retro->texhash[i] == NULL)
+			{
+				retro->texhash[i] = texture;
+				break;
+			}
+		assert(i < HASH_SIZE + OVERFLOW_SIZE);
+	}
+
+	return texture;
+}
+
+static void texture_set_data(texture_info *texture, const render_texinfo *texsource, UINT32 flags)
+{
+		int y;
+		UINT8 *dst;
+
+		for (y = 0; y < texsource->height; y++)
+		{
+
+				dst = (UINT8 *)(texture->data + y * texsource->width);
+
+				switch (PRIMFLAG_GET_TEXFORMAT(flags))
+				{
+					case TEXFORMAT_PALETTE16:
+						copyline_palette16((UINT32 *)dst, (UINT16 *)texsource->base + y * texsource->rowpixels, texsource->width, texsource->palette, 0, 1);
+						break;
+
+					case TEXFORMAT_PALETTEA16:
+						copyline_palettea16((UINT32 *)dst, (UINT16 *)texsource->base + y * texsource->rowpixels, texsource->width, texsource->palette, 0, 1);
+						break;
+
+					case TEXFORMAT_RGB32:
+						copyline_rgb32((UINT32 *)dst, (UINT32 *)texsource->base + y * texsource->rowpixels, texsource->width, texsource->palette, 0, 1);
+						break;
+
+					case TEXFORMAT_ARGB32:
+						copyline_argb32((UINT32 *)dst, (UINT32 *)texsource->base + y * texsource->rowpixels, texsource->width, texsource->palette, 0, 1);
+						break;
+
+					case TEXFORMAT_YUY16:
+						copyline_yuy16_to_argb((UINT32 *)dst, (UINT16 *)texsource->base + y * texsource->rowpixels, texsource->width, texsource->palette, 0, 1);
+						break;
+
+					default:
+						osd_printf_error("Unknown texture blendmode=%d format=%d\n", PRIMFLAG_GET_BLENDMODE(flags), PRIMFLAG_GET_TEXFORMAT(flags));
+						break;
+				}			
+		}		
+	
+		glBindTexture(texture->texTarget, texture->texture);
+
+		// and upload the image
+		glTexSubImage2D(texture->texTarget, 0, 0, 0, texsource->width, texsource->height,
+						GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, texture->data);
+	
+}
+
+
+static int compare_texture_primitive(const texture_info *texture, const render_primitive *prim)
+{
+	if (texture->texinfo.base == prim->texture.base &&
+		texture->texinfo.width == prim->texture.width &&
+		texture->texinfo.height == prim->texture.height &&
+		texture->texinfo.rowpixels == prim->texture.rowpixels &&
+		texture->texinfo.palette == prim->texture.palette &&
+		((texture->flags ^ prim->flags) & (PRIMFLAG_BLENDMODE_MASK | PRIMFLAG_TEXFORMAT_MASK)) == 0)
+		return 1;
+	else
+		return 0;
+}
+
+static texture_info *texture_find(retro_info *retro, const render_primitive *prim)
+{
+	HashT texhash = texture_compute_hash(&prim->texture, prim->flags);
+	texture_info *texture;
+
+	texture = retro->texhash[texhash];
+	if (texture != NULL)
+	{
+		int i;
+		if (compare_texture_primitive(texture, prim))
+			return texture;
+		for (i=HASH_SIZE; i<HASH_SIZE + OVERFLOW_SIZE; i++)
+		{
+			texture = retro->texhash[i];
+			if (texture != NULL && compare_texture_primitive(texture, prim))
+				return texture;
+		}
+	}
+	return NULL;
+}
+
+static texture_info * texture_update(const render_primitive *prim, int shaderIdx)
+{	
+	texture_info *texture = texture_find(retro, prim);
+	int texBound = 0;
+
+	// if we didn't find one, create a new texture
+	if (texture == NULL && prim->texture.base != NULL)
+	{
+		texture = texture_create(&prim->texture, prim->flags);
+	}
+	else if (texture != NULL)
+	{
+		glEnable(texture->texTarget);
+	}
+
+	if (texture != NULL)
+	{
+		if (prim->texture.base != NULL && texture->texinfo.seqid != prim->texture.seqid)
+		{
+			texture->texinfo.seqid = prim->texture.seqid;
+
+			// if we found it, but with a different seqid, copy the data
+			texture_set_data(texture, &prim->texture, prim->flags);
+			texBound=1;			
+		}
+
+		if (!texBound) {
+			glBindTexture(texture->texTarget, texture->texture);
+		}
+
+	}
+
+	return texture;
+}
+
+static void destroy_all_textures(){
+
+	int i;
+	texture_info *texture = NULL;
+	if (retro == NULL)
+			return;
+
+    glDisable(GL_TEXTURE_2D);
+
+	i=0;
+	while (i<HASH_SIZE+OVERFLOW_SIZE)
+	{
+		texture = retro->texhash[i];
+		retro->texhash[i] = NULL;
+		if (texture != NULL)
+		{
+
+			glDeleteTextures(1, (GLuint *)&texture->texture);
+			if ( texture->data_own )
+			{
+				free(texture->data);
+				texture->data=NULL;
+				texture->data_own=FALSE;
+			}
+			free(texture);
+
+		}
+		i++;
+	}
+}
+
+static void compile_program(void)
+{
+	prog = glCreateProgram();
+   	GLuint vert = glCreateShader(GL_VERTEX_SHADER);
+   	GLuint frag = glCreateShader(GL_FRAGMENT_SHADER);
+
+   	glShaderSource(vert, ARRAY_SIZE(vertex_shader), vertex_shader, 0);
+   	glShaderSource(frag, ARRAY_SIZE(fragment_shader), fragment_shader, 0);
+   	glCompileShader(vert);
+   	glCompileShader(frag);
+	
+	glAttachShader(prog, vert);
+   	glAttachShader(prog, frag);
+
+   	glLinkProgram(prog);
+
+   	glDeleteShader(vert);
+   	glDeleteShader(frag);
+}
+
+static void setup_vao(void)
+{
+   	glUseProgram(prog);
+	
+	//setup_loc
+   	glUniform1i(glGetUniformLocation(prog, "sTex0"), 0);
+   	vloc = glGetAttribLocation(prog, "aVertex");
+   	tloc = glGetAttribLocation(prog, "aTexCoord");
+   	cloc = glGetAttribLocation(prog, "aColor");
+	utloc= glGetUniformLocation(prog, "uUseTexture");
+
+	//setup_vbo
+   	glGenBuffers(1, &vbo);
+
+   	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+   	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data, GL_STREAM_DRAW);
+   	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+   	glUseProgram(0);
+}
+
+static void context_reset(void)
+{
+   	fprintf(stderr, "Context reset!\n");
+   	rglgen_resolve_symbols(hw_render.get_proc_address);
+   	compile_program();
+   	setup_vao(); 
+
+   	glDisable(GL_DEPTH_TEST);
+
+}
+
+static void context_destroy(void)
+{
+   	fprintf(stderr, "Context destroy!\n");
+
+   	glDeleteBuffers(1,&vbo);
+   	vbo = 0;
+   	glDeleteProgram(prog);
+   	prog = 0;   
+
+}
+
+INLINE float round_nearest(float f)
+{
+	return floor(f + 0.5f);
+}
+
+static void do_glflush(){  
+
+	glUseProgram(0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	video_cb(RETRO_HW_FRAME_BUFFER_VALID, rtwi, rthe, 0);
+}
+
+#define prep_vertex_attrib()\
+			glBindBuffer(GL_ARRAY_BUFFER, vbo);\
+   			glVertexAttribPointer(vloc, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);\
+   			glEnableVertexAttribArray(vloc);\
+   			glVertexAttribPointer(cloc, 4, GL_FLOAT, GL_FALSE, 0, (void*)(8 * sizeof(GLfloat)));\
+   			glEnableVertexAttribArray(cloc);\
+   			glVertexAttribPointer(tloc, 2, GL_FLOAT, GL_FALSE, 0,  (void*)(24 * sizeof(GLfloat)) );\
+   			glEnableVertexAttribArray(tloc);\
+   			glBindBuffer(GL_ARRAY_BUFFER, 0);\
+   			glUniform1f(utloc,UseTexture );
+
+static void gl_draw_primitives(const render_primitive_list &primlst,int minwidth,int minheight){  
+	
+	texture_info *texture=NULL;
+
 	if(init3d==1){
+
 		printf("initGL\n");
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		last_blendmode = BLENDMODE_ALPHA;
+		retro->last_blendmode = BLENDMODE_ALPHA;
 
 		init3d=0;
 
-		//glShadeModel(GL_SMOOTH);
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-		//glClearDepth(1.0f);
-		//glEnable(GL_DEPTH_TEST);
-		//glDepthFunc(GL_LEQUAL);
+
 		glDisable(GL_DEPTH_TEST);
-		//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
 		//TODO: only if machine->options().antialias()
 		{
@@ -509,6 +730,8 @@ static void gl_draw_primitives(const render_primitive_list &primlst,int minwidth
 		glLineWidth(2.0);
 		glPointSize(2.0);
 
+		//TODO:texture destroy
+		destroy_all_textures();
 	}
 
   	glBindFramebuffer(GL_FRAMEBUFFER, hw_render.get_current_framebuffer());
@@ -589,8 +812,6 @@ static void gl_draw_primitives(const render_primitive_list &primlst,int minwidth
                break;
 
           case render_primitive::QUAD:
-		
-		//PRINTQUAD();
 
 		glColor4f(prim->color.r, prim->color.g, prim->color.b, prim->color.a);
 		set_blendmode(PRIMFLAG_GET_BLENDMODE(prim->flags));
@@ -640,80 +861,12 @@ static void gl_draw_primitives(const render_primitive_list &primlst,int minwidth
 			glDisableVertexAttribArray(vloc);
 			glDisableVertexAttribArray(cloc);
 	
-
 		}
 		else{
 
    			glUseProgram(prog);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D,tex);
-
-			//TODO: only if video_config.filter
-			if ((PRIMFLAG_GET_SCREENTEX(prim->flags)) /*&& video_config.filter*/)
-			{
-				// screen textures get the user's choice of filtering
-				glTexParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexParameteri(tex, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			}
-			else
-			{
-				// non-screen textures will never be filtered
-				glTexParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-				glTexParameteri(tex, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			}
-
-			// set wrapping mode appropriately
-			if (prim->flags & PRIMFLAG_TEXWRAP_MASK)
-			{
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			}
-			else
-			{
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-			}
-
-			PRINTQUAD();
-
-			int y;
-			UINT8 *dst;
-
-#define COPYLOOP(format,tex) {\
- 	for (y = 0; y < prim->texture.height; y++){\
-		dst = (UINT8 *)(videoBuffer + y * prim->texture.width);\
-		copyline_##format((UINT32 *)dst,tex + y * prim->texture.rowpixels, prim->texture.width, prim->texture.palette, 0, 1);\
-	}\
-}
-			switch (PRIMFLAG_GET_TEXFORMAT(prim->flags))
-			{
-					case TEXFORMAT_PALETTE16:
-						COPYLOOP(palette16,(UINT16 *)prim->texture.base);
-						break;
-
-					case TEXFORMAT_PALETTEA16:
-						COPYLOOP(palettea16,(UINT16 *)prim->texture.base);
-						break;
-
-					case TEXFORMAT_RGB32:
-						COPYLOOP(rgb32,(UINT32 *)prim->texture.base);
-						break;
-
-					case TEXFORMAT_ARGB32:
-						COPYLOOP(argb32,(UINT32 *)prim->texture.base);
-						break;
-
-					case TEXFORMAT_YUY16:
-						COPYLOOP(yuy16_to_argb,(UINT16 *)prim->texture.base);
-						break;
-
-					default:
-						osd_printf_error("Unknown texture blendmode=%d format=%d\n", PRIMFLAG_GET_BLENDMODE(prim->flags), PRIMFLAG_GET_TEXFORMAT(prim->flags));
-						break;
-			}
-
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,prim->texture.width,prim->texture.height,0,GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,videoBuffer);
+			
+			texture = texture_update( prim, 0);
 
 			glverts[0]=2*(prim->bounds.x0/minwidth-0.5);
 			glverts[1]=2*(prim->bounds.y0/minheight-0.5);
@@ -771,8 +924,9 @@ static void gl_draw_primitives(const render_primitive_list &primlst,int minwidth
 			glDisableVertexAttribArray(cloc);
 			glDisableVertexAttribArray(tloc);
 
-		}
+			if ( texture )glDisable(texture->texTarget);
 
+		}
                break;
 
             default:
@@ -781,4 +935,3 @@ static void gl_draw_primitives(const render_primitive_list &primlst,int minwidth
       }
 
 }
-

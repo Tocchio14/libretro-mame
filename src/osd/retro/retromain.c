@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <string.h>
- 
+
 #include "osdepend.h"
 
 #include "emu.h"

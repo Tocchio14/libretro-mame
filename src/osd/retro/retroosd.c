@@ -33,6 +33,11 @@ void retro_osd_interface::osd_exit()
 	if (log_cb)
 		log_cb(RETRO_LOG_INFO, "OSD exit called\n");
 
+#if defined(HAVE_GL)
+	destroy_all_textures();
+	if (NULL!=retro)free(retro);
+#endif
+
 	osd_interface::osd_exit();
 	
 /*
@@ -48,6 +53,12 @@ void retro_osd_interface::osd_exit()
 void retro_osd_interface::init(running_machine &machine)
 {
 	int gamRot=0;
+
+#if defined(HAVE_GL)
+	// allocate memory for our structures
+	retro = (retro_info *) malloc(sizeof(*retro));
+	memset(retro, 0, sizeof(*retro));
+#endif
 
 	osd_interface::init(machine);
 	our_target = machine.render().target_alloc();
@@ -81,6 +92,7 @@ void retro_osd_interface::init(running_machine &machine)
 	NEWGAME_FROM_OSD=1;
 	if (log_cb)
 		log_cb(RETRO_LOG_INFO, "OSD initialization complete\n");
+
 	co_switch(mainThread);
 }
 
