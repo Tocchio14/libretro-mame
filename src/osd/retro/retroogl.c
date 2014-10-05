@@ -660,7 +660,8 @@ static void context_reset(void)
    	setup_vao(); 
 
    	glDisable(GL_DEPTH_TEST);
-
+   	
+	destroy_all_textures();
 }
 
 static void context_destroy(void)
