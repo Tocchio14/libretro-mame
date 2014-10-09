@@ -402,7 +402,7 @@ Keyboard TX commands:
 #include "machine/upd1990a.h"
 #include "machine/i8251.h"
 
-#include "bus/scsi/s1410.h"
+#include "bus/scsi/pc9801_sasi.h"
 #include "bus/scsi/scsi.h"
 #include "bus/scsi/scsihd.h"
 #include "machine/buffer.h"
@@ -426,6 +426,7 @@ Keyboard TX commands:
 #include "machine/pc9801_kbd.h"
 
 #include "machine/idectrl.h"
+#include "machine/idehd.h"
 
 
 #define UPD1990A_TAG "upd1990a"
@@ -599,8 +600,11 @@ public:
 	DECLARE_WRITE8_MEMBER(pc9801ux_gvram0_w);
 	UINT32 pc9801_286_a20(bool state);
 
+	DECLARE_READ8_MEMBER(ide_hack_r);
 	DECLARE_WRITE8_MEMBER(sasi_data_w);
+	DECLARE_READ8_MEMBER(sasi_data_r);
 	DECLARE_WRITE_LINE_MEMBER(write_sasi_io);
+	DECLARE_WRITE_LINE_MEMBER(write_sasi_req);
 	DECLARE_READ8_MEMBER(sasi_status_r);
 	DECLARE_WRITE8_MEMBER(sasi_ctrl_w);
 
@@ -646,13 +650,6 @@ public:
 //  DECLARE_WRITE8_MEMBER(pc9801_ext_opna_w);
 	DECLARE_READ8_MEMBER(pic_r);
 	DECLARE_WRITE8_MEMBER(pic_w);
-
-	DECLARE_READ8_MEMBER(pc9801rs_ide_io_0_r);
-	DECLARE_READ16_MEMBER(pc9801rs_ide_io_1_r);
-	DECLARE_READ16_MEMBER(pc9801rs_ide_io_2_r);
-	DECLARE_WRITE8_MEMBER(pc9801rs_ide_io_0_w);
-	DECLARE_WRITE16_MEMBER(pc9801rs_ide_io_1_w);
-	DECLARE_WRITE16_MEMBER(pc9801rs_ide_io_2_w);
 
 	DECLARE_READ8_MEMBER(sdip_0_r);
 	DECLARE_READ8_MEMBER(sdip_1_r);
@@ -757,6 +754,7 @@ public:
 
 	DECLARE_DRIVER_INIT(pc9801_kanji);
 	inline void set_dma_channel(int channel, int state);
+	virtual void device_reset_after_children();
 };
 
 
@@ -1730,6 +1728,22 @@ WRITE8_MEMBER(pc9801_state::pc9801_mouse_w)
 	}
 }
 
+READ8_MEMBER(pc9801_state::ide_hack_r)
+{
+	// this makes the ide driver not do 512 to 256 byte sector translation, the 9821 looks for bit 6 of offset 0xac403 of the kanji ram to set this, the rs unknown
+	m_work_ram[0x457] |= 0xc0;
+	return 0xff;
+}
+
+READ8_MEMBER( pc9801_state::sasi_data_r )
+{
+	UINT8 data = m_sasi_data_in->read();
+
+	if(m_sasi_ctrl_in->read() & 0x80)
+		m_sasibus->write_ack(1);
+	return data;
+}
+
 WRITE8_MEMBER( pc9801_state::sasi_data_w )
 {
 	m_sasi_data = data;
@@ -1737,6 +1751,8 @@ WRITE8_MEMBER( pc9801_state::sasi_data_w )
 	if (m_sasi_data_enable)
 	{
 		m_sasi_data_out->write(m_sasi_data);
+		if(m_sasi_ctrl_in->read() & 0x80)
+			m_sasibus->write_ack(1);
 	}
 }
 
@@ -1754,6 +1770,25 @@ WRITE_LINE_MEMBER( pc9801_state::write_sasi_io )
 	{
 		m_sasi_data_out->write(0);
 	}
+	if((m_sasi_ctrl_in->read() & 0x9C) == 0x8C)
+		m_pic2->ir1_w(m_sasi_ctrl & 1);
+	else
+		m_pic2->ir1_w(0);
+}
+
+WRITE_LINE_MEMBER( pc9801_state::write_sasi_req )
+{
+	m_sasi_ctrl_in->write_bit7(state);
+
+	if (!state)
+		m_sasibus->write_ack(0);
+
+	if((m_sasi_ctrl_in->read() & 0x9C) == 0x8C)
+		m_pic2->ir1_w(m_sasi_ctrl & 1);
+	else
+		m_pic2->ir1_w(0);
+
+	m_dmac->dreq0_w(!(state && !(m_sasi_ctrl_in->read() & 8) && (m_sasi_ctrl & 2)));
 }
 
 #include "debugger.h"
@@ -1765,7 +1800,7 @@ READ8_MEMBER( pc9801_state::sasi_status_r )
 	if(m_sasi_ctrl & 0x40) // read status
 	{
 	/*
-	    x--- -.-- REQ
+	    x--- ---- REQ
 	    -x-- ---- ACK
 	    --x- ---- BSY
 	    ---x ---- MSG
@@ -1782,10 +1817,9 @@ READ8_MEMBER( pc9801_state::sasi_status_r )
         --xx x--- SASI-1 media type
         ---- -xxx SASI-2 media type
 */
-		res |= 7 << 3; // read mediatype SASI-1
-		res |= 7;   // read mediatype SASI-2
+		//res |= 7 << 3; // read mediatype SASI-1
+		//res |= 7;   // read mediatype SASI-2
 	}
-
 	return res;
 }
 
@@ -1839,7 +1873,7 @@ static ADDRESS_MAP_START( pc9801_io, AS_IO, 16, pc9801_state )
 //  AM_RANGE(0x006c, 0x006f) border color / <undefined>
 	AM_RANGE(0x0070, 0x007b) AM_READWRITE8(pc9801_70_r,pc9801_70_w,0xffff) //display registers / i8253 pit
 //  AM_RANGE(0x0080, 0x0083) AM_READWRITE8(pc9801_sasi_r,pc9801_sasi_w,0xffff) //HDD SASI interface / <undefined>
-	AM_RANGE(0x0080, 0x0081) AM_DEVREAD8("sasi_data_in", input_buffer_device, read, 0x00ff) AM_WRITE8(sasi_data_w, 0x00ff)
+	AM_RANGE(0x0080, 0x0081) AM_READWRITE8(sasi_data_r, sasi_data_w, 0x00ff)
 	AM_RANGE(0x0082, 0x0083) AM_READWRITE8(sasi_status_r, sasi_ctrl_w,0x00ff)
 	AM_RANGE(0x0090, 0x0097) AM_READWRITE8(pc9801_fdc_2hd_r,pc9801_fdc_2hd_w,0xffff) //upd765a 2hd / cmt
 	AM_RANGE(0x00a0, 0x00af) AM_READWRITE8(pc9801_a0_r,pc9801_a0_w,0xffff) //upd7220 bitmap ports / display registers
@@ -2023,6 +2057,7 @@ READ8_MEMBER(pc9801_state::pc9801rs_memory_r)
 	else if(offset >= 0x000b8000 && offset <= 0x000bffff)                   { return m_pc9801rs_grcg_r(offset & 0x7fff,3);        }
 	else if(offset >= 0x000cc000 && offset <= 0x000cffff)                   { return pc9801rs_soundrom_r(space,offset & 0x3fff);}
 	else if(offset >= 0x000d8000 && offset <= 0x000d9fff)                   { return pc9801rs_ide_r(space,offset & 0x1fff);         }
+	else if(offset >= 0x000da000 && offset <= 0x000dbfff)                   { return pc9821_ideram_r(space,offset & 0x1fff);      }
 	else if(offset >= 0x000e0000 && offset <= 0x000e7fff)                   { return m_pc9801rs_grcg_r(offset & 0x7fff,0);        }
 	else if(offset >= 0x000e0000 && offset <= 0x000fffff)                   { return pc9801rs_ipl_r(space,offset & 0x1ffff);      }
 	else if(offset >= 0x00100000 && offset <= 0x00100000+m_ram_size-1)      { return pc9801rs_ex_wram_r(space,offset-0x00100000); }
@@ -2044,6 +2079,7 @@ WRITE8_MEMBER(pc9801_state::pc9801rs_memory_w)
 	else if(offset >= 0x000a8000 && offset <= 0x000affff)                   { m_pc9801rs_grcg_w(offset & 0x7fff,1,data);        }
 	else if(offset >= 0x000b0000 && offset <= 0x000b7fff)                   { m_pc9801rs_grcg_w(offset & 0x7fff,2,data);        }
 	else if(offset >= 0x000b8000 && offset <= 0x000bffff)                   { m_pc9801rs_grcg_w(offset & 0x7fff,3,data);        }
+	else if(offset >= 0x000da000 && offset <= 0x000dbfff)                   { pc9821_ideram_w(space,offset & 0x1fff,data);         }
 	else if(offset >= 0x000e0000 && offset <= 0x000e7fff)                   { m_pc9801rs_grcg_w(offset & 0x7fff,0,data);        }
 	else if(offset >= 0x00100000 && offset <= 0x00100000+m_ram_size-1)      { pc9801rs_ex_wram_w(space,offset-0x00100000,data);    }
 	//else
@@ -2277,55 +2313,6 @@ WRITE8_MEMBER(pc9801_state::pc9801rs_pit_mirror_w)
 	}
 }
 
-READ8_MEMBER(pc9801_state::pc9801rs_ide_io_0_r)
-{
-	printf("IDE r %02x\n",offset);
-	return m_ide_bank[offset];
-}
-
-WRITE8_MEMBER(pc9801_state::pc9801rs_ide_io_0_w)
-{
-	/*
-	[0x430]
-	[Read/write]
-	    bit 7-0: unknown
-	    00 h = IDE Bank # 1
-	    01 h = IDE Bank # 2
-
-	[0x432]
-	    bit 7-0: Bank select
-	    80 h = readout for dummy (only [WRITE])
-	    00 h = IDE Bank # 1 choice
-	    01 h = IDE Bank # 2 selection
-	*/
-
-	printf("IDE w %02x %02x\n",offset,data);
-
-	if ((data & 0x80) == 0x00)
-		m_ide_bank[offset] = data & 0x7f;
-}
-
-/* TODO: is mapping correct? */
-READ16_MEMBER(pc9801_state::pc9801rs_ide_io_1_r)
-{
-	return m_ide->read_cs0(space, offset, mem_mask);
-}
-
-WRITE16_MEMBER(pc9801_state::pc9801rs_ide_io_1_w)
-{
-	m_ide->write_cs0(space, offset, data, mem_mask);
-}
-
-READ16_MEMBER(pc9801_state::pc9801rs_ide_io_2_r)
-{
-	return m_ide->read_cs1(space, offset + 6, mem_mask);
-}
-
-WRITE16_MEMBER(pc9801_state::pc9801rs_ide_io_2_w)
-{
-	m_ide->write_cs1(space, offset + 6, data, mem_mask);
-}
-
 static ADDRESS_MAP_START( pc9801rs_map, AS_PROGRAM, 32, pc9801_state )
 	AM_RANGE(0x00000000, 0xffffffff) AM_READWRITE8(pc9801rs_memory_r,pc9801rs_memory_w,0xffffffff)
 ADDRESS_MAP_END
@@ -2350,13 +2337,13 @@ static ADDRESS_MAP_START( pc9801rs_io, AS_IO, 32, pc9801_state )
 //  AM_RANGE(0x00ec, 0x00ef) PC-9801-86 sound board
 	AM_RANGE(0x00f0, 0x00ff) AM_READWRITE8(pc9801rs_f0_r,      pc9801rs_f0_w,      0xffffffff)
 //  AM_RANGE(0x0188, 0x018f) AM_READWRITE8(pc9801_opn_r,       pc9801_opn_w,       0xffffffff) //ym2203 opn / <undefined>
-	AM_RANGE(0x0430, 0x0433) AM_READWRITE8(pc9801rs_ide_io_0_r,  pc9801rs_ide_io_0_w,0x00ff00ff)
+	AM_RANGE(0x0430, 0x0433) AM_READ8(ide_hack_r, 0x000000ff)
 
 	AM_RANGE(0x0438, 0x043b) AM_READWRITE8(pc9801rs_access_ctrl_r,pc9801rs_access_ctrl_w,0xffffffff)
 	AM_RANGE(0x043c, 0x043f) AM_WRITE8(pc9801rs_bank_w,    0xffffffff) //ROM/RAM bank
 
-	AM_RANGE(0x0640, 0x064f) AM_READWRITE16(pc9801rs_ide_io_1_r,  pc9801rs_ide_io_1_w,0xffffffff)
-	AM_RANGE(0x074c, 0x074f) AM_READWRITE16(pc9801rs_ide_io_2_r,  pc9801rs_ide_io_2_w,0xffffffff)
+	AM_RANGE(0x0640, 0x064f) AM_DEVREADWRITE16("ide", ata_interface_device, read_cs0, write_cs0, 0xffffffff)
+	AM_RANGE(0x0740, 0x074f) AM_DEVREADWRITE16("ide", ata_interface_device, read_cs1, write_cs1, 0xffffffff)
 
 	AM_RANGE(0x3fd8, 0x3fdf) AM_READWRITE8(pc9801rs_pit_mirror_r,        pc9801rs_pit_mirror_w,        0xffffffff) // <undefined> / pit mirror ports
 	AM_RANGE(0x7fd8, 0x7fdf) AM_READWRITE8(pc9801_mouse_r,     pc9801_mouse_w,     0xffffffff) // <undefined> / mouse ppi8255 ports
@@ -2720,15 +2707,15 @@ static ADDRESS_MAP_START( pc9821_io, AS_IO, 32, pc9801_state )
 	AM_RANGE(0x00f0, 0x00ff) AM_READWRITE8(pc9801rs_f0_r,      pc9801rs_f0_w,      0xffffffff)
 //  AM_RANGE(0x0188, 0x018f) AM_READWRITE8(pc9801_opn_r,       pc9801_opn_w,       0xffffffff) //ym2203 opn / <undefined>
 //  AM_RANGE(0x018c, 0x018f) YM2203 OPN extended ports / <undefined>
-	AM_RANGE(0x0430, 0x0433) AM_READWRITE8(pc9801rs_ide_io_0_r,  pc9801rs_ide_io_0_w,0x00ff00ff) // IDE bank register
+	AM_RANGE(0x0430, 0x0433) AM_READ8(ide_hack_r, 0x000000ff)
 	AM_RANGE(0x0438, 0x043b) AM_READWRITE8(pc9801rs_access_ctrl_r,pc9801rs_access_ctrl_w,0xffffffff)
 //  AM_RANGE(0x043d, 0x043d) ROM/RAM bank (NEC)
 	AM_RANGE(0x043c, 0x043f) AM_WRITE8(pc9801rs_bank_w,    0xffffffff) //ROM/RAM bank (EPSON)
 	AM_RANGE(0x0460, 0x0463) AM_READWRITE8(pc9821_window_bank_r,pc9821_window_bank_w, 0xffffffff)
 //  AM_RANGE(0x04a0, 0x04af) EGC
 //  AM_RANGE(0x04be, 0x04be) FDC "RPM" register
-	AM_RANGE(0x0640, 0x064f) AM_READWRITE16(pc9801rs_ide_io_1_r,  pc9801rs_ide_io_1_w,0xffffffff) // IDE registers / <undefined>
-	AM_RANGE(0x074c, 0x074f) AM_READWRITE16(pc9801rs_ide_io_2_r,  pc9801rs_ide_io_2_w,0xffffffff) // IDE status (r) - IDE control registers (w) / <undefined>
+	AM_RANGE(0x0640, 0x064f) AM_DEVREADWRITE16("ide", ata_interface_device, read_cs0, write_cs0, 0xffffffff)
+	AM_RANGE(0x0740, 0x074f) AM_DEVREADWRITE16("ide", ata_interface_device, read_cs1, write_cs1, 0xffffffff)
 //  AM_RANGE(0x08e0, 0x08ea) <undefined> / EMM SIO registers
 	AM_RANGE(0x09a0, 0x09a3) AM_READWRITE8(pc9821_ext2_video_ff_r, pc9821_ext2_video_ff_w, 0xffffffff) // GDC extended register r/w
 //  AM_RANGE(0x09a8, 0x09a8) GDC 31KHz register r/w
@@ -3362,7 +3349,9 @@ MACHINE_START_MEMBER(pc9801_state,pc9801rs)
 	}
 
 	m_ide_rom = memregion("ide")->base();
+	m_ide_ram = auto_alloc_array(machine(), UINT8, 0x2000);
 	m_sys_type = 0x80 >> 6;
+	save_pointer(NAME(m_ide_ram), 0x2000);
 }
 
 MACHINE_START_MEMBER(pc9801_state,pc9801bx2)
@@ -3377,11 +3366,9 @@ MACHINE_START_MEMBER(pc9801_state,pc9821)
 {
 	MACHINE_START_CALL_MEMBER(pc9801rs);
 
-	m_ide_ram = auto_alloc_array(machine(), UINT8, 0x2000);
 	m_ext_gvram = auto_alloc_array(machine(), UINT8, 0xa0000);
 
 	save_pointer(NAME(m_sdip), 24);
-	save_pointer(NAME(m_ide_ram), 0x2000);
 	save_pointer(NAME(m_ext_gvram), 0xa0000);
 }
 
@@ -3400,6 +3387,7 @@ MACHINE_RESET_MEMBER(pc9801_state,pc9801_common)
 		int i;
 		static const UINT8 default_memsw_data[0x10] =
 		{
+			// set high nibble of byte 9 to 0xa and comment ROM_FILL below to boot from hdd
 			0xe1, 0x48, 0xe1, 0x05, 0xe1, 0x04, 0xe1, 0x00, 0xe1, 0x01, 0xe1, 0x00, 0xe1, 0x00, 0xe1, 0x6e
 //          0xe1, 0xff, 0xe1, 0xff, 0xe1, 0xff, 0xe1, 0xff, 0xe1, 0xff, 0xe1, 0xff, 0xe1, 0xff, 0xe1, 0xff
 		};
@@ -3469,6 +3457,14 @@ MACHINE_RESET_MEMBER(pc9801_state,pc9821)
 	MACHINE_RESET_CALL_MEMBER(pc9801rs);
 
 	m_pc9821_window_bank = 0x08;
+}
+
+void pc9801_state::device_reset_after_children()
+{
+	driver_device::device_reset_after_children();
+	ata_mass_storage_device *ide0 = machine().device<ata_mass_storage_device>("ide:0:hdd");
+	if(ide0)
+		ide0->identify_device_buffer()[47] = 0;
 }
 
 INTERRUPT_GEN_MEMBER(pc9801_state::pc9801_vrtc_irq)
@@ -3542,13 +3538,17 @@ static MACHINE_CONFIG_FRAGMENT( pc9801_sasi )
 	MCFG_SCSI_MSG_HANDLER(DEVWRITELINE("sasi_ctrl_in", input_buffer_device, write_bit4))
 	MCFG_SCSI_BSY_HANDLER(DEVWRITELINE("sasi_ctrl_in", input_buffer_device, write_bit5))
 	MCFG_SCSI_ACK_HANDLER(DEVWRITELINE("sasi_ctrl_in", input_buffer_device, write_bit6))
-	MCFG_SCSI_REQ_HANDLER(DEVWRITELINE("sasi_ctrl_in", input_buffer_device, write_bit7))
+	MCFG_SCSI_REQ_HANDLER(WRITELINE(pc9801_state, write_sasi_req))
 
-	MCFG_SCSIDEV_ADD(SASIBUS_TAG ":" SCSI_PORT_DEVICE1, "harddisk", S1410, SCSI_ID_0) // TODO: correct one, perhaps ttl
+	MCFG_SCSIDEV_ADD(SASIBUS_TAG ":" SCSI_PORT_DEVICE1, "harddisk", PC9801_SASI, SCSI_ID_0)
 
 	MCFG_SCSI_OUTPUT_LATCH_ADD("sasi_data_out", SASIBUS_TAG)
 	MCFG_DEVICE_ADD("sasi_data_in", INPUT_BUFFER, 0)
 	MCFG_DEVICE_ADD("sasi_ctrl_in", INPUT_BUFFER, 0)
+
+	MCFG_DEVICE_MODIFY("i8237")
+	MCFG_I8237_IN_IOR_0_CB(READ8(pc9801_state, sasi_data_r))
+	MCFG_I8237_OUT_IOW_0_CB(WRITE8(pc9801_state, sasi_data_w))
 MACHINE_CONFIG_END
 
 

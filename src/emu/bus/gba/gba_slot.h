@@ -34,6 +34,7 @@ public:
 	virtual DECLARE_READ32_MEMBER(read_ram) { return 0xffffffff; }
 	virtual DECLARE_WRITE32_MEMBER(write_ram) {};
 
+	void rom_alloc(UINT32 size, const char *tag);
 	void nvram_alloc(UINT32 size);
 	UINT32* get_rom_base() { return m_rom; }
 	UINT32* get_nvram_base() { return m_nvram; }
@@ -45,8 +46,8 @@ public:
 
 	// internal state
 	UINT32 *m_rom;  // this points to the cart rom region
-	dynamic_array<UINT32> m_nvram;
 	UINT32 m_rom_size;  // this is the actual game size, not the rom region size!
+	dynamic_array<UINT32> m_nvram;
 };
 
 
@@ -69,8 +70,6 @@ public:
 	virtual bool call_load();
 	virtual void call_unload();
 	virtual bool call_softlist_load(software_list_device &swlist, const char *swname, const rom_entry *start_entry);
-
-	void install_rom();
 
 	int get_type() { return m_type; }
 	int get_cart_type(UINT8 *ROM, UINT32 len);
@@ -114,6 +113,8 @@ extern const device_type GBA_CART_SLOT;
 /***************************************************************************
  DEVICE CONFIGURATION MACROS
  ***************************************************************************/
+
+#define GBASLOT_ROM_REGION_TAG ":cart:rom"
 
 #define MCFG_GBA_CARTRIDGE_ADD(_tag,_slot_intf,_def_slot) \
 	MCFG_DEVICE_ADD(_tag, GBA_CART_SLOT, 0) \
@@ -174,7 +175,7 @@ static const gba_chip_fix_conflict_item gba_chip_fix_conflict_list[] =
 	{ "BR4J", GBA_CHIP_FLASH      }, // 1586 - Rockman EXE 4.5 - Real Operation (JPN)
 	{ "BG8J", GBA_CHIP_EEPROM_64K }, // 1853 - Ganbare! Dodge Fighters (JPN)
 	{ "AROP", GBA_CHIP_EEPROM_4K  }, // 1862 - Rocky (EUR)
-	{ "A2YE", GBA_CHIP_SRAM       }, // 1906 - Top Gun - Combat Zones (USA)
+//	"A2YE" - 1906 - Top Gun - Combat Zones (USA) - multiple NVRAM chips detected, but none present (protection against emu?)
 	{ "BKMJ", GBA_CHIP_EEPROM_4K  }, // 2039 - Kim Possible (JPN)
 	{ "BKEJ", GBA_CHIP_EEPROM_64K }, // 2047 - Konjiki no Gashbell - The Card Battle for GBA (JPN)
 	{ "BKMP", GBA_CHIP_EEPROM_4K  }, // 2297 - Kim Possible 2 - Drakken's Demise (EUR)

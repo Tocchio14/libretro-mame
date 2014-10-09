@@ -10,6 +10,21 @@
 #include "trident.h"
 #include "debugger.h"
 
+enum
+{
+	SCREEN_OFF = 0,
+	TEXT_MODE,
+	VGA_MODE,
+	EGA_MODE,
+	CGA_MODE,
+	MONO_MODE,
+	RGB8_MODE,
+	RGB15_MODE,
+	RGB16_MODE,
+	RGB24_MODE,
+	RGB32_MODE
+};
+
 const device_type TRIDENT_VGA = &device_creator<trident_vga_device>;
 
 #define CRTC_PORT_ADDR ((vga.miscellaneous_output&1)?0x3d0:0x3b0)
@@ -158,6 +173,7 @@ void trident_vga_device::device_start()
 	save_pointer(vga.sequencer.data,"Sequencer Registers",0x100);
 	save_pointer(vga.attribute.data,"Attribute Registers", 0x15);
 	save_pointer(tri.accel_pattern,"Pattern Data", 0x80);
+	save_pointer(tri.lutdac_reg,"LUTDAC registers", 0x100);
 
 	m_vblank_timer = machine().scheduler().timer_alloc(timer_expired_delegate(FUNC(vga_device::vblank_timer_cb),this));
 	vga.svga_intf.seq_regcount = 0x0f;
@@ -168,7 +184,7 @@ void trident_vga_device::device_start()
 void trident_vga_device::device_reset()
 {
 	svga_device::device_reset();
-	svga.id = 0xd3;  // identifies at TGUI9660XGi
+	svga.id = 0xd3;  // identifies at TGUI9660XGi (set to 0xe3 to identify at TGUI9440AGi)
 	tri.revision = 0x01;  // revision identifies as TGUI9680
 	tri.new_mode = false;  // start up in old mode
 	tri.dac_active = false;
@@ -176,9 +192,114 @@ void trident_vga_device::device_reset()
 	tri.mmio_active = false;
 	tri.sr0f = 0x6f;
 	tri.sr0c = 0x78;
+	tri.mem_clock = 0x2c6;  // 50MHz default
+	tri.vid_clock = 0;
 	tri.port_3c3 = true;
 	tri.accel_busy = false;
 	tri.accel_memwrite_active = false;
+	// Windows 3.1 TGUI9440AGi drivers do not set the pointer colour registers?
+	tri.cursor_bg = 0x00000000;
+	tri.cursor_fg = 0xffffffff;
+}
+
+UINT32 trident_vga_device::screen_update(screen_device &screen, bitmap_rgb32 &bitmap, const rectangle &cliprect)
+{
+	UINT8 cur_mode = 0;
+
+	svga_device::screen_update(screen,bitmap,cliprect);
+	cur_mode = pc_vga_choosevideomode();
+
+	// draw hardware graphics cursor
+	if(tri.cursor_ctrl & 0x80)  // if cursor is enabled
+	{
+		UINT32 src;
+		UINT32* dst;
+		UINT8 val;
+		int x,y;
+		UINT16 cx = tri.cursor_x & 0x0fff;
+		UINT16 cy = tri.cursor_y & 0x0fff;
+		UINT32 bg_col;
+		UINT32 fg_col;
+		UINT8 cursor_size = (tri.cursor_ctrl & 0x01) ? 64 : 32;
+
+		if(cur_mode == SCREEN_OFF || cur_mode == TEXT_MODE || cur_mode == MONO_MODE || cur_mode == CGA_MODE || cur_mode == EGA_MODE)
+			return 0;  // cursor only works in VGA or SVGA modes
+
+		src = tri.cursor_loc * 1024;  // start address is in units of 1024 bytes
+
+		if(cur_mode == RGB16_MODE)
+		{
+			bg_col = tri.cursor_bg;
+			fg_col = tri.cursor_fg;
+		}
+		else /* TODO: other modes */
+		{
+			bg_col = m_palette->pen(tri.cursor_bg & 0xff);
+			fg_col = m_palette->pen(tri.cursor_fg & 0xff);
+		}
+
+		for(y=0;y<cursor_size;y++)
+		{
+			UINT8 bitcount = 31;
+			dst = &bitmap.pix32(cy + y, cx);
+			for(x=0;x<cursor_size;x++)
+			{
+				UINT32 bitb = (vga.memory[(src+3) % vga.svga_intf.vram_size]
+				            | ((vga.memory[(src+2) % vga.svga_intf.vram_size]) << 8)
+				            | ((vga.memory[(src+1) % vga.svga_intf.vram_size]) << 16)
+				            | ((vga.memory[(src+0) % vga.svga_intf.vram_size]) << 24));
+				UINT32 bita = (vga.memory[(src+7) % vga.svga_intf.vram_size]
+							| ((vga.memory[(src+6) % vga.svga_intf.vram_size]) << 8)
+							| ((vga.memory[(src+5) % vga.svga_intf.vram_size]) << 16)
+							| ((vga.memory[(src+4) % vga.svga_intf.vram_size]) << 24));
+				val = (BIT(bita << 1,bitcount+1) << 1 | BIT(bitb,bitcount));
+				if(tri.cursor_ctrl & 0x40)
+				{  // X11 mode
+					switch(val)
+					{
+					case 0x00:
+						// no change
+						break;
+					case 0x01:
+						dst[x] = bg_col;
+						break;
+					case 0x02:
+						// no change
+						break;
+					case 0x03:
+						dst[x] = fg_col;
+						break;
+					}
+				}
+				else
+				{  // Windows mode
+					switch(val)
+					{
+					case 0x00:
+						dst[x] = bg_col;
+						break;
+					case 0x01:
+						// no change
+						break;
+					case 0x02:  // screen data
+						dst[x] = fg_col;
+						break;
+					case 0x03:  // inverted screen data
+						dst[x] = ~(dst[x]);
+						break;
+					}
+				}
+				bitcount--;
+				if(x % 32 == 31)
+				{
+					src+=8;
+					bitcount=31;
+				}
+			}
+		}
+	}
+
+	return 0;
 }
 
 UINT16 trident_vga_device::offset()
@@ -191,11 +312,29 @@ UINT16 trident_vga_device::offset()
 		return off;
 }
 
+int trident_vga_device::calculate_clock()
+{
+	// Bits 0-6: M
+	// Bits 7-11: N
+	// Bit 12: K
+	// Later formula extends each variable by one extra bit (Providia 9685 and later)
+	double freq;
+	UINT8 m,n,k;
+
+	m = tri.vid_clock & 0x007f;
+	n = (tri.vid_clock & 0x0f80) >> 7;
+	k = (tri.vid_clock & 0x1000) >> 12;
+	freq = ((double)(m+8) / (double)((n+2)*(pow(2.0,k)))) * 14.31818f; // there is a 14.31818MHz clock on the board
+
+	return freq * 1000000;
+}
+
 void trident_vga_device::trident_define_video_mode()
 {
 	int divisor = 1;
 	int xtal;
 
+	/*  // clock select for TGUI9440CXi and earlier
 	switch(tri.clock)
 	{
 	case 0:
@@ -224,9 +363,24 @@ void trident_vga_device::trident_define_video_mode()
 	case 1:   xtal = xtal / 2; break;
 	case 2:   xtal = xtal / 4; break;
 	case 3:   xtal = xtal / 1.5; break;
+	}*/
+
+
+	// TGUI9440AGi/9660/9680/9682 programmable clock
+	switch((vga.miscellaneous_output & 0x0c) >> 2)
+	{
+	case 0:
+	default: xtal = XTAL_25_1748MHz; break;
+	case 1:  xtal = XTAL_28_63636MHz; break;
+	case 2:  xtal = calculate_clock(); break;
 	}
 
-	// TODO: determine when 8 bit modes are selected
+	if(tri.gc0f & 0x08)  // 16 pixels per character clock
+		xtal = xtal / 2;
+
+	if(tri.port_3db & 0x20)
+		xtal = xtal / 2;  // correct?
+
 	svga.rgb8_en = svga.rgb15_en = svga.rgb16_en = svga.rgb32_en = 0;
 	switch((tri.pixel_depth & 0x0c) >> 2)
 	{
@@ -257,7 +411,6 @@ UINT8 trident_vga_device::trident_seq_reg_read(UINT8 index)
 			case 0x0b:
 				res = svga.id;
 				tri.new_mode = true;
-				//debugger_break(machine());
 				break;
 			case 0x0c:  // Power Up Mode register 1
 				res = tri.sr0c & 0xef;
@@ -280,6 +433,9 @@ UINT8 trident_vga_device::trident_seq_reg_read(UINT8 index)
 			case 0x0f:  // Power Up Mode 2
 				res = tri.sr0f;
 				break;
+			default:
+				res = vga.sequencer.data[index];
+				if(!LOG) logerror("Trident: Sequencer index %02x read\n",index);
 		}
 	}
 	if(LOG) logerror("Trident SR%02X: read %02x\n",index,res);
@@ -288,9 +444,9 @@ UINT8 trident_vga_device::trident_seq_reg_read(UINT8 index)
 
 void trident_vga_device::trident_seq_reg_write(UINT8 index, UINT8 data)
 {
+	vga.sequencer.data[vga.sequencer.index] = data;
 	if(index <= 0x04)
 	{
-		vga.sequencer.data[vga.sequencer.index] = data;
 		seq_reg_write(vga.sequencer.index,data);
 		recompute_params();
 	}
@@ -310,7 +466,6 @@ void trident_vga_device::trident_seq_reg_write(UINT8 index, UINT8 data)
 				tri.sr0c = data;
 				break;
 			case 0x0d:  // Mode Control 2
-				//svga.rgb15_en = data & 0x30; // TODO: doesn't match documentation
 				if(tri.new_mode)
 				{
 					tri.sr0d_new = data;
@@ -340,13 +495,15 @@ void trident_vga_device::trident_seq_reg_write(UINT8 index, UINT8 data)
 			case 0x0f:  // Power Up Mode 2
 				tri.sr0f = data;
 				break;
+			default:
+				if(!LOG) logerror("Trident: Sequencer index %02x read\n",index);
 		}
 	}
 }
 
 UINT8 trident_vga_device::trident_crtc_reg_read(UINT8 index)
 {
-	UINT8 res;
+	UINT8 res = 0;
 
 	if(index <= 0x18)
 		res = crtc_reg_read(index);
@@ -363,6 +520,13 @@ UINT8 trident_vga_device::trident_crtc_reg_read(UINT8 index)
 		case 0x21:
 			res = tri.cr21;
 			break;
+		case 0x24:
+			if(vga.attribute.state != 0)
+				res |= 0x80;
+			break;
+		case 0x26:
+			res = vga.attribute.index;
+			break;
 		case 0x27:
 			res = (vga.crtc.start_addr & 0x60000) >> 17;
 			break;
@@ -375,11 +539,60 @@ UINT8 trident_vga_device::trident_crtc_reg_read(UINT8 index)
 		case 0x39:
 			res = tri.cr39;
 			break;
+		case 0x40:
+			res = (tri.cursor_x & 0x00ff);
+			break;
+		case 0x41:
+			res = (tri.cursor_x & 0xff00) >> 8;
+			break;
+		case 0x42:
+			res = (tri.cursor_y & 0x00ff);
+			break;
+		case 0x43:
+			res = (tri.cursor_y & 0xff00) >> 8;
+			break;
+		case 0x44:
+			res = (tri.cursor_loc & 0x00ff);
+			break;
+		case 0x45:
+			res = (tri.cursor_loc & 0xff00) >> 8;
+			break;
+		case 0x46:
+			res = tri.cursor_x_off;
+			break;
+		case 0x47:
+			res = tri.cursor_y_off;
+			break;
+		case 0x48:
+			res = (tri.cursor_fg & 0x000000ff);
+			break;
+		case 0x49:
+			res = (tri.cursor_fg & 0x0000ff00) >> 8;
+			break;
+		case 0x4a:
+			res = (tri.cursor_fg & 0x00ff0000) >> 16;
+			break;
+		case 0x4b:
+			res = (tri.cursor_fg & 0xff000000) >> 24;
+			break;
+		case 0x4c:
+			res = (tri.cursor_bg & 0x000000ff);
+			break;
+		case 0x4d:
+			res = (tri.cursor_bg & 0x0000ff00) >> 8;
+			break;
+		case 0x4e:
+			res = (tri.cursor_bg & 0x00ff0000) >> 16;
+			break;
+		case 0x4f:
+			res = (tri.cursor_bg & 0xff000000) >> 24;
+			break;
 		case 0x50:
-			res = tri.cr50;
+			res = tri.cursor_ctrl;
 			break;
 		default:
 			res = vga.crtc.data[index];
+			if(!LOG) logerror("Trident: CRTC index %02x read\n",index);
 			break;
 		}
 	}
@@ -403,14 +616,14 @@ void trident_vga_device::trident_crtc_reg_write(UINT8 index, UINT8 data)
 			vga.crtc.start_addr = (vga.crtc.start_addr & 0xfffeffff) | ((data & 0x20)<<11);
 			break;
 		case 0x1f:
-			tri.cr1f = data;  // "Software Programming Register"  written to by software (BIOS?)
+			tri.cr1f = data;  // "Software Programming Register"  written to by the BIOS
 			break;
 		case 0x21:  // Linear aperture
 			tri.cr21 = data;
 			tri.linear_address = ((data & 0xc0)<<18) | ((data & 0x0f)<<20);
 			tri.linear_active = data & 0x20;
-			if(tri.linear_active)
-				popmessage("Trident: Linear Aperture active - %08x, %s",tri.linear_address,(tri.cr21 & 0x10) ? "2MB" : "1MB" );
+			//if(tri.linear_active)
+				//popmessage("Trident: Linear Aperture active - %08x, %s",tri.linear_address,(tri.cr21 & 0x10) ? "2MB" : "1MB" );
 			break;
 		case 0x27:
 			vga.crtc.start_addr = (vga.crtc.start_addr & 0xfff9ffff) | ((data & 0x03)<<17);
@@ -420,6 +633,9 @@ void trident_vga_device::trident_crtc_reg_write(UINT8 index, UINT8 data)
 			vga.crtc.offset = (vga.crtc.offset & 0xfeff) | ((data & 0x10)<<4);
 			break;
 		case 0x38:
+			// bit 0: 16 bit bus
+			// bits 2-3: pixel depth (1=15/16bit, 2=24/32bit, 0=anything else)
+			// bit 5: packed mode
 			tri.pixel_depth = data;
 			trident_define_video_mode();
 			break;
@@ -429,11 +645,59 @@ void trident_vga_device::trident_crtc_reg_write(UINT8 index, UINT8 data)
 			if(tri.mmio_active)
 				popmessage("Trident: MMIO activated");
 			break;
+		case 0x40:
+			tri.cursor_x = (tri.cursor_x & 0xff00) | data;
+			break;
+		case 0x41:
+			tri.cursor_x = (tri.cursor_x & 0x00ff) | (data << 8);
+			break;
+		case 0x42:
+			tri.cursor_y = (tri.cursor_y & 0xff00) | data;
+			break;
+		case 0x43:
+			tri.cursor_y = (tri.cursor_y & 0x00ff) | (data << 8);
+			break;
+		case 0x44:
+			tri.cursor_loc = (tri.cursor_loc & 0xff00) | data;
+			break;
+		case 0x45:
+			tri.cursor_loc = (tri.cursor_loc & 0x00ff) | (data << 8);
+			break;
+		case 0x46:
+			tri.cursor_x_off = data;
+			break;
+		case 0x47:
+			tri.cursor_y_off = data;
+			break;
+		case 0x48:
+			tri.cursor_fg = (tri.cursor_fg & 0xffffff00) | data;
+			break;
+		case 0x49:
+			tri.cursor_fg = (tri.cursor_fg & 0xffff00ff) | (data << 8);
+			break;
+		case 0x4a:
+			tri.cursor_fg = (tri.cursor_fg & 0xff00ffff) | (data << 16);
+			break;
+		case 0x4b:
+			tri.cursor_fg = (tri.cursor_fg & 0x00ffffff) | (data << 24);
+			break;
+		case 0x4c:
+			tri.cursor_bg = (tri.cursor_bg & 0xffffff00) | data;
+			break;
+		case 0x4d:
+			tri.cursor_bg = (tri.cursor_bg & 0xffff00ff) | (data << 8);
+			break;
+		case 0x4e:
+			tri.cursor_bg = (tri.cursor_bg & 0xff00ffff) | (data << 16);
+			break;
+		case 0x4f:
+			tri.cursor_bg = (tri.cursor_bg & 0x00ffffff) | (data << 24);
+			break;
 		case 0x50:
-			tri.cr50 = data;
+			tri.cursor_ctrl = data;
 			break;
 		default:
-			//logerror("Trident: 3D4 index %02x write %02x\n",index,data);
+			if(!LOG) logerror("Trident: 3D4 index %02x write %02x\n",index,data);
 			break;
 		}
 	}
@@ -460,6 +724,7 @@ UINT8 trident_vga_device::trident_gc_reg_read(UINT8 index)
 			break;
 		default:
 			res = 0xff;
+			if(!LOG) logerror("Trident: Sequencer index %02x read\n",index);
 			break;
 		}
 	}
@@ -486,12 +751,13 @@ void trident_vga_device::trident_gc_reg_write(UINT8 index, UINT8 data)
 			break;
 		case 0x0f:
 			tri.gc0f = data;
+			trident_define_video_mode();
 			break;
 		case 0x2f:  // XFree86 refers to this register as "MiscIntContReg", setting bit 2, but gives no indication as to what it does
 			tri.gc2f = data;
 			break;
 		default:
-			//logerror("Trident: Unimplemented GC register %02x write %02x\n",index,data);
+			if(!LOG) logerror("Trident: Unimplemented GC register %02x write %02x\n",index,data);
 			break;
 		}
 	}
@@ -596,6 +862,9 @@ READ8_MEMBER(trident_vga_device::port_03d0_r)
 				else
 					res = 0xff;
 				break;
+			case 11:
+				res = tri.port_3db;
+				break;
 			default:
 				res = vga_device::port_03d0_r(space,offset,mem_mask);
 				break;
@@ -637,6 +906,9 @@ WRITE8_MEMBER(trident_vga_device::port_03d0_w)
 					}
 				}
 				break;
+			case 11:
+				tri.port_3db = data;  // no info on this port?  Bit 5 appears to be a clock divider...
+				break;
 			default:
 				vga_device::port_03d0_w(space,offset,data,mem_mask);
 				break;
@@ -644,18 +916,76 @@ WRITE8_MEMBER(trident_vga_device::port_03d0_w)
 	}
 }
 
+READ8_MEMBER(trident_vga_device::port_43c6_r)
+{
+	UINT8 res = 0xff;
+	switch(offset)
+	{
+	case 2:
+		res = tri.mem_clock & 0xff;
+		break;
+	case 3:
+		res = tri.mem_clock >> 8;
+		break;
+	case 4:
+		res = tri.vid_clock & 0xff;
+		break;
+	case 5:
+		res = tri.vid_clock >> 8;
+		break;
+	}
+	return res;
+}
+
+WRITE8_MEMBER(trident_vga_device::port_43c6_w)
+{
+	switch(offset)
+	{
+	case 2:
+		if(!(tri.sr0e_new & 0x02) && (tri.sr0e_new & 0x80))
+		{
+			tri.mem_clock = (tri.mem_clock & 0xff00) | (data);
+			if(LOG) logerror("Trident: Memory clock write %04x\n",tri.mem_clock);
+		}
+		break;
+	case 3:
+		if(!(tri.sr0e_new & 0x02) && (tri.sr0e_new & 0x80))
+		{
+			tri.mem_clock = (tri.mem_clock & 0x00ff) | (data << 8);
+			if(LOG) logerror("Trident: Memory clock write %04x\n",tri.mem_clock);
+		}
+		break;
+	case 4:
+		if(!(tri.sr0e_new & 0x02) && (tri.sr0e_new & 0x80))
+		{
+			tri.vid_clock = (tri.vid_clock & 0xff00) | (data);
+			if(LOG) logerror("Trident: Video clock write %04x\n",tri.vid_clock);
+		}
+		break;
+	case 5:
+		if(!(tri.sr0e_new & 0x02) && (tri.sr0e_new & 0x80))
+		{
+			tri.vid_clock = (tri.vid_clock & 0x00ff) | (data << 8);
+			if(LOG) logerror("Trident: Video clock write %04x\n",tri.vid_clock);
+		}
+		break;
+	}
+}
+
+// Trident refers to these registers as a LUTDAC
+// Not much else is known.  XFree86 uses register 4 for something related to DPMS
 READ8_MEMBER(trident_vga_device::port_83c6_r)
 {
 	UINT8 res = 0xff;
 	switch(offset)
 	{
 	case 2:
-		res = port_03c0_r(space,5,mem_mask);
-		if(LOG) logerror("Trident: 83c6 read %02x\n",res);
+		res = tri.lutdac_reg[tri.lutdac_index];
+		if(LOG) logerror("Trident: LUTDAC reg read %02x\n",res);
 		break;
 	case 4:
-		res = vga.sequencer.index;
-		if(LOG) logerror("Trident: 83c8 seq read %02x\n",res);
+		res = tri.lutdac_index;
+		if(LOG) logerror("Trident: LUTDAC index read %02x\n",res);
 		break;
 	}
 	return res;
@@ -666,12 +996,12 @@ WRITE8_MEMBER(trident_vga_device::port_83c6_w)
 	switch(offset)
 	{
 	case 2:
-		if(LOG) logerror("Trident: 83c6 seq write %02x\n",data);
-		port_03c0_w(space,5,data,mem_mask);
+		if(LOG) logerror("Trident: LUTDAC reg write %02x\n",data);
+		tri.lutdac_reg[tri.lutdac_index] = data;
 		break;
 	case 4:
-		if(LOG) logerror("Trident: 83c8 seq index write %02x\n",data);
-		vga.sequencer.index = data;
+		if(LOG) logerror("Trident: LUTDAC index write %02x\n",data);
+		tri.lutdac_index = data;
 		break;
 	}
 }
@@ -1157,32 +1487,36 @@ void trident_vga_device::accel_line()
 //    TGUI_SRC_XY(dmin-dmaj,dmin);
 //    TGUI_DEST_XY(x,y);
 //    TGUI_DIM_XY(dmin+e,len);
-	INT16 dx = abs(tri.accel_source_x - tri.accel_source_y);
-	INT16 dy = abs(tri.accel_source_y);
-	INT16 err = (tri.accel_dim_x - tri.accel_source_y);
+	INT16 dx = tri.accel_source_y - tri.accel_source_x;
+	INT16 dy = tri.accel_source_y;
+	INT16 err = tri.accel_dim_x + tri.accel_source_y;
 	int sx = (tri.accel_drawflags & 0x0200) ? -1 : 1;
 	int sy = (tri.accel_drawflags & 0x0100) ? -1 : 1;
-	int count = 0;
-	INT16 temp;
+	int x,y,z;
 
-	if(tri.accel_drawflags & 0x0400)
+	x = tri.accel_dest_x;
+	y = tri.accel_dest_y;
+
+	WRITEPIXEL(x,y,col);
+	for(z=0;z<tri.accel_dim_y;z++)
 	{
-		temp = dx; dx = dy; dy = temp;
-	}
-	for(;;)
-	{
-		WRITEPIXEL(tri.accel_dest_x,tri.accel_dest_y,col);
-		if (count > tri.accel_dim_y) break;
-		count++;
-		if((err*2) > -dy)
+		if(tri.accel_drawflags & 0x0400)
+			y += sy;
+		else
+			x += sx;
+		if(err > 0)
 		{
-			err -= dy;
-			tri.accel_dest_x += sx;
+			if(tri.accel_drawflags & 0x0400)
+				x += sx;
+			else
+				y += sy;
+			WRITEPIXEL(x,y,col);
+			err += (dy-dx);
 		}
-		if((err*2) < dx)
+		else
 		{
-			err += dx;
-			tri.accel_dest_y += sy;
+			WRITEPIXEL(x,y,col);
+			err += dy;
 		}
 	}
 }

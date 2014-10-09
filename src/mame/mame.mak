@@ -569,6 +569,8 @@ MACHINES += PCCARD
 
 #BUSES += A1BUS
 #BUSES += A2BUS
+#BUSES += A7800
+#BUSES += A800
 #BUSES += ABCBUS
 #BUSES += ABCKB
 #BUSES += ADAM
@@ -584,12 +586,14 @@ BUSES += CENTRONICS
 #BUSES += COMPUCOLOR
 #BUSES += COMX35
 #BUSES += CPC
+#BUSES += DMV
 #BUSES += ECBBUS
 #BUSES += ECONET
 #BUSES += EP64
 #BUSES += EPSON_SIO
 #BUSES += GAMEBOY
 #BUSES += GBA
+BUSES += GENERIC
 #BUSES += IEEE488
 #BUSES += IMI7000
 #BUSES += IQ151
@@ -599,6 +603,7 @@ BUSES += ISA
 #BUSES += MACPDS
 #BUSES += MIDI
 #BUSES += MEGADRIVE
+#BUSES += MSX_SLOT
 BUSES += NEOGEO
 #BUSES += NES
 #BUSES += NUBUS
@@ -609,24 +614,31 @@ BUSES += NEOGEO
 #BUSES += PC_KBD
 #BUSES += PET
 #BUSES += PLUS4
+#BUSES += QL
 BUSES += RS232
 #BUSES += S100
 #BUSES += SATURN
 BUSES += SCSI
+#BUSES += SCV
 #BUSES += SEGA8
 #BUSES += SMS_CTRL
 #BUSES += SMS_EXP
 #BUSES += SNES
 #BUSES += TI99PEB
 #BUSES += TVC
+#BUSES += VBOY
 #BUSES += VCS
+#BUSES += VCS_CTRL
 #BUSES += VIC10
 #BUSES += VIC20
 #BUSES += VIDBRAIN
 #BUSES += VIP
+#BUSES += VTECH_IOEXP
+#BUSES += VTECH_MEMEXP
 #BUSES += WANGPC
 #BUSES += X68K
 #BUSES += Z88
+#BUSES += ZORRO
 
 #-------------------------------------------------
 # this is the list of driver libraries that
@@ -1136,6 +1148,7 @@ $(MAMEOBJ)/funworld.a: \
 $(MAMEOBJ)/fuuki.a: \
 	$(DRIVERS)/fuukifg2.o $(VIDEO)/fuukifg2.o \
 	$(DRIVERS)/fuukifg3.o $(VIDEO)/fuukifg3.o \
+	$(VIDEO)/fuukifg.o \
 
 $(MAMEOBJ)/gaelco.a: \
 	$(DRIVERS)/atvtrack.o \
@@ -1480,7 +1493,7 @@ $(MAMEOBJ)/namco.a: \
 	$(DRIVERS)/cswat.o \
 	$(DRIVERS)/dambustr.o \
 	$(DRIVERS)/gal3.o \
-	$(DRIVERS)/galaga.o $(AUDIO)/galaga.o $(VIDEO)/galaga.o \
+	$(DRIVERS)/galaga.o $(AUDIO)/galaga.o $(VIDEO)/galaga.o $(VIDEO)/bosco.o $(VIDEO)/digdug.o $(MACHINE)/xevious.o $(VIDEO)/xevious.o \
 	$(DRIVERS)/galaxian.o $(AUDIO)/galaxian.o $(VIDEO)/galaxian.o \
 	$(DRIVERS)/galaxold.o $(MACHINE)/galaxold.o $(VIDEO)/galaxold.o \
 	$(DRIVERS)/gaplus.o $(MACHINE)/gaplus.o $(VIDEO)/gaplus.o \
@@ -1522,9 +1535,6 @@ $(MAMEOBJ)/namco.a: \
 	$(AUDIO)/namco54.o \
 	$(VIDEO)/c116.o \
 	$(VIDEO)/c45.o \
-	$(VIDEO)/bosco.o \
-	$(VIDEO)/digdug.o \
-	$(MACHINE)/xevious.o $(VIDEO)/xevious.o \
 
 $(MAMEOBJ)/nasco.a: \
 	$(DRIVERS)/crgolf.o $(VIDEO)/crgolf.o \
@@ -1625,12 +1635,8 @@ $(MAMEOBJ)/pacific.a: \
 
 $(MAMEOBJ)/pacman.a: \
 	$(DRIVERS)/jrpacman.o \
-	$(DRIVERS)/pacman.o $(VIDEO)/pacman.o \
+	$(DRIVERS)/pacman.o $(VIDEO)/pacman.o $(MACHINE)/acitya.o $(MACHINE)/jumpshot.o $(MACHINE)/pacplus.o $(MACHINE)/theglobp.o \
 	$(DRIVERS)/pengo.o \
-	$(MACHINE)/acitya.o \
-	$(MACHINE)/jumpshot.o \
-	$(MACHINE)/pacplus.o \
-	$(MACHINE)/theglobp.o \
 
 $(MAMEOBJ)/pce.a: \
 	$(DRIVERS)/ggconnie.o \
@@ -1863,6 +1869,8 @@ $(MAMEOBJ)/taito.a: \
 	$(DRIVERS)/bking.o $(VIDEO)/bking.o \
 	$(DRIVERS)/bublbobl.o $(MACHINE)/bublbobl.o $(VIDEO)/bublbobl.o \
 	$(DRIVERS)/buggychl.o $(MACHINE)/buggychl.o $(VIDEO)/buggychl.o \
+	$(DRIVERS)/capr1.o \
+	$(DRIVERS)/caprcyc.o \
 	$(DRIVERS)/cchance.o \
 	$(DRIVERS)/chaknpop.o $(MACHINE)/chaknpop.o $(VIDEO)/chaknpop.o \
 	$(DRIVERS)/champbwl.o \
@@ -1934,6 +1942,7 @@ $(MAMEOBJ)/taito.a: \
 	$(DRIVERS)/wgp.o $(VIDEO)/wgp.o \
 	$(DRIVERS)/wyvernf0.o \
 	$(AUDIO)/taitosnd.o \
+	$(AUDIO)/taito_zm.o \
 	$(AUDIO)/t5182.o \
 	$(MACHINE)/taitoio.o \
 	$(VIDEO)/taito_helper.o \
@@ -1947,7 +1956,6 @@ $(MAMEOBJ)/taito.a: \
 	$(VIDEO)/tc0480scp.o \
 	$(VIDEO)/tc0110pcr.o \
 	$(VIDEO)/tc0180vcu.o \
-	$(AUDIO)/taito_zm.o \
 
 $(MAMEOBJ)/tatsumi.a: \
 	$(DRIVERS)/kingdrby.o \
@@ -2149,6 +2157,7 @@ $(MAMEOBJ)/pinball.a: \
 	$(DRIVERS)/s6a.o \
 	$(DRIVERS)/s7.o \
 	$(DRIVERS)/s8.o \
+	$(DRIVERS)/s8a.o \
 	$(DRIVERS)/s9.o \
 	$(DRIVERS)/sam.o \
 	$(DRIVERS)/sleic.o \
@@ -2335,6 +2344,7 @@ $(MAMEOBJ)/misc.a: \
 	$(DRIVERS)/malzak.o $(VIDEO)/malzak.o \
 	$(DRIVERS)/manohman.o \
 	$(DRIVERS)/mcatadv.o $(VIDEO)/mcatadv.o \
+	$(DRIVERS)/mgavegas.o \
 	$(DRIVERS)/meyc8080.o \
 	$(DRIVERS)/meyc8088.o \
 	$(DRIVERS)/micro3d.o $(MACHINE)/micro3d.o $(VIDEO)/micro3d.o $(AUDIO)/micro3d.o \
@@ -2630,6 +2640,8 @@ $(DRIVERS)/goldnpkr.o:  $(LAYOUT)/goldnpkr.lh \
 			$(LAYOUT)/pmpoker.lh \
 			$(LAYOUT)/upndown.lh
 
+$(DRIVERS)/gts80.o:     $(LAYOUT)/gts80.lh
+
 $(DRIVERS)/lbeach.o:    $(LAYOUT)/lbeach.lh
 
 $(DRIVERS)/goldstar.o:  $(LAYOUT)/goldstar.lh \
@@ -2698,6 +2710,8 @@ $(DRIVERS)/mcr3.o:      $(LAYOUT)/spyhunt.lh \
 			$(LAYOUT)/turbotag.lh
 
 $(DRIVERS)/mgames.o:    $(LAYOUT)/mgames.lh
+
+$(DRIVERS)/mgavegas.o:  $(LAYOUT)/mgavegas.lh
 
 $(DRIVERS)/mpu3.o:      $(LAYOUT)/mpu3.lh
 
@@ -2789,19 +2803,13 @@ $(DRIVERS)/roul.o:      $(LAYOUT)/roul.lh
 $(DRIVERS)/rowamet.o:   $(LAYOUT)/rowamet.lh
 
 $(DRIVERS)/s3.o:        $(LAYOUT)/s3.lh
-
 $(DRIVERS)/s4.o:        $(LAYOUT)/s4.lh
-
 $(DRIVERS)/s6.o:        $(LAYOUT)/s6.lh
-
 $(DRIVERS)/s6a.o:       $(LAYOUT)/s6a.lh
-
 $(DRIVERS)/s7.o:        $(LAYOUT)/s7.lh
-
 $(DRIVERS)/s8.o:        $(LAYOUT)/s8.lh
-
+$(DRIVERS)/s8a.o:       $(LAYOUT)/s8a.lh
 $(DRIVERS)/s9.o:        $(LAYOUT)/s9.lh
-
 $(DRIVERS)/s11.o:       $(LAYOUT)/s11.lh
 $(DRIVERS)/s11a.o:      $(LAYOUT)/s11a.lh
 $(DRIVERS)/s11b.o:      $(LAYOUT)/s11b.lh

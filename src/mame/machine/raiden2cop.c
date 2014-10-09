@@ -147,6 +147,8 @@ void raiden2cop_device::device_start()
 	save_item(NAME(cop_collision_info[0].spradr));
 	save_item(NAME(cop_collision_info[0].allow_swap));
 	save_item(NAME(cop_collision_info[0].flags_swap));
+	save_item(NAME(cop_collision_info[0].min));
+	save_item(NAME(cop_collision_info[0].max));
 
 	save_item(NAME(cop_collision_info[1].pos));
 	save_item(NAME(cop_collision_info[1].dx));
@@ -154,6 +156,8 @@ void raiden2cop_device::device_start()
 	save_item(NAME(cop_collision_info[1].spradr));
 	save_item(NAME(cop_collision_info[1].allow_swap));
 	save_item(NAME(cop_collision_info[1].flags_swap));
+	save_item(NAME(cop_collision_info[1].min));
+	save_item(NAME(cop_collision_info[1].max));
 
 	save_item(NAME(m_cop_rng_max_value));
 
@@ -195,6 +199,12 @@ void raiden2cop_device::cop_write_word(address_space &space, int address, UINT16
 {
 	if (m_cpu_is_68k) space.write_word(address ^ 2, data);
 	else space.write_word(address, data);
+}
+
+void raiden2cop_device::cop_write_byte(address_space &space, int address, UINT8 data)
+{
+	if (m_cpu_is_68k) space.write_byte(address ^ 3, data);
+	else space.write_byte(address, data);
 }
 
 
@@ -366,8 +376,12 @@ int raiden2cop_device::find_trigger_match(UINT16 triggerval, UINT16 mask)
 			int otherlog = 1;
 			
 			// just some per-game debug code so that we have a record of exactly which triggers each game is known to use
+
+
 			if (!strcmp(machine().system().name, "legionna"))
 			{
+				// enemies often walk on the spot, bosses often walk above / below playable game area (the >>16 in the sqrt commands seems responsible)
+				// player doesn't walk off screen after end of level (walks on spot, different cause?)
 				if (triggerval == 0x0205 || triggerval == 0x0905 || 
 					triggerval == 0x8100 || triggerval == 0x8900 || /* sin / cos */
 					triggerval == 0x138e || // atan?
@@ -436,6 +450,65 @@ int raiden2cop_device::find_trigger_match(UINT16 triggerval, UINT16 mask)
 			{
 				// never calls any programs
 			}
+			else if (!strcmp(machine().system().name, "zeroteam"))
+			{
+				// got stuck in lying in corner with tiny bit of health left on first boss (couldn't do anything, had to let 2nd player join)
+				// birdman boss is wrong (unemulated commands) (final boss behavior is similar)
+				// sprite priority is wrong (not command related - sort DMA)
+				// 3rd stage mid-boss does not enter properly (have to use special attack to trigger them into motion)
+				// 5th stage, does not punch door for speedboat section
+				// bats all fly in a single straight line during ending (maybe PRNG, it isn't hooked up on R2 driver?)
+
+				if (triggerval == 0x0205 || triggerval == 0x0904 ||
+					triggerval == 0x8100 || triggerval == 0x8900 || /* sin / cos */
+					triggerval == 0x130e || triggerval == 0x138e ||
+					triggerval == 0x3b30 ||
+					triggerval == 0x42c2 || // throwing
+					triggerval == 0x6200 || // emeny throwing crates to the left?
+					triggerval == 0xa180 || triggerval == 0xa980 || triggerval == 0xb100 || triggerval == 0xb900 || /* collisions */
+
+					// 2nd level 'bird man' boss uses these
+					triggerval == 0xfc84 ||
+					triggerval == 0xf790 ||
+					triggerval == 0xede5 ||
+					triggerval == 0x330e ||
+					triggerval == 0x4aa0)
+
+					otherlog = 0;
+
+
+			}
+			else if (!strcmp(machine().system().name, "xsedae"))
+			{
+				// not really sure what's right / wrong with this one..
+				if (triggerval == 0x0205 || triggerval == 0x0904 ||
+					triggerval == 0x8100 || triggerval == 0x8900 || /* sin / cos */
+					triggerval == 0x5a85 ||
+					triggerval == 0x5105 ||
+					triggerval == 0x130e ||
+					triggerval == 0x3b30
+					)
+					otherlog = 0;
+			}
+			else if (!strcmp(machine().system().name, "raiden2"))
+			{
+				if (triggerval == 0x0205 || triggerval == 0x0905 ||
+					triggerval == 0x8100 || triggerval == 0x8900 || /* sin / cos */
+					triggerval == 0x130e ||	triggerval == 0x138e ||
+					triggerval == 0x2a05 ||
+					triggerval == 0x2208 ||	triggerval == 0x2288 ||	
+					triggerval == 0x338e ||
+					triggerval == 0x39b0 || triggerval == 0x3bb0 ||	
+					triggerval == 0x4aa0 ||	
+					triggerval == 0x42c2 ||	
+					triggerval == 0x5205 ||
+					triggerval == 0x5a05 ||
+					triggerval == 0x6200 ||
+					triggerval == 0xf205 ||
+					triggerval == 0xa100 || triggerval == 0xa900 || triggerval == 0xb100 || triggerval == 0xb900 /* collisions */
+					)
+					otherlog = 0;
+			}		
 			else
 			{
 				otherlog = 0;
@@ -1160,8 +1233,11 @@ void raiden2cop_device::execute_5a05(address_space &space, int offset, UINT16 da
 */
 void raiden2cop_device::execute_6200(address_space &space, int offset, UINT16 data)
 {
-	UINT8 angle = cop_read_byte(space, cop_regs[0] + 0x34);
-	UINT16 flags = cop_read_word(space, cop_regs[0]);
+	int primary_reg = 0;
+	int primary_offset = 0x34;
+
+	UINT8 angle = cop_read_byte(space, cop_regs[primary_reg] + primary_offset);
+	UINT16 flags = cop_read_word(space, cop_regs[primary_reg]);
 	cop_angle_target &= 0xff;
 	cop_angle_step &= 0xff;
 	flags &= ~0x0004;
@@ -1186,117 +1262,55 @@ void raiden2cop_device::execute_6200(address_space &space, int offset, UINT16 da
 		else
 			angle -= cop_angle_step;
 	}
-	space.write_word(cop_regs[0], flags);
-	space.write_byte(cop_regs[0] + 0x34, angle);
-}
+	
+	cop_write_word(space, cop_regs[primary_reg], flags);
 
+	if (!m_cpu_is_68k)
+		cop_write_byte(space, cop_regs[primary_reg] + primary_offset, angle);
+	else // angle is a byte, but grainbow (cave mid-boss) is only happy with write-word, could be more endian weirdness, or it always writes a word?
+		cop_write_word(space, cop_regs[primary_reg] + primary_offset, angle);
 
-void raiden2cop_device::LEGACY_execute_6200_grainbow(address_space &space, int offset, UINT16 data)
-{
-	UINT8 cur_angle;
-	UINT16 flags;
-
-	cur_angle = cop_read_byte(space,cop_regs[0] + 0x34);
-	flags = cop_read_word(space, cop_regs[0]);
-	//space.write_byte(cop_regs[1] + (0^3),space.read_byte(cop_regs[1] + (0^3)) & 0xfb); //correct?
-
-	INT8 tempangle_compare = (INT8)cop_angle_target;
-	INT8 tempangle_mod_val = (INT8)cop_angle_step;
-
-	tempangle_compare &= 0xff;
-	tempangle_mod_val &= 0xff;
-
-	cop_angle_target = tempangle_compare;
-	cop_angle_step = tempangle_mod_val;
-
-
-	flags &= ~0x0004;
-
-	int delta = cur_angle - tempangle_compare;
-	if (delta >= 128)
-		delta -= 256;
-	else if (delta < -128)
-		delta += 256;
-	if (delta < 0)
-	{
-		if (delta >= -tempangle_mod_val)
-		{
-			cur_angle = tempangle_compare;
-			flags |= 0x0004;
-		}
-		else
-			cur_angle += tempangle_mod_val;
-	}
-	else
-	{
-		if (delta <= tempangle_mod_val)
-		{
-			cur_angle = tempangle_compare;
-			flags |= 0x0004;
-		}
-		else
-			cur_angle -= tempangle_mod_val;
-	}
-
-	space.write_byte(cop_regs[0] + (0 ^ 3), flags); // this is a word in the avoce
-	space.write_word(cop_regs[0] + (0x34 ^ 3), cur_angle); // why ^3 on a word? should it be a byte, it is in the above
 }
 
 
 void raiden2cop_device::LEGACY_execute_6200(address_space &space, int offset, UINT16 data) // this is for cupsoc, different sequence, works on different registers
 {
-	UINT8 cur_angle;
-	UINT16 flags;
+	int primary_reg = 1;
+	int primary_offset = 0xc;
 
-	/* 0 [1] */
-	/* 0xc [1] */
-	/* 0 [0] */
-	/* 0 [1] */
-	/* 0xc [1] */
-
-	cur_angle = space.read_byte(cop_regs[1] + (0xc ^ 3));
-	flags = space.read_word(cop_regs[1]);
-	//space.write_byte(cop_regs[1] + (0^3),space.read_byte(cop_regs[1] + (0^3)) & 0xfb); //correct?
-
-	INT8 tempangle_compare = (INT8)cop_angle_target;
-	INT8 tempangle_mod_val = (INT8)cop_angle_step;
-
-	tempangle_compare &= 0xff;
-	tempangle_mod_val &= 0xff;
-
-	cop_angle_target = tempangle_compare;
-	cop_angle_step = tempangle_mod_val;
-
+	UINT8 angle = cop_read_byte(space, cop_regs[primary_reg] + primary_offset);
+	UINT16 flags = cop_read_word(space, cop_regs[primary_reg]);
+	cop_angle_target &= 0xff;
+	cop_angle_step &= 0xff;
 	flags &= ~0x0004;
-
-	int delta = cur_angle - tempangle_compare;
+	int delta = angle - cop_angle_target;
 	if (delta >= 128)
 		delta -= 256;
 	else if (delta < -128)
 		delta += 256;
-	if (delta < 0)
-	{
-		if (delta >= -tempangle_mod_val)
-		{
-			cur_angle = tempangle_compare;
+	if (delta < 0) {
+		if (delta >= -cop_angle_step) {
+			angle = cop_angle_target;
 			flags |= 0x0004;
 		}
 		else
-			cur_angle += tempangle_mod_val;
+			angle += cop_angle_step;
 	}
-	else
-	{
-		if (delta <= tempangle_mod_val)
-		{
-			cur_angle = tempangle_compare;
+	else {
+		if (delta <= cop_angle_step) {
+			angle = cop_angle_target;
 			flags |= 0x0004;
 		}
 		else
-			cur_angle -= tempangle_mod_val;
+			angle -= cop_angle_step;
 	}
+	
+	cop_write_word(space, cop_regs[primary_reg], flags);
 
-	space.write_byte(cop_regs[1] + (0 ^ 2), flags);
-	space.write_byte(cop_regs[1] + (0xc ^ 3), cur_angle);
+	if (!m_cpu_is_68k)
+		cop_write_byte(space, cop_regs[primary_reg] + primary_offset, angle);
+	else // angle is a byte, but grainbow (cave mid-boss) is only happy with write-word, could be more endian weirdness, or it always writes a word?
+		cop_write_word(space, cop_regs[primary_reg] + primary_offset, angle);
 }
 
 /*
@@ -1426,14 +1440,11 @@ void raiden2cop_device::execute_a900(address_space &space, int offset, UINT16 da
 */
 void raiden2cop_device::execute_b100(address_space &space, int offset, UINT16 data)
 {
-	cop_collision_update_hitbox(space, 0, cop_regs[2]);
+	cop_collision_update_hitbox(space, data, 0, cop_regs[2]);
 }
 
 
-void raiden2cop_device::LEGACY_execute_b100(address_space &space, int offset, UINT16 data)
-{
-	LEGACY_cop_collision_update_hitbox(space, data, 0, cop_regs[2]);
-}
+
 
 /*
 ## - trig (up5) (low11) :  (sq0, sq1, sq2, sq3, sq4, sq5, sq6, sq7)  valu  mask
@@ -1442,13 +1453,10 @@ void raiden2cop_device::LEGACY_execute_b100(address_space &space, int offset, UI
 */
 void raiden2cop_device::execute_b900(address_space &space, int offset, UINT16 data)
 {
-	cop_collision_update_hitbox(space, 1, cop_regs[3]);
+	cop_collision_update_hitbox(space, data, 1, cop_regs[3]);
 }
 
-void raiden2cop_device::LEGACY_execute_b900(address_space &space, int offset, UINT16 data)
-{
-	LEGACY_cop_collision_update_hitbox(space, data, 1, cop_regs[3]);
-}
+
 
 /*
 ## - trig (up5) (low11) :  (sq0, sq1, sq2, sq3, sq4, sq5, sq6, sq7)  valu  mask
@@ -1654,35 +1662,7 @@ void  raiden2cop_device::cop_collision_read_pos(address_space &space, int slot, 
 		cop_collision_info[slot].pos[i] = cop_read_word(space, spradr+6+4*i);
 }
 
-void  raiden2cop_device::cop_collision_update_hitbox(address_space &space, int slot, UINT32 hitadr)
-{
-	UINT32 hitadr2 = space.read_word(hitadr) | (cop_hit_baseadr << 16);
 
-	for(int i=0; i<3; i++) {
-		cop_collision_info[slot].dx[i] = space.read_byte(hitadr2++);
-		cop_collision_info[slot].size[i] = space.read_byte(hitadr2++);
-	}
-
-	cop_hit_status = 7;
-
-	for(int i=0; i<3; i++) {
-		int min[2], max[2];
-		for(int j=0; j<2; j++) {
-			if(cop_collision_info[j].allow_swap && (cop_collision_info[j].flags_swap & (1 << i))) {
-				max[j] = cop_collision_info[j].pos[i] - cop_collision_info[j].dx[i];
-				min[j] = max[j] - cop_collision_info[j].size[i];
-			} else {
-				min[j] = cop_collision_info[j].pos[i] + cop_collision_info[j].dx[i];
-				max[j] = min[j] + cop_collision_info[j].size[i];
-			}
-		}
-		if(max[0] > min[1] && min[0] < max[1])
-			cop_hit_status &= ~(1 << i);
-		cop_hit_val[i] = cop_collision_info[0].pos[i] - cop_collision_info[1].pos[i];
-	}
-
-	cop_hit_val_stat = cop_hit_status ? 0xffff : 0x0000;
-}
 
 /*
 Godzilla 0x12c0 X = 0x21ed Y = 0x57da
@@ -1702,10 +1682,12 @@ Y = collides between 0xd0 and 0x30 (not inclusive)
 0x588 bits 2 & 3 = 0x580 bits 0 & 1
 */
 
-void  raiden2cop_device::LEGACY_cop_collision_update_hitbox(address_space &space, UINT16 data, int slot, UINT32 hitadr)
+void  raiden2cop_device::cop_collision_update_hitbox(address_space &space, UINT16 data, int slot, UINT32 hitadr)
 {
 	UINT32 hitadr2 = space.read_word(hitadr) | (cop_hit_baseadr << 16); // DON'T use cop_read_word here, doesn't need endian fixing?!
 	int num_axis = 2;
+	int extraxor = 0;
+	if (m_cpu_is_68k) extraxor = 1;
 
 	// guess, heatbrl doesn't have this set and clearly only wants 2 axis to be checked (otherwise it reads bad params into the 3rd)
 	// everything else has it set, and legionna clearly wants 3 axis for jumping attacks to work
@@ -1719,8 +1701,8 @@ void  raiden2cop_device::LEGACY_cop_collision_update_hitbox(address_space &space
 	}
 
 	for(i=0; i<num_axis; i++) {
-		cop_collision_info[slot].dx[i] = space.read_byte(1^ (hitadr2++));
-		cop_collision_info[slot].size[i] = space.read_byte(1^ (hitadr2++));
+		cop_collision_info[slot].dx[i] = space.read_byte(extraxor^ (hitadr2++));
+		cop_collision_info[slot].size[i] = space.read_byte(extraxor^ (hitadr2++));
 	}
 
 	INT16 dx[3],size[3];
@@ -1745,19 +1727,19 @@ void  raiden2cop_device::LEGACY_cop_collision_update_hitbox(address_space &space
 	{
 		if (cop_collision_info[j].allow_swap && (cop_collision_info[j].flags_swap & (1 << i)))
 		{
-			m_LEGACY_cop_collision_info[j].max[i] = (cop_collision_info[j].pos[i]) - dx[i];
-			m_LEGACY_cop_collision_info[j].min[i] = m_LEGACY_cop_collision_info[j].max[i] - size[i];
+			cop_collision_info[j].max[i] = (cop_collision_info[j].pos[i]) - dx[i];
+			cop_collision_info[j].min[i] = cop_collision_info[j].max[i] - size[i];
 		}
 		else
 		{
-			m_LEGACY_cop_collision_info[j].min[i] = (cop_collision_info[j].pos[i]) + dx[i];
-			m_LEGACY_cop_collision_info[j].max[i] = m_LEGACY_cop_collision_info[j].min[i] + size[i];
+			cop_collision_info[j].min[i] = (cop_collision_info[j].pos[i]) + dx[i];
+			cop_collision_info[j].max[i] = cop_collision_info[j].min[i] + size[i];
 		}
 
-		if(m_LEGACY_cop_collision_info[0].max[i] >= m_LEGACY_cop_collision_info[1].min[i] && m_LEGACY_cop_collision_info[0].min[i] <= m_LEGACY_cop_collision_info[1].max[i])
+		if(cop_collision_info[0].max[i] >= cop_collision_info[1].min[i] && cop_collision_info[0].min[i] <= cop_collision_info[1].max[i])
 			res &= ~(1 << i);
 
-		if(m_LEGACY_cop_collision_info[1].max[i] >= m_LEGACY_cop_collision_info[0].min[i] && m_LEGACY_cop_collision_info[1].min[i] <= m_LEGACY_cop_collision_info[0].max[i])
+		if(cop_collision_info[1].max[i] >= cop_collision_info[0].min[i] && cop_collision_info[1].min[i] <= cop_collision_info[0].max[i])
 			res &= ~(1 << i);
 
 		cop_hit_val[i] = (cop_collision_info[0].pos[i] - cop_collision_info[1].pos[i]);
@@ -1770,6 +1752,8 @@ void  raiden2cop_device::LEGACY_cop_collision_update_hitbox(address_space &space
 
 WRITE16_MEMBER( raiden2cop_device::cop_cmd_w)
 {
+	find_trigger_match(data, 0xf800);
+
 	cop_status &= 0x7fff;
 
 	switch(data) {
@@ -1869,7 +1853,7 @@ WRITE16_MEMBER( raiden2cop_device::cop_cmd_w)
 		break;
 
 	case 0xb100: {
-		execute_b100(space, offset, data); // collisions
+		execute_b100(space, offset, data);// collisions
 		break;
 	}
 
@@ -2243,7 +2227,7 @@ WRITE16_MEMBER(raiden2cop_device::LEGACY_cop_cmd_w)
 	if (check_command_matches(command, 0xb40, 0xbc0, 0xbc2, 0x000, 0x000, 0x000, 0x000, 0x000, funcval, funcmask))
 	{
 		executed = 1;
-		LEGACY_execute_b100(space, offset, data);
+		execute_b100(space, offset, data);
 		return;
 	}
 
@@ -2258,7 +2242,7 @@ WRITE16_MEMBER(raiden2cop_device::LEGACY_cop_cmd_w)
 	if (check_command_matches(command, 0xb60, 0xbe0, 0xbe2, 0x000, 0x000, 0x000, 0x000, 0x000, funcval, funcmask))
 	{
 		executed = 1;
-		LEGACY_execute_b900(space, offset, data);
+		execute_b900(space, offset, data);
 		return;
 	}
 
@@ -2303,7 +2287,7 @@ WRITE16_MEMBER(raiden2cop_device::LEGACY_cop_cmd_w)
 	if (check_command_matches(command, 0x380, 0x39a, 0x380, 0xa80, 0x29a, 0x000, 0x000, 0x000, 8, 0xf3e7))
 	{
 		executed = 1;
-		LEGACY_execute_6200_grainbow(space, offset, data);	
+		execute_6200(space, offset, data);	
 		return;
 	}
 

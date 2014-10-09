@@ -291,52 +291,50 @@ static int amerdart_trackball_dec(int data)
 	return data;
 }
 
-static int amerdart_trackball_direction(address_space &space, int num, int data)
+int coolpool_state::amerdart_trackball_direction(int num, int data)
 {
-	coolpool_state *state = space.machine().driver_data<coolpool_state>();
-
 	UINT16 result_x = (data & 0x0c) >> 2;
 	UINT16 result_y = (data & 0x03) >> 0;
 
 
-	if ((state->m_dx[num] == 0) && (state->m_dy[num] < 0)) {        /* Up */
-		state->m_oldy[num]--;
+	if ((m_dx[num] == 0) && (m_dy[num] < 0)) {        /* Up */
+		m_oldy[num]--;
 		result_x = amerdart_trackball_inc(result_x);
 		result_y = amerdart_trackball_inc(result_y);
 	}
-	if ((state->m_dx[num] == 0) && (state->m_dy[num] > 0)) {        /* Down */
-		state->m_oldy[num]++;
+	if ((m_dx[num] == 0) && (m_dy[num] > 0)) {        /* Down */
+		m_oldy[num]++;
 		result_x = amerdart_trackball_dec(result_x);
 		result_y = amerdart_trackball_dec(result_y);
 	}
-	if ((state->m_dx[num] < 0) && (state->m_dy[num] == 0)) {        /* Left */
-		state->m_oldx[num]--;
+	if ((m_dx[num] < 0) && (m_dy[num] == 0)) {        /* Left */
+		m_oldx[num]--;
 		result_x = amerdart_trackball_inc(result_x);
 		result_y = amerdart_trackball_dec(result_y);
 	}
-	if ((state->m_dx[num] > 0) && (state->m_dy[num] == 0)) {        /* Right */
-		state->m_oldx[num]++;
+	if ((m_dx[num] > 0) && (m_dy[num] == 0)) {        /* Right */
+		m_oldx[num]++;
 		result_x = amerdart_trackball_dec(result_x);
 		result_y = amerdart_trackball_inc(result_y);
 	}
-	if ((state->m_dx[num] < 0) && (state->m_dy[num] < 0)) {         /* Left & Up */
-		state->m_oldx[num]--;
-		state->m_oldy[num]--;
+	if ((m_dx[num] < 0) && (m_dy[num] < 0)) {         /* Left & Up */
+		m_oldx[num]--;
+		m_oldy[num]--;
 		result_x = amerdart_trackball_inc(result_x);
 	}
-	if ((state->m_dx[num] < 0) && (state->m_dy[num] > 0)) {         /* Left & Down */
-		state->m_oldx[num]--;
-		state->m_oldy[num]++;
+	if ((m_dx[num] < 0) && (m_dy[num] > 0)) {         /* Left & Down */
+		m_oldx[num]--;
+		m_oldy[num]++;
 		result_y = amerdart_trackball_dec(result_y);
 	}
-	if ((state->m_dx[num] > 0) && (state->m_dy[num] < 0)) {         /* Right & Up */
-		state->m_oldx[num]++;
-		state->m_oldy[num]--;
+	if ((m_dx[num] > 0) && (m_dy[num] < 0)) {         /* Right & Up */
+		m_oldx[num]++;
+		m_oldy[num]--;
 		result_y = amerdart_trackball_inc(result_y);
 	}
-	if ((state->m_dx[num] > 0) && (state->m_dy[num] > 0)) {         /* Right & Down */
-		state->m_oldx[num]++;
-		state->m_oldy[num]++;
+	if ((m_dx[num] > 0) && (m_dy[num] > 0)) {         /* Right & Down */
+		m_oldx[num]++;
+		m_oldy[num]++;
 		result_x = amerdart_trackball_dec(result_x);
 	}
 
@@ -398,10 +396,10 @@ READ16_MEMBER(coolpool_state::amerdart_trackball_r)
 	m_dy[2] = (INT8)(m_newy[2] - m_oldy[2]);
 
 	/* Determine Trackball 1 direction state */
-	m_result = (m_result & 0xf0ff) | (amerdart_trackball_direction(space, 1, ((m_result >>  8) & 0xf)) <<  8);
+	m_result = (m_result & 0xf0ff) | (amerdart_trackball_direction(1, ((m_result >>  8) & 0xf)) <<  8);
 
 	/* Determine Trackball 2 direction state */
-	m_result = (m_result & 0x0fff) | (amerdart_trackball_direction(space, 2, ((m_result >> 12) & 0xf)) << 12);
+	m_result = (m_result & 0x0fff) | (amerdart_trackball_direction(2, ((m_result >> 12) & 0xf)) << 12);
 
 
 //  logerror("%08X:read port 6 (X=%02X Y=%02X oldX=%02X oldY=%02X oldRes=%04X Res=%04X)\n", space.device().safe_pc(), m_newx, m_newy, m_oldx, m_oldy, m_lastresult, m_result);
@@ -1106,19 +1104,17 @@ ROM_END
  *
  *************************************/
 
-static void register_state_save(running_machine &machine)
+void coolpool_state::register_state_save()
 {
-	coolpool_state *state = machine.driver_data<coolpool_state>();
+	save_item(NAME(m_oldx));
+	save_item(NAME(m_oldy));
+	save_item(NAME(m_result));
+	save_item(NAME(m_lastresult));
 
-	state->save_item(NAME(state->m_oldx));
-	state->save_item(NAME(state->m_oldy));
-	state->save_item(NAME(state->m_result));
-	state->save_item(NAME(state->m_lastresult));
-
-	state->save_item(NAME(state->m_cmd_pending));
-	state->save_item(NAME(state->m_iop_cmd));
-	state->save_item(NAME(state->m_iop_answer));
-	state->save_item(NAME(state->m_iop_romaddr));
+	save_item(NAME(m_cmd_pending));
+	save_item(NAME(m_iop_cmd));
+	save_item(NAME(m_iop_answer));
+	save_item(NAME(m_iop_romaddr));
 }
 
 
@@ -1127,14 +1123,14 @@ DRIVER_INIT_MEMBER(coolpool_state,amerdart)
 {
 	m_lastresult = 0xffff;
 
-	register_state_save(machine());
+	register_state_save();
 }
 
 DRIVER_INIT_MEMBER(coolpool_state,coolpool)
 {
 	m_dsp->space(AS_IO).install_read_handler(0x07, 0x07, read16_delegate(FUNC(coolpool_state::coolpool_input_r),this));
 
-	register_state_save(machine());
+	register_state_save();
 }
 
 
@@ -1178,7 +1174,7 @@ DRIVER_INIT_MEMBER(coolpool_state,9ballsht)
 		rom[a+1] = tmp;
 	}
 
-	register_state_save(machine());
+	register_state_save();
 }
 
 

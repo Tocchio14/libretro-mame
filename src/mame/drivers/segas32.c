@@ -531,16 +531,6 @@ orunners:  Interleaved with the dj and << >> buttons is the data the drives the 
 
 /*************************************
  *
- *  Prototypes
- *
- *************************************/
-
-static void signal_sound_irq(running_machine &machine, int which);
-
-
-
-/*************************************
- *
  *  Machine init
  *
  *************************************/
@@ -659,7 +649,7 @@ void segas32_state::int_control_w(address_space &space, int offset, UINT8 data)
 		case 13:
 		case 14:
 		case 15:        /* signal IRQ to sound CPU */
-			signal_sound_irq(machine(),SOUND_IRQ_V60);
+			signal_sound_irq(SOUND_IRQ_V60);
 			break;
 	}
 }
@@ -732,7 +722,7 @@ INTERRUPT_GEN_MEMBER(segas32_state::start_of_vblank_int)
 	system32_set_vblank(1);
 	machine().scheduler().timer_set(m_screen->time_until_pos(0), timer_expired_delegate(FUNC(segas32_state::end_of_vblank_int),this));
 	if (m_system32_prot_vblank)
-		(*m_system32_prot_vblank)(&device);
+		(this->*m_system32_prot_vblank)();
 }
 
 
@@ -1216,27 +1206,22 @@ void segas32_state::update_sound_irq_state()
 }
 
 
-static void signal_sound_irq(running_machine &machine, int which)
+void segas32_state::signal_sound_irq(int which)
 {
-	segas32_state *state = machine.driver_data<segas32_state>();
-	int i;
-
 	/* see if this interrupt input is mapped to any vectors; if so, mark them */
-	for (i = 0; i < 3; i++)
-		if (state->m_sound_irq_control[i] == which)
-			state->m_sound_irq_input |= 1 << i;
-	state->update_sound_irq_state();
+	for (int i = 0; i < 3; i++)
+		if (m_sound_irq_control[i] == which)
+			m_sound_irq_input |= 1 << i;
+	update_sound_irq_state();
 }
 
 
-static void clear_sound_irq(running_machine &machine, int which)
+void segas32_state::clear_sound_irq(int which)
 {
-	segas32_state *state = machine.driver_data<segas32_state>();
-	int i;
-	for (i = 0; i < 3; i++)
-		if (state->m_sound_irq_control[i] == which)
-			state->m_sound_irq_input &= ~(1 << i);
-	state->update_sound_irq_state();
+	for (int i = 0; i < 3; i++)
+		if (m_sound_irq_control[i] == which)
+			m_sound_irq_input &= ~(1 << i);
+	update_sound_irq_state();
 }
 
 
@@ -1265,9 +1250,9 @@ WRITE8_MEMBER(segas32_state::sound_int_control_hi_w)
 WRITE_LINE_MEMBER(segas32_state::ym3438_irq_handler)
 {
 	if (state)
-		signal_sound_irq(machine(), SOUND_IRQ_YM3438);
+		signal_sound_irq(SOUND_IRQ_YM3438);
 	else
-		clear_sound_irq(machine(), SOUND_IRQ_YM3438);
+		clear_sound_irq(SOUND_IRQ_YM3438);
 }
 
 
@@ -4705,7 +4690,7 @@ DRIVER_INIT_MEMBER(segas32_state,darkedge)
 
 	/* install protection handlers */
 	m_maincpu->space(AS_PROGRAM).install_readwrite_handler(0xa00000, 0xa7ffff, read16_delegate(FUNC(segas32_state::darkedge_protection_r),this), write16_delegate(FUNC(segas32_state::darkedge_protection_w),this));
-	m_system32_prot_vblank = darkedge_fd1149_vblank;
+	m_system32_prot_vblank = &segas32_state::darkedge_fd1149_vblank;
 }
 
 DRIVER_INIT_MEMBER(segas32_state,dbzvrvs)
@@ -4750,7 +4735,7 @@ DRIVER_INIT_MEMBER(segas32_state,f1lap)
 	m_maincpu->space(AS_PROGRAM).install_read_handler(0x801000, 0x801003, read16_delegate(FUNC(segas32_state::dual_pcb_masterslave),this));
 
 //  m_maincpu->space(AS_PROGRAM).install_write_handler(0x800048, 0x800049, write16_delegate(FUNC(segas32_state::f1en_comms_echo_w),this));
-	m_system32_prot_vblank = f1lap_fd1149_vblank;
+	m_system32_prot_vblank = &segas32_state::f1lap_fd1149_vblank;
 
 	m_sw1_output = &segas32_state::f1lap_sw1_output;
 }
