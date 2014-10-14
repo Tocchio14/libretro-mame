@@ -1,3 +1,5 @@
+// license:BSD-3-Clause
+// copyright-holders:etabeta
 #ifndef __CHANF_SLOT_H
 #define __CHANF_SLOT_H
 
@@ -13,6 +15,7 @@ enum
 	CF_MAZE,
 	CF_HANGMAN,
 	CF_CHESS,
+	CF_MULTI_OLD,
 	CF_MULTI
 };
 

@@ -48,6 +48,7 @@ pacman          // (c) 1980 Midway
 pacmanf         // hack
 puckmod         // (c) 1981 Namco
 pacmod          // (c) 1981 Midway
+pacmanjpm		// bootleg
 newpuc2         // hack
 newpuc2b        // hack
 pacuman         // bootleg
@@ -134,6 +135,8 @@ mschamps        // hack (hack of the Rayglo hack?)
 cannonbp        // hack
 superabc        // hack
 superabco       // hack
+pengojpm		// bootleg
+pengopac		// bootleg
 
 // S2650 Pacman Kits
 drivfrcp        // (c) 1984 Shinkai Inc. (Magic Eletronics Inc. license)
@@ -466,6 +469,7 @@ kickboy         // (c) 1983
 itaten          // (c) 1984 + Alice
 friskyt         // (c) 1981
 friskyta        // (c) 1981
+friskytb		// (c) 1981
 radrad          // (c) 1982 Nichibutsu USA
 seicross        // (c) 1984 + Alice
 sectrzon        // (c) 1984 + Alice
@@ -1757,6 +1761,7 @@ motorace        // (c) 1983 Williams license
 mototour        // (c) 1983 Tecfri
 shtrider        // (c) 1984 Seibu Kaihatsu
 shtridera       // (c) 1984 Seibu Kaihatsu
+shtriderb		// bootleg
 wilytowr        // M63 (c) 1984
 atomboy         // M63 (c) 1985 Irem + Memetron license
 atomboya        // M63 (c) 1985 Irem + Memetron license
@@ -2100,6 +2105,7 @@ rbisland        // B22 (c) 1987 Taito Corporation
 rbislando       // B22 (c) 1987 Taito Corporation
 rbislande       // B39 (c) 1988 Taito Corporation
 jumping         // bootleg
+jumpinga        // bootleg
 arkanoid        // A75 (c) 1986 Taito Corporation Japan (World)
 arkanoidu       // A75 (c) 1986 Taito America Corporation + Romstar license (US)
 arkanoiduo      // A75 (c) 1986 Taito America Corporation + Romstar license (US)
@@ -2123,6 +2129,7 @@ arktayt2        // bootleg
 arkatour        // ??? (c) 1987 Taito America Corporation + Romstar license (US)
 tetrsark        // ??? (c) D.R.Korea
 hexa            // D. R. Korea
+hexaa			//
 brixian         // (c) 1993 Cheil Computer System
 sqix            // B03 1987
 sqixr1          // B03 1987
@@ -3028,6 +3035,7 @@ toramich        // 11/1987 (c) 1987 (Japan
 tigeroadb       // bootleg
 f1dream         //  4/1988 (c) 1988 + Romstar
 f1dreamb        // bootleg
+f1dreamba		// bootleg
 1943kai         //  6/1988 (c) 1987 (Japan)
 lastduel        //  7/1988 (c) 1988 (US)
 lastduelo       //  7/1988 (c) 1988 (US)
@@ -5880,6 +5888,8 @@ wndrplnt        // (c) 1987 Data East Corporation (Japan)
 chelnov         // (c) 1988 Data East USA (World)
 chelnovu        // (c) 1988 Data East USA (US)
 chelnovj        // (c) 1988 Data East Corporation (Japan)
+chelnovjbl		// bootleg
+chelnovjbla		// bootleg
 // the following ones all run on similar hardware
 hbarrel         // (c) 1987 Data East USA (US)
 hbarrelw        // (c) 1987 Data East Corporation (World)
@@ -8339,6 +8349,8 @@ raiden2ea       // (c) 1993 Seibu Kaihatsu
 raiden2eu       // (c) 1993 Seibu Kaihatsu + Fabtek license
 raiden2eua      // (c) 1993 Seibu Kaihatsu + Fabtek license
 raiden2nl       // (c) 1993 Seibu Kaihatsu
+raiden2g		// (c) 1993 Seibu Kaihatsu + Tuning license
+raiden2dx		// (c) 1993 Seibu Kaihatsu
 
 raidendx        // (c) 1994 Seibu Kaihatsu
 raidendxk       // (c) 1994 Seibu Kaihatsu
@@ -8348,6 +8360,7 @@ raidendxa2      // (c) 1994 Seibu Kaihatsu + Metrotainment license
 raidendxg       // (c) 1994 Seibu Kaihatsu + Tuning license
 raidendxnl      // (c) 1994 Seibu Kaihatsu
 raidendxj       // (c) 1994 Seibu Kaihatsu
+raidendxch
 zeroteam        // (c) 1993 Seibu Kaihatsu + Fabtek license
 zeroteama       // (c) 1993 Seibu Kaihatsu
 zeroteamb       // (c) 1993 Seibu Kaihatsu
@@ -8778,6 +8791,7 @@ grtesoro4       // (c) 1999 - Ref ???
 
 // Gaelco 3D games
 speedup         // (c) 1996 - Ref ???
+speedup10       // (c) 1996 - Ref ???
 surfplnt        // (c) 1997 - Ref 971223
 surfplnt40      // (c) 1997 - Ref 970514
 radikalb        // (c) 1998 - Ref ???
@@ -10466,7 +10480,6 @@ riviera         // (c) 1987 Merit
 rivieraa        // (c) 1986 Merit
 rivierab        // (c) 1986 Merit
 americna        // (c) 1987 Merit
-americnaa       // (c) 1994 Merit
 dodgecty        // (c) 1988 Merit
 dodgectya       // (c) 1986 Merit
 dodgectyb       // (c) 1986 Merit
@@ -10485,6 +10498,7 @@ pbss330         // (c) 1994 Merit
 pbst30          // (c) 1994 Merit
 pbst30b         // (c) 1993 Merit
 realbrod        // (c) 1995 Merit
+mtjpoker        // (c) 1994 Merit
 megat2          // (c) 1994 Merit
 megat2a         // (c) 1994 Merit
 megat2b         // (c) 1994 Merit

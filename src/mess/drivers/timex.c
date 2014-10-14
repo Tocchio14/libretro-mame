@@ -148,7 +148,6 @@ http://www.z88forever.org.uk/zxplus3e/
 #include "cpu/z80/z80.h"
 #include "includes/spectrum.h"
 #include "imagedev/snapquik.h"
-#include "imagedev/cartslot.h"
 #include "imagedev/cassette.h"
 #include "sound/speaker.h"
 #include "sound/ay8910.h"
@@ -684,6 +683,8 @@ static MACHINE_CONFIG_DERIVED( ts2068, spectrum_128 )
 	MCFG_CPU_REPLACE("maincpu", Z80, XTAL_14_112MHz/4)        /* From Schematic; 3.528 MHz */
 	MCFG_CPU_PROGRAM_MAP(ts2068_mem)
 	MCFG_CPU_IO_MAP(ts2068_io)
+	MCFG_CPU_VBLANK_INT_DRIVER("screen", spectrum_state,  spec_interrupt)
+	MCFG_QUANTUM_TIME(attotime::from_hz(60))
 
 	MCFG_MACHINE_RESET_OVERRIDE(spectrum_state, ts2068 )
 

@@ -298,6 +298,18 @@ endif
 
 #-------------------------------------------------
 #
+#@src/emu/bus/crvision/slot.h,BUSES += CRVISION
+#-------------------------------------------------
+
+ifneq ($(filter CRVISION,$(BUSES)),)
+OBJDIRS += $(BUSOBJ)/crvision
+BUSOBJS += $(BUSOBJ)/crvision/slot.o
+BUSOBJS += $(BUSOBJ)/crvision/rom.o
+endif
+
+
+#-------------------------------------------------
+#
 #@src/emu/bus/dmv/dmv.h,BUSES += DMV
 #-------------------------------------------------
 
@@ -716,6 +728,18 @@ endif
 
 #-------------------------------------------------
 #
+#@src/emu/bus/vectrex/slot.h,BUSES += VECTREX
+#-------------------------------------------------
+
+ifneq ($(filter VECTREX,$(BUSES)),)
+OBJDIRS += $(BUSOBJ)/vectrex
+BUSOBJS += $(BUSOBJ)/vectrex/slot.o
+BUSOBJS += $(BUSOBJ)/vectrex/rom.o
+endif
+
+
+#-------------------------------------------------
+#
 #@src/emu/bus/vic10/exp.h,BUSES += VIC10
 #-------------------------------------------------
 
@@ -735,6 +759,7 @@ endif
 ifneq ($(filter VIC20,$(BUSES)),)
 OBJDIRS += $(BUSOBJ)/vic20
 BUSOBJS += $(BUSOBJ)/vic20/exp.o
+BUSOBJS += $(BUSOBJ)/vic20/fe3.o
 BUSOBJS += $(BUSOBJ)/vic20/megacart.o
 BUSOBJS += $(BUSOBJ)/vic20/std.o
 BUSOBJS += $(BUSOBJ)/vic20/vic1010.o
@@ -920,6 +945,7 @@ BUSOBJS += $(BUSOBJ)/rs232/printer.o
 BUSOBJS += $(BUSOBJ)/rs232/rs232.o
 BUSOBJS += $(BUSOBJ)/rs232/ser_mouse.o
 BUSOBJS += $(BUSOBJ)/rs232/terminal.o
+BUSOBJS += $(BUSOBJ)/rs232/xvd701.o
 endif
 
 #-------------------------------------------------
@@ -1118,6 +1144,8 @@ ifneq ($(filter SEGA8,$(BUSES)),)
 OBJDIRS += $(BUSOBJ)/sega8
 BUSOBJS += $(BUSOBJ)/sega8/sega8_slot.o
 BUSOBJS += $(BUSOBJ)/sega8/rom.o
+BUSOBJS += $(BUSOBJ)/sega8/ccatch.o
+BUSOBJS += $(BUSOBJ)/sega8/mgear.o
 endif
 
 #-------------------------------------------------

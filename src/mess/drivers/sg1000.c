@@ -67,7 +67,6 @@ Notes:
 
 #include "includes/sg1000.h"
 #include "bus/rs232/rs232.h"
-#include "bus/sega8/rom.h"
 
 
 /***************************************************************************
@@ -710,19 +709,6 @@ void sf7000_state::machine_reset()
 /***************************************************************************
     MACHINE DRIVERS
 ***************************************************************************/
-
-
-static SLOT_INTERFACE_START(sg1000_cart)
-	SLOT_INTERFACE_INTERNAL("rom",  SEGA8_ROM_STD)
-	SLOT_INTERFACE_INTERNAL("othello",  SEGA8_ROM_OTHELLO)
-	SLOT_INTERFACE_INTERNAL("castle",  SEGA8_ROM_CASTLE)
-	SLOT_INTERFACE_INTERNAL("terebi",  SEGA8_ROM_TEREBI)
-	SLOT_INTERFACE_INTERNAL("level3",  SEGA8_ROM_BASIC_L3)
-	SLOT_INTERFACE_INTERNAL("music_editor",  SEGA8_ROM_MUSIC_EDITOR)
-	SLOT_INTERFACE_INTERNAL("dahjee_typea",  SEGA8_ROM_DAHJEE_TYPEA)
-	SLOT_INTERFACE_INTERNAL("dahjee_typeb",  SEGA8_ROM_DAHJEE_TYPEB)
-	SLOT_INTERFACE_INTERNAL("cardcatcher",  SEGA8_ROM_CARDCATCH)
-SLOT_INTERFACE_END
 
 /*-------------------------------------------------
     MACHINE_CONFIG_START( sg1000, sg1000_state )
