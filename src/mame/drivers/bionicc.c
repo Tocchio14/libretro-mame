@@ -63,7 +63,6 @@
 #define MASTER_CLOCK       XTAL_24MHz
 #define EXO3_F0_CLK        XTAL_14_31818MHz
 
-
 /*************************************
  *
  *  Memory handlers
@@ -345,11 +344,11 @@ void bionicc_state::machine_reset()
 static MACHINE_CONFIG_START( bionicc, bionicc_state )
 
 	/* basic machine hardware */
-	MCFG_CPU_ADD("maincpu", M68000, MASTER_CLOCK / 2) /* 12 MHz - verified in schematics */
+	MCFG_CPU_ADD("maincpu", M68000, XTAL_24MHz / 2) /* 12 MHz - verified in schematics */
 	MCFG_CPU_PROGRAM_MAP(main_map)
 	MCFG_TIMER_DRIVER_ADD_SCANLINE("scantimer", bionicc_state, bionicc_scanline, "screen", 0, 1)
 
-	MCFG_CPU_ADD("audiocpu", Z80, EXO3_F0_CLK / 4)   /* EXO3 C,B=GND, A=5V ==> Divisor 2^2 */
+	MCFG_CPU_ADD("audiocpu", Z80, XTAL_14_31818MHz / 4)   /* EXO3 C,B=GND, A=5V ==> Divisor 2^2 */
 	MCFG_CPU_PROGRAM_MAP(sound_map)
 	/* FIXME: interrupt timing
 	 * schematics indicate that nmi_line is set on  M680000 access with AB1=1
@@ -376,7 +375,7 @@ static MACHINE_CONFIG_START( bionicc, bionicc_state )
 
 	MCFG_SPEAKER_STANDARD_MONO("mono")
 
-	MCFG_YM2151_ADD("ymsnd", 3579545)
+	MCFG_YM2151_ADD("ymsnd", XTAL_14_31818MHz / 4)
 	MCFG_SOUND_ROUTE(0, "mono", 0.60)
 	MCFG_SOUND_ROUTE(1, "mono", 0.60)
 MACHINE_CONFIG_END

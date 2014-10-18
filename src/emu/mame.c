@@ -71,6 +71,7 @@
         - exits the program
 
 ***************************************************************************/
+
 #include "emu.h"
 #include "emuopts.h"
 #include "osdepend.h"
@@ -78,8 +79,6 @@
 #include "debugger.h"
 #include "render.h"
 #include "cheat.h"
-//MKCHAMP - ADDING HEADER FILE HISCORE FOR INCLUSION
-#include "hiscore.h"
 #include "ui/ui.h"
 #include "uiinput.h"
 #include "crsshair.h"

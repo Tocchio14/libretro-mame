@@ -265,7 +265,7 @@ static ADDRESS_MAP_START( ufo_map, AS_PROGRAM, 8, ufo_state )
 	AM_RANGE(0xe000, 0xffff) AM_RAM
 ADDRESS_MAP_END
 
-static ADDRESS_MAP_START( ufo_portmap, AS_PROGRAM, 8, ufo_state )
+static ADDRESS_MAP_START( ufo_portmap, AS_IO, 8, ufo_state )
 	ADDRESS_MAP_UNMAP_HIGH
 	ADDRESS_MAP_GLOBAL_MASK(0xff)
 	AM_RANGE(0x00, 0x03) AM_DEVREADWRITE("pit", pit8254_device, read, write)
@@ -372,7 +372,7 @@ void ufo_state::machine_start()
 {
 	// init/zerofill
 	static const float motor_speeds[4] =
-		{ (float) (1.0/CABINET_WIDTH), (float) (1.0/CABINET_DEPTH), (float) (1.0/CABINET_HEIGHT), (float) (1.0/CRANE_SIZE) };
+		{ 1.0f/CABINET_WIDTH, 1.0f/CABINET_DEPTH, 1.0f/CABINET_HEIGHT, 1.0f/CRANE_SIZE };
 	
 	for (int p = 0; p < 2; p++)
 	{

@@ -155,12 +155,6 @@
 #ifndef NLBASE_H_
 #define NLBASE_H_
 
-#ifdef __LIBRETRO__
-#ifdef RETRO_AND
-#undef _C
-#endif
-#endif
-
 #include "nl_config.h"
 #include "nl_lists.h"
 #include "nl_time.h"

@@ -4939,4 +4939,3 @@ GAME( 2000, crszonev3b,  crszone,  ss23e2,      s23,       namcos23_state, s23, 
 GAME( 2000, crszonev3b2, crszone,  ss23e2,      s23,       namcos23_state, s23, ROT0, "Namco", "Crisis Zone (CSZO3 Ver. B, set 2)", GAME_FLAGS )
 GAME( 2000, crszonev3a,  crszone,  ss23e2,      s23,       namcos23_state, s23, ROT0, "Namco", "Crisis Zone (CSZO3 Ver. A)",   GAME_FLAGS )
 GAME( 2000, crszonev2a,  crszone,  ss23e2,      s23,       namcos23_state, s23, ROT0, "Namco", "Crisis Zone (CSZO2 Ver. A)",   GAME_FLAGS )
-

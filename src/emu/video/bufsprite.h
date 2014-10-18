@@ -58,21 +58,8 @@ public:
 			m_spriteram(*owner, tag) { }
 
 	// getters
-
 	_Type *live() const { return m_spriteram; }
-#ifndef __LIBRETRO__
 	_Type *buffer() { return m_buffered; }
-#else
-	
-	_Type *buffer() 
-	{
-		extern bool nobuffer_enable;
-		if(nobuffer_enable)
-			return m_spriteram;
-		else	
-			return m_buffered; 
-	}
-#endif
 	UINT32 bytes() const { return m_spriteram.bytes(); }
 
 	// operations
@@ -81,15 +68,7 @@ public:
 		assert(m_spriteram != NULL);
 		if (m_spriteram != NULL)
 			memcpy(m_buffered, m_spriteram + srcoffset, MIN(srclength, m_spriteram.bytes() / sizeof(_Type) - srcoffset) * sizeof(_Type));
-#ifndef __LIBRETRO__
-			return m_buffered;
-#else
-		extern bool nobuffer_enable;
-		if(nobuffer_enable)
-			return m_spriteram;
-		else	
-			return m_buffered; 
-#endif			
+		return m_buffered;
 	}
 
 	// read/write handlers

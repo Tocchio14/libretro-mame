@@ -88,7 +88,6 @@ EMUOBJS = \
 	$(EMUOBJ)/emupal.o \
 	$(EMUOBJ)/fileio.o \
 	$(EMUOBJ)/hash.o \
-	$(EMUOBJ)/hiscore.o \
 	$(EMUOBJ)/image.o \
 	$(EMUOBJ)/info.o \
 	$(EMUOBJ)/input.o \
@@ -98,7 +97,7 @@ EMUOBJS = \
 	$(EMUOBJ)/machine.o \
 	$(EMUOBJ)/mconfig.o \
 	$(EMUOBJ)/memarray.o \
-	$(EMUOBJ)/emumemory.o \
+	$(EMUOBJ)/memory.o \
 	$(EMUOBJ)/network.o \
 	$(EMUOBJ)/output.o \
 	$(EMUOBJ)/render.o \
@@ -145,7 +144,7 @@ EMUOBJS = \
 	$(EMUOBJ)/debug/express.o \
 	$(EMUOBJ)/debug/textbuf.o \
 	$(EMUOBJ)/profiler.o \
-	$(EMUOBJ)/webengine_retro.o \
+	$(EMUOBJ)/webengine.o \
 	$(OSDOBJ)/osdcore.o \
 	$(OSDOBJ)/osdepend.o \
 	$(OSDOBJ)/osdnet.o \
@@ -248,8 +247,7 @@ include $(EMUSRC)/bus/bus.mak
 # core optional library
 #-------------------------------------------------
 
-$(LIBOPTIONAL): $(CPUOBJS) $(SOUNDOBJS) $(VIDEOOBJS)
-$(LIBOPTIONAL2): $(MACHINEOBJS) $(BUSOBJS) $(NETLISTOBJS)
+$(LIBOPTIONAL): $(CPUOBJS) $(SOUNDOBJS) $(VIDEOOBJS) $(MACHINEOBJS) $(NETLISTOBJS)
 $(LIBBUS): $(BUSOBJS)
 
 #-------------------------------------------------

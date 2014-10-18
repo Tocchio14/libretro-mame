@@ -232,7 +232,6 @@ public:
 
 	// CPU information
 	cpu_device *            firstcpu;           // first CPU
-	device_t *		        cpu[8];             // MKChamp--CPU for hiscore support 
 
 private:
 	// video-related information
